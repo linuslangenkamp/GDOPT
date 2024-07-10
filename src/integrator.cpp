@@ -2,14 +2,13 @@
 // Created by Linus on 09.07.2024.
 //
 /*
-Implementation of Radau IIA collocation schemes. Contains schemes for s=1,...,7 steps
-with corresponding orders 2s - 1.
+Implementation of Radau IIA collocation schemes. Contains schemes for s=1,2,...,7 steps
+with corresponding orders 2s-1.
 The coefficients are calculated to 53 exact decimal places via
 https://github.com/linuslangenkamp/ConstructionRadauIIA.
 */
 
 #include "integrator.h"
-#include <cmath>
 
 Integrator::Integrator(const std::vector<double>& c,
                        const std::vector<std::vector<double>>& A,

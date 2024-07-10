@@ -2,11 +2,47 @@
 #include <IpIpoptApplication.hpp>
 #include "test_nlp.h"
 #include "integrator.h"
+#include "problem.h"
+#include "expression.h"
+#include "constraint.h"
 
 using namespace Ipopt;
 
+class TestConstraint : public Constraint {
+public:
+    static TestConstraint create() {
+        Adjacency adj{
+                {0, 2},
+                {},
+                {}
+        };
+
+        return TestConstraint(std::move(adj), 0., 10.);
+    }
+
+
+    double eval(const std::vector<double> &x, const std::vector<double> &u, const std::vector<double> &p,
+         double t) override {
+        return x[0] + x[2];
+    }
+
+    std::array<std::vector<double>, 3> evalDiff(const std::vector<double> &x, const std::vector<double> &u,
+                                                const std::vector<double> &p, double t) override {
+        return {std::vector<double>{1., 1.}, {}, {}};
+    }
+private:
+    TestConstraint(Adjacency adj, double lb, double ub) : Constraint(std::move(adj), lb, ub) {
+
+    }
+
+};
+
 int main() {
     Integrator RK = Integrator::radauIIA(IntegratorSteps::Steps3);
+
+    auto testConstraint = TestConstraint::create();
+
+    /*
     SmartPtr<TestNLP> testNLP = new TestNLP;
 
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
@@ -36,4 +72,6 @@ int main() {
     }
 
     return (int) status;
+     */
+    return 0;
 }
