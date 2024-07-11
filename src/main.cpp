@@ -16,23 +16,19 @@ public:
                 {},
                 {}
         };
-
         return TestConstraint(std::move(adj), 0., 10.);
     }
 
 
-    double eval(const std::vector<double> &x, const std::vector<double> &u, const std::vector<double> &p,
-         double t) override {
+    double eval(double *x, double *u, double *p, double t) override {
         return x[0] + x[2];
     }
 
-    std::array<std::vector<double>, 3> evalDiff(const std::vector<double> &x, const std::vector<double> &u,
-                                                const std::vector<double> &p, double t) override {
+    std::array<std::vector<double>, 3> evalDiff(double *x, double *u, double *p, double t) override {
         return {std::vector<double>{1., 1.}, {}, {}};
     }
 private:
     TestConstraint(Adjacency adj, double lb, double ub) : Constraint(std::move(adj), lb, ub) {
-
     }
 
 };
