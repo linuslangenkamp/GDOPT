@@ -13,7 +13,7 @@
 class Problem {
 public:
     Problem(int sizeX, int sizeU, int sizeP,
-            std::vector<double> startX, std::vector<double> lbX, std::vector<double> ubX,
+            std::vector<double> x0, std::vector<double> lbX, std::vector<double> ubX,
             std::vector<double> lbU, std::vector<double> ubU,
             std::vector<double> lbP, std::vector<double> ubP,
             std::unique_ptr<Expression> M, std::unique_ptr<Expression> L,
@@ -26,7 +26,7 @@ public:
     const int sizeU;
     const int sizeP;
 
-    std::vector<double> startX;
+    std::vector<double> x0;
     std::vector<double> lbX;
     std::vector<double> ubX;
     std::vector<double> lbU;
