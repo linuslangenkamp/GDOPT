@@ -4,11 +4,11 @@
 
 #ifndef IPOPT_DO_PROBLEM_H
 #define IPOPT_DO_PROBLEM_H
+
 #include <vector>
 #include <memory>
 #include "expression.h"
 #include "constraint.h"
-
 
 class Problem {
 public:
@@ -34,7 +34,6 @@ public:
     std::vector<std::unique_ptr<Constraint>> G;     // Algebraic path constraints for states, control, parameters and time
     std::vector<std::unique_ptr<Constraint>> R;     // Algebraic final constraints
     std::vector<std::unique_ptr<Constraint>> A;     // Algebraic constraints for parameters only
-
 };
 
 

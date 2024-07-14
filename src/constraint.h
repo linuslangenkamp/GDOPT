@@ -9,9 +9,7 @@
 
 class Constraint : public Expression {
 public:
-    Constraint(Adjacency adjacency, double lb = 0.0, double ub = 0.0) : Expression(std::move(adjacency)), lb{lb}, ub{ub}  {
-
-    }
+    Constraint(Adjacency adj, double lb = 0.0, double ub = 0.0) : Expression(std::move(adj)), lb{lb}, ub{ub} {}
 
     const double lb;
     const double ub;

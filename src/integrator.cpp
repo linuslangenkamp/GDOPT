@@ -2,10 +2,10 @@
 // Created by Linus on 09.07.2024.
 //
 /*
-Implementation of Radau IIA collocation schemes. Contains schemes for s=1,2,...,7 steps
-with corresponding orders 2s-1.
-The coefficients are calculated to 53 exact decimal places via
-https://github.com/linuslangenkamp/ConstructionRadauIIA.
+Implementation of Radau IIA collocation schemes. Contains schemes for s = 1,2,...,7 steps
+with corresponding orders 2s-1. The coefficients are calculated to 53 exact decimal places via
+https://github.com/linuslangenkamp/ConstructionRadauIIA. The theoretical values
+a_{s,s} = 1/s^2 and ainv_{s,s} = 1/2 (1 + s^2) hold.
 */
 
 #include "integrator.h"
@@ -13,8 +13,9 @@ https://github.com/linuslangenkamp/ConstructionRadauIIA.
 Integrator::Integrator(const std::vector<double>& c,
                        const std::vector<std::vector<double>>& A,
                        const std::vector<std::vector<double>>& Ainv,
+                       const std::vector<double>& invRowSum,
                        int steps)
-        : c(c), A(A), Ainv(Ainv), b(A.back()), steps(steps) {
+        : c(c), A(A), Ainv(Ainv), b(A.back()), invRowSum(invRowSum), steps(steps) {
 }
 
 Integrator Integrator::radauIIA(IntegratorSteps steps) {
@@ -24,6 +25,7 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
             return {{1.0},
                     {{1.0}},
                     {{1.0}},
+                    {1.0},
                     1};
         case IntegratorSteps::Steps2:
             return {{0.33333333333333333333333333333333333333333333333333333,
@@ -36,6 +38,8 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                       0.5},
                      {-4.5,
                       2.5}},
+                    {2.0,
+                     -2.0},
                     2};
         case IntegratorSteps::Steps3:
             return {{0.15505102572168219018027159252941086080340525193433299,
@@ -59,6 +63,9 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                      {5.531972647421808261859424199215710378575859948417787,
                       -7.531972647421808261859424199215710378575859948417787,
                       5.0}},
+                    {4.1393876913398137178367408896470696703591369767880042,
+                     -1.7393876913398137178367408896470696703591369767880042,
+                     3.0},
                     3};
         case IntegratorSteps::Steps4:
             return {{0.088587959512703947395546143769456196885729331922749565,
@@ -97,6 +104,10 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                       6.5952376696281438984433544702783024129703695528704059,
                       -12.171749413182689389905438065187833669509533306267336,
                       8.5}},
+                    {7.1555920234752315845609274623539279546322733470953607,
+                     -2.5082250819484616905837803993507104289690411348344811,
+                     1.9648779564324137794922406920988232906632983999840183,
+                     -4.0},
                     4};
         case IntegratorSteps::Steps5:
             return {{0.057104196114517682193121192554115621235077945598750164,
@@ -154,6 +165,11 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                       8.7771142041504732392140266302693783625882386155582994,
                       -18.219282311088100928588928701406697990625191257676312,
                       13.0}},
+                    {11.038679241208963692522789334832859881042405061263822,
+                     -3.5830685225010746114062561852660101032973774467436799,
+                     2.3441715579038609349632960394591104292955195321346255,
+                     -2.2826355002057143507849046348421467639678448146931765,
+                     5.0},
                     5};
 
         case IntegratorSteps::Steps6:
@@ -235,6 +251,12 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                       11.638707277368019864812077128557949247047967186213534,
                       -25.639054884453849210714599819019049330592893033732018,
                       18.5}},
+                    {15.786539322178852782680230380391487992976880419657537,
+                     -4.9221069407462727823109299526716040272944840523952964,
+                     2.96075238465036869485945673663929444912690315853416,
+                     -2.4340720577576472020882047721951807674049426264097331,
+                     2.6345685975964251648746105065451069219556594929362616,
+                     -6.0},
                     6};
 
         case IntegratorSteps::Steps7:
@@ -343,6 +365,13 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                       15.094393942991166540634498819845945045313276722359653,
                       -34.420366375065630807769272269473886501462467065399276,
                       25.0}},
+                    {21.398490858564559735866015870814478936602977071605697,
+                     -6.5150217985268510837422434312120662417739664668988965,
+                     3.7382371560186232730319465816314113474350617566895583,
+                     -2.8296298188932248547649372111005584501830257352814873,
+                     2.612473440890124270426042934688965144533062878387231,
+                     -3.0031865922167527743918278727121623098901034940565411,
+                     7.0},
                     7};
     }
 };

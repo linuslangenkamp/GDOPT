@@ -22,12 +22,14 @@ public:
     const std::vector<double> c;
     const std::vector<std::vector<double>> A;
     const std::vector<std::vector<double>> Ainv;
+    const std::vector<double>& invRowSum;
     const std::vector<double> b;
     const int steps;
 private:
     Integrator(const std::vector<double>& c,
                const std::vector<std::vector<double>>& A,
                const std::vector<std::vector<double>>& Ainv,
+               const std::vector<double>& invRowSum,
                int steps);
 
 };

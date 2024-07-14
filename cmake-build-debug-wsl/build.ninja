@@ -70,6 +70,13 @@ build CMakeFiles/ipopt_do.dir/src/integrator.cpp.o: CXX_COMPILER__ipopt_do_Debug
   OBJECT_DIR = CMakeFiles/ipopt_do.dir
   OBJECT_FILE_DIR = CMakeFiles/ipopt_do.dir/src
 
+build CMakeFiles/ipopt_do.dir/src/gdop.cpp.o: CXX_COMPILER__ipopt_do_Debug /home/linus/masterarbeit/ipopt_do/src/gdop.cpp || cmake_object_order_depends_target_ipopt_do
+  DEP_FILE = CMakeFiles/ipopt_do.dir/src/gdop.cpp.o.d
+  FLAGS = -g
+  INCLUDES = -I/usr/local/include/coin-or
+  OBJECT_DIR = CMakeFiles/ipopt_do.dir
+  OBJECT_FILE_DIR = CMakeFiles/ipopt_do.dir/src
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target ipopt_do
@@ -78,7 +85,7 @@ build CMakeFiles/ipopt_do.dir/src/integrator.cpp.o: CXX_COMPILER__ipopt_do_Debug
 #############################################
 # Link the executable ipopt_do
 
-build ipopt_do: CXX_EXECUTABLE_LINKER__ipopt_do_Debug CMakeFiles/ipopt_do.dir/src/main.cpp.o CMakeFiles/ipopt_do.dir/src/test_nlp.cpp.o CMakeFiles/ipopt_do.dir/src/integrator.cpp.o
+build ipopt_do: CXX_EXECUTABLE_LINKER__ipopt_do_Debug CMakeFiles/ipopt_do.dir/src/main.cpp.o CMakeFiles/ipopt_do.dir/src/test_nlp.cpp.o CMakeFiles/ipopt_do.dir/src/integrator.cpp.o CMakeFiles/ipopt_do.dir/src/gdop.cpp.o
   FLAGS = -g
   LINK_LIBRARIES = -Wl,-rpath,/usr/local/lib  -lipopt  -lcoinmumps
   LINK_PATH = -L/usr/local/lib
