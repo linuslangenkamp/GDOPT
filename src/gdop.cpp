@@ -45,3 +45,6 @@ void GDOP::finalize_solution(SolverReturn status, Index n, const Number *x, cons
                              Index m, const Number *g, const Number *lambda, Number obj_value, const IpoptData *ip_data,
                              IpoptCalculatedQuantities *ip_cq) {
 }
+
+GDOP::GDOP(Problem problem, Mesh &mesh, Integrator &rk) : problem(std::move(problem)), mesh(mesh), rk(rk) {
+}

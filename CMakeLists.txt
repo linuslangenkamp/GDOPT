@@ -13,7 +13,10 @@ add_executable(ipopt_do src/main.cpp
         src/constraint.h
         src/mesh.h
         src/gdop.h
-        src/gdop.cpp)
+        src/gdop.cpp
+        src/mesh.cpp
+        src/constants.h
+        src/problem.cpp)
 target_include_directories(ipopt_do PRIVATE /usr/local/include/coin-or)
 target_link_directories(ipopt_do PRIVATE /usr/local/lib)
 target_link_libraries(ipopt_do ipopt coinmumps)

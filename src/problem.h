@@ -12,22 +12,28 @@
 
 class Problem {
 public:
-    Problem(int sizeX, int sizeU, int sizeP, int dimF, int dimG, int dimR, int dimA,
+    Problem(int sizeX, int sizeU, int sizeP,
+            std::vector<double> startX, std::vector<double> lbX, std::vector<double> ubX,
+            std::vector<double> lbU, std::vector<double> ubU,
+            std::vector<double> lbP, std::vector<double> ubP,
             std::unique_ptr<Expression> M, std::unique_ptr<Expression> L,
             std::vector<std::unique_ptr<Constraint>> F,
             std::vector<std::unique_ptr<Constraint>> G,
             std::vector<std::unique_ptr<Constraint>> R,
-            std::vector<std::unique_ptr<Constraint>> A)
-            : sizeX(sizeX), sizeU(sizeU), sizeP(sizeP), dimF(dimF), dimG(dimG), dimR(dimR), dimA(dimA),
-              M(std::move(M)), L(std::move(L)), F(std::move(F)), G(std::move(G)), R(std::move(R)), A(std::move(A)) {}
+            std::vector<std::unique_ptr<Constraint>> A);
 
     const int sizeX;
     const int sizeU;
     const int sizeP;
-    const int dimF;
-    const int dimG;
-    const int dimR;
-    const int dimA;
+
+    std::vector<double> startX;
+    std::vector<double> lbX;
+    std::vector<double> ubX;
+    std::vector<double> lbU;
+    std::vector<double> ubU;
+    std::vector<double> lbP;
+    std::vector<double> ubP;
+
     std::unique_ptr<Expression> M;                  // Mayer term
     std::unique_ptr<Expression> L;                  // Lagrange term
     std::vector<std::unique_ptr<Constraint>> F;     // Differential constraints - state dynamics

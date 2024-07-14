@@ -15,7 +15,7 @@ using namespace Ipopt;
 
 class GDOP : public TNLP {
 public:
-    GDOP(Problem problem, Mesh& mesh, Integrator& rk) : problem(std::move(problem)), mesh(mesh), rk(rk) {}
+    GDOP(Problem problem, Mesh& mesh, Integrator& rk);
 
     Problem problem;
     Mesh mesh;
