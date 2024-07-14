@@ -14,20 +14,20 @@ using namespace Ipopt;
 
 class F0 : public Constraint {
 public:
-    static F0 create() {
+    static std::unique_ptr<F0> create() {
         Adjacency adj{
                 {0, 1},
                 {0, 1},
                 {}
         };
-        return F0(std::move(adj), 0., 0.);
+        return std::unique_ptr<F0>(new F0(std::move(adj), 0., 0.));
     }
 
-    double eval(double *x, double *u, double *p, double t) override {
+    double eval(const double *x, const double *u, const double *p, double t) override {
         return x[0] + x[1]*x[1] - u[0]*u[0] - u[1];
     }
 
-    std::array<std::vector<double>, 3> evalDiff(double *x, double *u, double *p, double t) override {
+    std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{1., 2*x[1]}, {-2*u[0], -1}, {}};
     }
 private:
@@ -37,20 +37,20 @@ private:
 
 class F1 : public Constraint {
 public:
-    static F1 create() {
+    static std::unique_ptr<F1> create() {
         Adjacency adj{
                 {1},
                 {0, 1},
                 {}
         };
-        return F1(std::move(adj), 0., 0.);
+        return std::unique_ptr<F1>(new F1(std::move(adj), 0., 0.));
     }
 
-    double eval(double *x, double *u, double *p, double t) override {
+    double eval(const double *x, const double *u, const double *p, double t) override {
         return -x[1] - u[0] - u[1];
     }
 
-    std::array<std::vector<double>, 3> evalDiff(double *x, double *u, double *p, double t) override {
+    std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{-1}, {-1, -1}, {}};
     }
 private:
@@ -60,20 +60,20 @@ private:
 
 class Lagrange : public Expression {
 public:
-    static Lagrange create() {
+    static std::unique_ptr<Lagrange> create() {
         Adjacency adj{
                 {0, 1},
                 {},
                 {}
         };
-        return Lagrange(std::move(adj));
+        return std::unique_ptr<Lagrange>(new Lagrange(std::move(adj)));
     }
 
-    double eval(double *x, double *u, double *p, double t) override {
+    double eval(const double *x, const double *u, const double *p, double t) override {
         return x[0] - x[1];
     }
 
-    std::array<std::vector<double>, 3> evalDiff(double *x, double *u, double *p, double t) override {
+    std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{1, -1}, {}, {}};
     }
 private:
@@ -81,36 +81,37 @@ private:
     }
 };
 
+
 int main() {
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
     Mesh mesh = Mesh::createEquidistantMesh(50, 2);
 
-    auto f0 = F0::create();
-    auto f1 = F1::create();
-
     std::vector<std::unique_ptr<Constraint>> F;
-    F.push_back(std::make_unique<F0>(std::move(f0)));
-    F.push_back(std::make_unique<F1>(std::move(f1)));
+    F.push_back(F0::create());
+    F.push_back(F1::create());
 
-    auto lagrange = Lagrange::create();
     Problem problem(
             2, 2, 0,
             {0, 1}, {MIN_DOUBLE, MIN_DOUBLE}, {MAX_DOUBLE, MAX_DOUBLE},
             {0, 0}, {2, 2},
             {}, {},
             nullptr,
-            std::make_unique<Lagrange>(std::move(lagrange)),
+            Lagrange::create(),
             std::move(F),
             {},
             {},
             {}
     );
     GDOP gdop(std::move(problem), mesh, rk);
+    const std::vector<double> x{600, 1.0};
+    double obj_value = 0.0;
+    gdop.eval_f(0, x.data(), false, obj_value);
 
+    /*
     std::vector<double> vars = {1, 4, 5, 2};
     auto out = gdop.problem.F[1]->eval(&vars[0], &vars[2], &vars[4], 2);
 
-    /*
+
     SmartPtr<TestNLP> testNLP = new TestNLP;
 
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
@@ -139,7 +140,7 @@ int main() {
         std::cout << std::endl << std::endl << "*** The problem FAILED!" << std::endl;
     }
 
-    return (int) status;
-     */
+    return (int) status;*/
+
     return 0;
 }

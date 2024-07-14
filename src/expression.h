@@ -19,9 +19,9 @@ class Expression {
 public:
     explicit Expression(Adjacency adj) : adj{std::move(adj)} {}
 
-    virtual double eval(double *x, double *u, double *p, double t) = 0;
+    virtual double eval(const double* x, const double* u, const double* p, double t) = 0;
 
-    virtual std::array<std::vector<double>, 3> evalDiff(double *x, double *u, double *p, double t) = 0;
+    virtual std::array<std::vector<double>, 3> evalDiff(const double* x, const double* u, const double* p, double t) = 0;
 protected:
     const Adjacency adj;
 };

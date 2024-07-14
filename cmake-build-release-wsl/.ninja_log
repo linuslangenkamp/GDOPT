@@ -1,9 +1,0 @@
-# ninja log v5
-0	6	1720601167500248329	CMakeFiles/ipopt_do.dir/src/problem.cpp.o	ef97339068fcc415
-1	368	1720615324970325138	CMakeFiles/ipopt_do.dir/src/main.cpp.o	c47d718ff819dd74
-1	333	1720601110910248022	CMakeFiles/ipopt_do.dir/src/test_nlp.cpp.o	6d4bff892663aa7c
-1	383	1720601110960248022	CMakeFiles/ipopt_do.dir/src/integrator.cpp.o	3cff0c807dcaf1d5
-368	444	1720615325050325138	ipopt_do	92d296ec078916f7
-0	443	1720510572532546921	CMakeFiles/ipopt_do.dir/main.cpp.o	bf4a556ca1977237
-0	327	1720510572422546919	CMakeFiles/ipopt_do.dir/test_nlp.cpp.o	d391ed2fbe27f4b1
-0	35	1720957137687326026	build.ninja	ef176854988fc9dd

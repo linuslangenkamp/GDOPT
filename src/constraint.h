@@ -11,6 +11,8 @@ class Constraint : public Expression {
 public:
     Constraint(Adjacency adj, double lb = 0.0, double ub = 0.0) : Expression(std::move(adj)), lb{lb}, ub{ub} {}
 
+    virtual ~Constraint() = default;
+
     const double lb;
     const double ub;
 };

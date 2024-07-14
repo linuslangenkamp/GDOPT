@@ -20,6 +20,22 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
 }
 
 bool GDOP::eval_f(Index n, const Number *x, bool new_x, Number &obj_value) {
+    double MAY = 0;
+    double LAG = 0;
+    if (this->problem.M) {
+        MAY = this->problem.M->eval(&x[offXUTotal-offXU], &x[offXUTotal-offU], &x[offXUTotal], mesh.tf);
+    }
+    if (this->problem.L) {
+        for( Index i = 0; i < mesh.intervals; i++ ){
+            for ( Index j = 0; j < rk.steps; j++ ){
+                LAG += mesh.deltaT[i] * rk.b[j] * problem.L->eval(&x[i * offXUBlock + j * offXU],
+                                                                  &x[i * offXUBlock + j * offXU + offU],
+                                                                  &x[offXUTotal],
+                                                                  mesh.grid[i] + rk.c[j] * mesh.deltaT[i]);
+            }
+        }
+    }
+    obj_value = MAY + LAG;
     return true;
 }
 

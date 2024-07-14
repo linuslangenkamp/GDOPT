@@ -1,3 +1,0 @@
-/home/linus/masterarbeit/ipopt_do/cmake-build-debug-wsl/CMakeFiles/ipopt_do.dir
-/home/linus/masterarbeit/ipopt_do/cmake-build-debug-wsl/CMakeFiles/edit_cache.dir
-/home/linus/masterarbeit/ipopt_do/cmake-build-debug-wsl/CMakeFiles/rebuild_cache.dir

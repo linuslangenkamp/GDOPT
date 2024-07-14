@@ -21,6 +21,12 @@ public:
     Mesh mesh;
     Integrator rk;
 
+    const int offX = problem.sizeX;
+    const int offU = problem.sizeU;
+    const int offXU = problem.sizeX + problem.sizeU; // number of vars for one collocation knod
+    const int offXUBlock = (problem.sizeX + problem.sizeU) * rk.steps;  // number of vars per interval
+    const int offXUTotal = (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals; // first const parameter variable
+
     bool get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) override;
 
     bool get_bounds_info(Index n, Number *x_l, Number *x_u, Index m, Number *g_l, Number *g_u) override;

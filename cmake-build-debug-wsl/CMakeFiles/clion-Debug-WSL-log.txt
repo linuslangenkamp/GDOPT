@@ -1,4 +1,0 @@
-C:\Windows\system32\wsl.exe --distribution Ubuntu-22.04 --exec /bin/bash -c "export CMAKE_COLOR_DIAGNOSTICS=ON && export CLION_IDE=TRUE && export JETBRAINS_IDE=TRUE && cd /home/linus/masterarbeit/ipopt_do/cmake-build-debug-wsl && /usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -S /home/linus/masterarbeit/ipopt_do -B /home/linus/masterarbeit/ipopt_do/cmake-build-debug-wsl"
--- Configuring done
--- Generating done
--- Build files have been written to: /home/linus/masterarbeit/ipopt_do/cmake-build-debug-wsl
