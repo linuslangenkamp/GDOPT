@@ -10,9 +10,9 @@
 #include <array>
 
 struct Adjacency {
-    const std::vector<int> indicesX;
-    const std::vector<int> indicesU;
-    const std::vector<int> indicesP;
+    const std::vector<int> indX;    // Indices X
+    const std::vector<int> indU;    // Indices U
+    const std::vector<int> indP;    // Indices P
 };
 
 class Expression {
