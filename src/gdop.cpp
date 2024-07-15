@@ -22,14 +22,17 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
 bool GDOP::eval_f(Index n, const Number *x, bool new_x, Number &obj_value) {
     double MAY = 0;
     double LAG = 0;
-    if (this->problem.M) {
-        MAY = this->problem.M->eval(&x[offXUTotal-offXU], &x[offXUTotal-offU], &x[offXUTotal], mesh.tf);
+    // Mayer term evaluation
+    if (problem.M) {
+        MAY = problem.M->eval(&x[offXUTotal-offXU], &x[offXUTotal-offU], &x[offXUTotal], mesh.tf);
     }
-    if (this->problem.L) {
-        for( Index i = 0; i < mesh.intervals; i++ ){
-            for ( Index j = 0; j < rk.steps; j++ ){
-                LAG += mesh.deltaT[i] * rk.b[j] * problem.L->eval(&x[i * offXUBlock + j * offXU],
-                                                                  &x[i * offXUBlock + j * offXU + offU],
+    // Lagrange term evaluation
+    if (problem.L) {
+        for(Index i = 0; i < mesh.intervals; i++){
+            for (Index j = 0; j < rk.steps; j++){
+                const int offset = i * offXUBlock + j * offXU;  // index of 1st x var at collocation point (i,j)
+                LAG += mesh.deltaT[i] * rk.b[j] * problem.L->eval(&x[offset],
+                                                                  &x[offset + offU],
                                                                   &x[offXUTotal],
                                                                   mesh.grid[i] + rk.c[j] * mesh.deltaT[i]);
             }
@@ -40,6 +43,40 @@ bool GDOP::eval_f(Index n, const Number *x, bool new_x, Number &obj_value) {
 }
 
 bool GDOP::eval_grad_f(Index n, const Number *x, bool new_x, Number *grad_f) {
+    // Initialize the dense gradient as 0 for all elements
+    std::fill(grad_f, grad_f + numberVars, 0);
+
+    // Mayer term derivative
+    if (problem.M) {
+        const auto diffMAY = problem.M->evalDiff(&x[offXUTotal - offXU], &x[offXUTotal - offU], &x[offXUTotal], mesh.tf);
+        for (size_t k = 0; k < diffMAY[0].size(); k++) {
+            grad_f[offXUTotal - offXU + problem.M->adj.indicesX[k]] += diffMAY[0][k];
+        }
+        for (size_t k = 0; k < diffMAY[1].size(); k++) {
+            grad_f[offXUTotal - offU + problem.M->adj.indicesU[k]] += diffMAY[1][k];
+        }
+        for (size_t k = 0; k < diffMAY[2].size(); k++) {
+            grad_f[offXUTotal + problem.M->adj.indicesU[k]] += diffMAY[2][k];
+        }
+    }
+    // Lagrange term derivative
+    if (problem.L) {
+        for(Index i = 0; i < mesh.intervals; i++){
+            for (Index j = 0; j < rk.steps; j++){
+                const int offset = i * offXUBlock + j * offXU; // index of 1st x var at collocation point (i,j)
+                const auto diffLAG = problem.L->evalDiff(&x[offset], &x[offset + offU], &x[offXUTotal], mesh.grid[i] + rk.c[j] * mesh.deltaT[i]);
+                for (size_t k = 0; k < diffLAG[0].size(); k++) {
+                    grad_f[offset + problem.L->adj.indicesX[k]] += mesh.deltaT[i] * rk.b[j] * diffLAG[0][k];
+                }
+                for (size_t k = 0; k < diffLAG[1].size(); k++) {
+                    grad_f[offset + offU + problem.L->adj.indicesU[k]] += mesh.deltaT[i] * rk.b[j] * diffLAG[1][k];
+                }
+                for (size_t k = 0; k < diffLAG[2].size(); k++) {
+                    grad_f[offXUTotal + problem.L->adj.indicesU[k]] += mesh.deltaT[i] * rk.b[j] * diffLAG[2][k];
+                }
+            }
+        }
+    }
     return true;
 }
 

@@ -70,14 +70,37 @@ public:
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
-        return x[0] - x[1];
+        return x[0]*x[0] - x[1] - 0.35;
     }
 
     std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-        return {std::vector<double>{1, -1}, {}, {}};
+        return {std::vector<double>{2*x[0], -1}, {}, {}};
     }
 private:
     Lagrange(Adjacency adj) : Expression(std::move(adj)) {
+    }
+};
+
+class Mayer : public Expression {
+public:
+    static std::unique_ptr<Mayer> create() {
+        Adjacency adj{
+                {0, 1},
+                {},
+                {}
+        };
+        return std::unique_ptr<Mayer>(new Mayer(std::move(adj)));
+    }
+
+    double eval(const double *x, const double *u, const double *p, double t) override {
+        return x[0] * (0.23 + x[1] * x[1]);
+    }
+
+    std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
+        return {std::vector<double>{0.23 + x[1] * x[1], 2 * x[1] * x[0]}, {}, {}};
+    }
+private:
+    Mayer(Adjacency adj) : Expression(std::move(adj)) {
     }
 };
 
@@ -95,7 +118,7 @@ int main() {
             {0, 1}, {MIN_DOUBLE, MIN_DOUBLE}, {MAX_DOUBLE, MAX_DOUBLE},
             {0, 0}, {2, 2},
             {}, {},
-            nullptr,
+            Mayer::create(),
             Lagrange::create(),
             std::move(F),
             {},
@@ -103,15 +126,14 @@ int main() {
             {}
     );
     GDOP gdop(std::move(problem), mesh, rk);
-    const std::vector<double> x{600, 1.0};
+
+    const std::vector<double> x(600, 1.5);
+    std::vector<double> grad_f(600, -2.3);
     double obj_value = 0.0;
-    gdop.eval_f(0, x.data(), false, obj_value);
 
+    gdop.eval_f(0, x.data(), true, obj_value);
+    gdop.eval_grad_f(0, x.data(), true, grad_f.data());
     /*
-    std::vector<double> vars = {1, 4, 5, 2};
-    auto out = gdop.problem.F[1]->eval(&vars[0], &vars[2], &vars[4], 2);
-
-
     SmartPtr<TestNLP> testNLP = new TestNLP;
 
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();

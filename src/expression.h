@@ -21,8 +21,9 @@ public:
 
     virtual double eval(const double* x, const double* u, const double* p, double t) = 0;
 
+    // returns {evalDiff(indicesX), evalDiff(indicesU), evalDiff(indicesP)} - same sorting as adj.indices
     virtual std::array<std::vector<double>, 3> evalDiff(const double* x, const double* u, const double* p, double t) = 0;
-protected:
+
     const Adjacency adj;
 };
 

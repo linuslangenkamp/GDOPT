@@ -50,7 +50,7 @@ bool TestNLP::eval_grad_f(Index n, const Number *x, bool new_x, Number *grad_f) 
     assert(n == 3);
     grad_f[0] = x[1];
     grad_f[1] = x[0];
-    grad_f[2] = 2 * x[2];;
+    grad_f[2] = 2 * x[2];
     return true;
 }
 
