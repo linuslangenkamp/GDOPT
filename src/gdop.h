@@ -26,7 +26,7 @@ public:
     const int offXU = problem.sizeX + problem.sizeU; // number of vars for one collocation knod
     const int offXUBlock = (problem.sizeX + problem.sizeU) * rk.steps;  // number of vars per interval
     const int offXUTotal = (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals; // first const parameter variable
-    const int numberVars = (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals + problem.sizeP;
+    const int numberVars = (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals + problem.sizeP; // total number of vars
 
     bool get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) override;
 

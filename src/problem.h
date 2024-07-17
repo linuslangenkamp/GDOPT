@@ -26,20 +26,20 @@ public:
     const int sizeU;
     const int sizeP;
 
-    std::vector<double> x0;
-    std::vector<double> lbX;
-    std::vector<double> ubX;
-    std::vector<double> lbU;
-    std::vector<double> ubU;
-    std::vector<double> lbP;
-    std::vector<double> ubP;
+    std::vector<double> x0;                         // starting value for states
+    std::vector<double> lbX;                        // global lower bound on state vars
+    std::vector<double> ubX;                        // global upper bound on state vars
+    std::vector<double> lbU;                        // global lower bound on control vars
+    std::vector<double> ubU;                        // global upper bound on control vars
+    std::vector<double> lbP;                        // global lower bound on parameters
+    std::vector<double> ubP;                        // global upper bound on parameters
 
-    std::unique_ptr<Expression> M;                  // Mayer term
-    std::unique_ptr<Expression> L;                  // Lagrange term
-    std::vector<std::unique_ptr<Constraint>> F;     // Differential constraints - state dynamics
-    std::vector<std::unique_ptr<Constraint>> G;     // Algebraic path constraints for states, control, parameters and time
-    std::vector<std::unique_ptr<Constraint>> R;     // Algebraic final constraints
-    std::vector<std::unique_ptr<Constraint>> A;     // Algebraic constraints for parameters only
+    std::unique_ptr<Expression> M;                  // mayer term
+    std::unique_ptr<Expression> L;                  // lagrange term
+    std::vector<std::unique_ptr<Constraint>> F;     // differential constraints - state dynamics
+    std::vector<std::unique_ptr<Constraint>> G;     // algebraic path constraints for states, control, parameters and time
+    std::vector<std::unique_ptr<Constraint>> R;     // algebraic final constraints
+    std::vector<std::unique_ptr<Constraint>> A;     // algebraic constraints for parameters only
 };
 
 

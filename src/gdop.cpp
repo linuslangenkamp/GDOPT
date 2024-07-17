@@ -3,10 +3,52 @@
 //
 
 #include "gdop.h"
+#include "util.h"
 #include <cassert>
 
 
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
+    n = numberVars;
+    m = sz(problem.A) + sz(problem.R) + (sz(problem.F) + sz(problem.G)) * rk.steps * mesh.intervals;
+    nnz_jac_g = 0;
+
+    // nnz jac - dynamics
+    int nnzDynBlock = 0;
+    int containedIndex = 0; // target idx
+    for (const auto& dynConstr : problem.F) {
+        nnzDynBlock += sz(dynConstr->adj.indX) + sz(dynConstr->adj.indU) + sz(dynConstr->adj.indP);
+        // intersection of state indices may not be empty!
+        // check if the k-th component of x, that is always contained in this block equation,
+        // is contained in grad f_k(.) as well => reduce block nnz by 1
+        auto it = std::find(dynConstr->adj.indX.begin(), dynConstr->adj.indX.end(), containedIndex);
+        if (it != dynConstr->adj.indX.end())
+            nnzDynBlock -= 1;
+        containedIndex++;
+    }
+    nnz_jac_g += mesh.intervals * rk.steps * nnzDynBlock; // RHS = nnz for f(v_{i,j}) eval
+    nnz_jac_g += mesh.intervals * rk.steps * rk.steps * (sz(problem.F)); // nnz for sum_k ~a_{j,k} * x_{i,k}
+    nnz_jac_g += (mesh.intervals - 1) * rk.steps * sz(problem.F); // nnz for sum_k ~a_{j,k} * (-x_{i-1,m}), i = 1,2,...
+
+    // nnz jac - path
+    int nnzPathBlock = 0;
+    for (const auto& pathConstr : problem.G) {
+        nnzPathBlock += sz(pathConstr->adj.indX) + sz(pathConstr->adj.indU) + sz(pathConstr->adj.indP);
+    }
+    nnz_jac_g += mesh.intervals * rk.steps * nnzPathBlock; // RHS = nnz for g(v_{i,j}) eval
+
+    // nnz jac - final constraints
+    for (const auto& finalConstr : problem.R) {
+        nnz_jac_g += sz(finalConstr->adj.indX) + sz(finalConstr->adj.indU) + sz(finalConstr->adj.indP);
+    }
+
+    // nnz jac - algebraic parameter constraints
+    for (const auto& paramConstr : problem.A) {
+        nnz_jac_g += sz(paramConstr->adj.indP);
+    }
+
+    // TODO: implement Hessian
+    nnz_h_lag = 0;
+    index_style = TNLP::C_STYLE; // index starts at 0
     return true;
 }
 

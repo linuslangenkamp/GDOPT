@@ -126,6 +126,9 @@ int main() {
             {}
     );
     GDOP gdop(std::move(problem), mesh, rk);
+    int n,m,nJac,nHes;
+    GDOP::IndexStyleEnum index_style;
+    gdop.get_nlp_info(n,m,nJac,nHes,index_style);
 
     const std::vector<double> x(600, 1.5);
     std::vector<double> grad_f(600, -2.3);

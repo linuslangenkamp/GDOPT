@@ -35,7 +35,8 @@ add_executable(ipopt_do src/main.cpp
         src/gdop.cpp
         src/mesh.cpp
         src/constants.h
-        src/problem.cpp)
+        src/problem.cpp
+        src/util.h)
 target_include_directories(ipopt_do PRIVATE ${CMAKE_BINARY_DIR}/third-party-install/usr/local/include/coin-or)
 target_link_directories(ipopt_do PRIVATE ${CMAKE_BINARY_DIR}/third-party-install/usr/local/lib)
 target_link_libraries(ipopt_do ipopt )
