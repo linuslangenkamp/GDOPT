@@ -1,8 +1,6 @@
-//
-// Created by Linus on 09.07.2024.
-//
 #ifndef IPOPT_DO_INTEGRATOR_H
 #define IPOPT_DO_INTEGRATOR_H
+
 #include <vector>
 
 enum class IntegratorSteps {

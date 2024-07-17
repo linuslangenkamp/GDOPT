@@ -1,6 +1,3 @@
-//
-// Created by Linus on 14.07.2024.
-//
 #include "problem.h"
 
 Problem::Problem(int sizeX, int sizeU, int sizeP,
@@ -8,7 +5,7 @@ Problem::Problem(int sizeX, int sizeU, int sizeP,
                  std::vector<double> lbU, std::vector<double> ubU,
                  std::vector<double> lbP, std::vector<double> ubP,
                  std::unique_ptr<Expression> M, std::unique_ptr<Expression> L,
-                 std::vector<std::unique_ptr<Constraint>> F,
+                 std::vector<std::unique_ptr<Expression>> F,
                  std::vector<std::unique_ptr<Constraint>> G,
                  std::vector<std::unique_ptr<Constraint>> R,
                  std::vector<std::unique_ptr<Constraint>> A)

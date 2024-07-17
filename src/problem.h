@@ -1,7 +1,3 @@
-//
-// Created by Linus on 10.07.2024.
-//
-
 #ifndef IPOPT_DO_PROBLEM_H
 #define IPOPT_DO_PROBLEM_H
 
@@ -17,7 +13,7 @@ public:
             std::vector<double> lbU, std::vector<double> ubU,
             std::vector<double> lbP, std::vector<double> ubP,
             std::unique_ptr<Expression> M, std::unique_ptr<Expression> L,
-            std::vector<std::unique_ptr<Constraint>> F,
+            std::vector<std::unique_ptr<Expression>> F,
             std::vector<std::unique_ptr<Constraint>> G,
             std::vector<std::unique_ptr<Constraint>> R,
             std::vector<std::unique_ptr<Constraint>> A);
@@ -36,7 +32,7 @@ public:
 
     std::unique_ptr<Expression> M;                  // mayer term
     std::unique_ptr<Expression> L;                  // lagrange term
-    std::vector<std::unique_ptr<Constraint>> F;     // differential constraints - state dynamics
+    std::vector<std::unique_ptr<Expression>> F;     // state dynamics, RHS of ODE
     std::vector<std::unique_ptr<Constraint>> G;     // algebraic path constraints for states, control, parameters and time
     std::vector<std::unique_ptr<Constraint>> R;     // algebraic final constraints
     std::vector<std::unique_ptr<Constraint>> A;     // algebraic constraints for parameters only

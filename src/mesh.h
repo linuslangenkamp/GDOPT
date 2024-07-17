@@ -1,7 +1,3 @@
-//
-// Created by Linus on 14.07.2024.
-//
-
 #ifndef IPOPT_DO_MESH_H
 #define IPOPT_DO_MESH_H
 

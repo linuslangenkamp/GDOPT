@@ -1,9 +1,5 @@
-//
-// Created by Linus on 08.07.2024.
-//
-
-#include "test_nlp.h"
 #include <cassert>
+#include "test_nlp.h"
 
 bool TestNLP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, TNLP::IndexStyleEnum &index_style) {
     n = 3;

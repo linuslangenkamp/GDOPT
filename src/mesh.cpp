@@ -1,6 +1,3 @@
-//
-// Created by Linus on 14.07.2024.
-//
 #include "mesh.h"
 
 Mesh Mesh::createEquidistantMesh(int intervals, double tf) {
@@ -18,3 +15,4 @@ Mesh Mesh::createEquidistantMesh(int intervals, double tf) {
 
     return {intervals, tf, std::move(grid), std::move(deltaT)};
 }
+// TODO: mesh refinement methods

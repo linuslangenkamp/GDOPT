@@ -1,7 +1,3 @@
-//
-// Created by Linus on 10.07.2024.
-//
-
 #ifndef IPOPT_DO_EXPRESSION_H
 #define IPOPT_DO_EXPRESSION_H
 

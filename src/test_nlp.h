@@ -1,7 +1,3 @@
-//
-// Created by Linus on 08.07.2024.
-//
-
 #ifndef IPOPT_DO_TEST_NLP_H
 #define IPOPT_DO_TEST_NLP_H
 

@@ -1,7 +1,3 @@
-//
-// Created by Linus on 14.07.2024.
-//
-
 #ifndef IPOPT_DO_GDOP_H
 #define IPOPT_DO_GDOP_H
 
@@ -9,7 +5,6 @@
 #include "problem.h"
 #include "mesh.h"
 #include "integrator.h"
-
 
 using namespace Ipopt;
 
@@ -27,6 +22,7 @@ public:
     const int offXUBlock = (problem.sizeX + problem.sizeU) * rk.steps;  // number of vars per interval
     const int offXUTotal = (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals; // first const parameter variable
     const int numberVars = (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals + problem.sizeP; // total number of vars
+    // TODO: add tf as optional var?!
 
     bool get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) override;
 

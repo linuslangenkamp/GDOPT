@@ -1,6 +1,6 @@
 #include <iostream>
-#include <IpIpoptApplication.hpp>
 #include <memory>
+#include <IpIpoptApplication.hpp>
 #include "test_nlp.h"
 #include "integrator.h"
 #include "expression.h"
@@ -12,7 +12,53 @@
 
 using namespace Ipopt;
 
-class F0 : public Constraint {
+class Mayer : public Expression {
+public:
+    static std::unique_ptr<Mayer> create() {
+        Adjacency adj{
+                {0, 1},
+                {},
+                {}
+        };
+        return std::unique_ptr<Mayer>(new Mayer(std::move(adj)));
+    }
+
+    double eval(const double *x, const double *u, const double *p, double t) override {
+        return x[0] * (0.23 + x[1] * x[1]);
+    }
+
+    std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
+        return {std::vector<double>{0.23 + x[1] * x[1], 2 * x[1] * x[0]}, {}, {}};
+    }
+private:
+    Mayer(Adjacency adj) : Expression(std::move(adj)) {
+    }
+};
+
+class Lagrange : public Expression {
+public:
+    static std::unique_ptr<Lagrange> create() {
+        Adjacency adj{
+                {0, 1},
+                {},
+                {}
+        };
+        return std::unique_ptr<Lagrange>(new Lagrange(std::move(adj)));
+    }
+
+    double eval(const double *x, const double *u, const double *p, double t) override {
+        return x[0]*x[0] - x[1] - 0.35;
+    }
+
+    std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
+        return {std::vector<double>{2*x[0], -1}, {}, {}};
+    }
+private:
+    Lagrange(Adjacency adj) : Expression(std::move(adj)) {
+    }
+};
+
+class F0 : public Expression {
 public:
     static std::unique_ptr<F0> create() {
         Adjacency adj{
@@ -20,7 +66,7 @@ public:
                 {0, 1},
                 {}
         };
-        return std::unique_ptr<F0>(new F0(std::move(adj), 0., 0.));
+        return std::unique_ptr<F0>(new F0(std::move(adj)));
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
@@ -31,11 +77,11 @@ public:
         return {std::vector<double>{1., 2*x[1]}, {-2*u[0], -1}, {}};
     }
 private:
-    F0(Adjacency adj, double lb, double ub) : Constraint(std::move(adj), lb, ub) {
+    F0(Adjacency adj) : Expression(std::move(adj)) {
     }
 };
 
-class F1 : public Constraint {
+class F1 : public Expression {
 public:
     static std::unique_ptr<F1> create() {
         Adjacency adj{
@@ -43,7 +89,7 @@ public:
                 {0, 1},
                 {}
         };
-        return std::unique_ptr<F1>(new F1(std::move(adj), 0., 0.));
+        return std::unique_ptr<F1>(new F1(std::move(adj)));
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
@@ -54,7 +100,7 @@ public:
         return {std::vector<double>{-1}, {-1, -1}, {}};
     }
 private:
-    F1(Adjacency adj, double lb, double ub) : Constraint(std::move(adj), lb, ub) {
+    F1(Adjacency adj) : Expression(std::move(adj)) {
     }
 };
 
@@ -104,58 +150,11 @@ private:
     }
 };
 
-class Lagrange : public Expression {
-public:
-    static std::unique_ptr<Lagrange> create() {
-        Adjacency adj{
-                {0, 1},
-                {},
-                {}
-        };
-        return std::unique_ptr<Lagrange>(new Lagrange(std::move(adj)));
-    }
-
-    double eval(const double *x, const double *u, const double *p, double t) override {
-        return x[0]*x[0] - x[1] - 0.35;
-    }
-
-    std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-        return {std::vector<double>{2*x[0], -1}, {}, {}};
-    }
-private:
-    Lagrange(Adjacency adj) : Expression(std::move(adj)) {
-    }
-};
-
-class Mayer : public Expression {
-public:
-    static std::unique_ptr<Mayer> create() {
-        Adjacency adj{
-                {0, 1},
-                {},
-                {}
-        };
-        return std::unique_ptr<Mayer>(new Mayer(std::move(adj)));
-    }
-
-    double eval(const double *x, const double *u, const double *p, double t) override {
-        return x[0] * (0.23 + x[1] * x[1]);
-    }
-
-    std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-        return {std::vector<double>{0.23 + x[1] * x[1], 2 * x[1] * x[0]}, {}, {}};
-    }
-private:
-    Mayer(Adjacency adj) : Expression(std::move(adj)) {
-    }
-};
-
-
 int main() {
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
     Mesh mesh = Mesh::createEquidistantMesh(50, 2);
 
-    std::vector<std::unique_ptr<Constraint>> F;
+    std::vector<std::unique_ptr<Expression>> F;
     F.push_back(F0::create());
     F.push_back(F1::create());
 
