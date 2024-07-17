@@ -133,7 +133,7 @@ int main() {
 
     gdop.eval_f(0, x.data(), true, obj_value);
     gdop.eval_grad_f(0, x.data(), true, grad_f.data());
-    /*
+
     SmartPtr<TestNLP> testNLP = new TestNLP;
 
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
@@ -162,7 +162,7 @@ int main() {
         std::cout << std::endl << std::endl << "*** The problem FAILED!" << std::endl;
     }
 
-    return (int) status;*/
+    return (int) status;
 
     return 0;
 }
