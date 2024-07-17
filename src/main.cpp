@@ -58,6 +58,52 @@ private:
     }
 };
 
+class G0 : public Constraint {
+public:
+    static std::unique_ptr<G0> create() {
+        Adjacency adj{
+                {0},
+                {1},
+                {}
+        };
+        return std::unique_ptr<G0>(new G0(std::move(adj), MIN_DOUBLE, 3.5));
+    }
+
+    double eval(const double *x, const double *u, const double *p, double t) override {
+        return x[0]*x[0] + u[1]*u[1];
+    }
+
+    std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
+        return {std::vector<double>{2*x[0]}, {2*u[1]}, {}};
+    }
+private:
+    G0(Adjacency adj, double lb, double ub) : Constraint(std::move(adj), lb, ub) {
+    }
+};
+
+class R0 : public Constraint {
+public:
+    static std::unique_ptr<R0> create() {
+        Adjacency adj{
+                {0, 1},
+                {},
+                {}
+        };
+        return std::unique_ptr<R0>(new R0(std::move(adj), 1, MAX_DOUBLE));
+    }
+
+    double eval(const double *x, const double *u, const double *p, double t) override {
+        return -x[0]*x[0] + x[1]*x[1];
+    }
+
+    std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
+        return {std::vector<double>{-2*x[0], 2*x[1]}, {}, {}};
+    }
+private:
+    R0(Adjacency adj, double lb, double ub) : Constraint(std::move(adj), lb, ub) {
+    }
+};
+
 class Lagrange : public Expression {
 public:
     static std::unique_ptr<Lagrange> create() {
@@ -113,6 +159,12 @@ int main() {
     F.push_back(F0::create());
     F.push_back(F1::create());
 
+    std::vector<std::unique_ptr<Constraint>> G;
+    G.push_back(G0::create());
+
+    std::vector<std::unique_ptr<Constraint>> R;
+    R.push_back(R0::create());
+
     Problem problem(
             2, 2, 0,
             {0, 1}, {MIN_DOUBLE, MIN_DOUBLE}, {MAX_DOUBLE, MAX_DOUBLE},
@@ -121,14 +173,14 @@ int main() {
             Mayer::create(),
             Lagrange::create(),
             std::move(F),
-            {},
-            {},
+            std::move(G),
+            std::move(R),
             {}
     );
     GDOP gdop(std::move(problem), mesh, rk);
-    int n,m,nJac,nHes;
+    int n, m, nJac, nHes;
     GDOP::IndexStyleEnum index_style;
-    gdop.get_nlp_info(n,m,nJac,nHes,index_style);
+    gdop.get_nlp_info(n, m, nJac, nHes, index_style);
 
     const std::vector<double> x(600, 1.5);
     std::vector<double> grad_f(600, -2.3);
