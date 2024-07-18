@@ -9,10 +9,7 @@
 #include "problem.h"
 #include "constants.h"
 #include "gdop.h"
-#include <IpSolveStatistics.hpp>
-#include <IpTimingStatistics.hpp>
-#include <IpIpoptData.hpp>
-#include <iomanip>
+
 
 using namespace Ipopt;
 
@@ -131,8 +128,8 @@ int main() {
             std::move(R),
             {}
     );
-    GDOP gdop(std::move(problem), mesh, rk, InitVars::CONST);
-    SmartPtr<GDOP> DOP = &gdop;
+
+    SmartPtr<GDOP> DOP{new GDOP(std::move(problem), mesh, rk, InitVars::CONST)};
 
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
     app->Options()->SetNumericValue("tol", 1e-12);

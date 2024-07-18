@@ -5,7 +5,7 @@
 #include "util.h"
 
 
-// TODO: Check entire indices!
+// TODO: Check entire indices! - LGTM
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
     // #vars
     n = numberVars;
