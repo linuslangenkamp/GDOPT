@@ -8,7 +8,7 @@ Problem::Problem(int sizeX, int sizeU, int sizeP,
                  std::vector<std::unique_ptr<Expression>> F,
                  std::vector<std::unique_ptr<Constraint>> G,
                  std::vector<std::unique_ptr<Constraint>> R,
-                 std::vector<std::unique_ptr<Constraint>> A)
+                 std::vector<std::unique_ptr<paramConstraint>> A)
         : sizeX(sizeX), sizeU(sizeU), sizeP(sizeP),
           x0(std::move(x0)), lbX(std::move(lbX)), ubX(std::move(ubX)),
           lbU(std::move(lbU)), ubU(std::move(ubU)),

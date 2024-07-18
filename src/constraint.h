@@ -13,4 +13,14 @@ public:
     const double ub;
 };
 
+class paramConstraint : public paramExpression {
+public:
+    explicit paramConstraint(paramAdjacency adj, double lb = 0.0, double ub = 0.0) : paramExpression(std::move(adj)), lb{lb}, ub{ub} {}
+
+    virtual ~paramConstraint() = default;
+
+    const double lb;
+    const double ub;
+};
+
 #endif //IPOPT_DO_CONSTRAINT_H

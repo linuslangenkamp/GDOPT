@@ -181,12 +181,14 @@ int main() {
     GDOP::IndexStyleEnum index_style;
     gdop.get_nlp_info(n, m, nJac, nHes, index_style);
 
-    const std::vector<double> x(600, 1.5);
+    const std::vector<double> x(600, 2.3);
     std::vector<double> grad_f(600, -2.3);
     double obj_value = 0.0;
 
     gdop.eval_f(0, x.data(), true, obj_value);
     gdop.eval_grad_f(0, x.data(), true, grad_f.data());
+    std::vector<double> g(451, 0);
+    gdop.eval_g(0, x.data(), true, 451, g.data());
 
     SmartPtr<TestNLP> testNLP = new TestNLP;
 
