@@ -8,13 +8,18 @@
 
 using namespace Ipopt;
 
+enum class InitVars {
+    CONST
+};
+
 class GDOP : public TNLP {
 public:
-    GDOP(Problem problem, Mesh& mesh, Integrator& rk);
+    GDOP(Problem problem, Mesh& mesh, Integrator& rk, InitVars initVars);
 
     Problem problem;
     Mesh mesh;
     Integrator rk;
+    InitVars initVars;
 
     const int offX = problem.sizeX;
     const int offU = problem.sizeU;

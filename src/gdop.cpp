@@ -4,6 +4,8 @@
 #include "gdop.h"
 #include "util.h"
 
+
+// TODO: Check entire indices!
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
     // #vars
     n = numberVars;
@@ -50,7 +52,7 @@ bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, 
 
     // TODO: implement hessian sparsity
     // eval hessian nnz
-    nnz_h_lag = -1;
+    nnz_h_lag = 0;
 
     index_style = TNLP::C_STYLE; // index starts at 0
     return true;
@@ -63,6 +65,7 @@ bool GDOP::get_bounds_info(Index n, Number *x_l, Number *x_u, Index m, Number *g
     // var bounds
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
+
             const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
             const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
@@ -79,6 +82,7 @@ bool GDOP::get_bounds_info(Index n, Number *x_l, Number *x_u, Index m, Number *g
             }
         }
     }
+
     // parameter bounds
     for (int d = 0; d < problem.sizeP; d++) {
         x_l[offXUTotal + d] = problem.lbP[d];
@@ -118,12 +122,20 @@ bool GDOP::get_bounds_info(Index n, Number *x_l, Number *x_u, Index m, Number *g
         g_u[eq] = paramConstr->ub;
         eq++;
     }
+    assert(m == eq);
     return true;
 }
 
 bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Number *z_L, Number *z_U, Index m,
                               bool init_lambda, Number *lambda) {
-    // TODO: implement x init -> different strategies: CONST, SOLVE(), WARM_START
+    // TODO: implement different strategies: SOLVE(), WARM_START
+    assert(n == numberVars);
+    switch (initVars) {
+        case InitVars::CONST:
+            for (int i = 0; i < n; i++) {
+                x[i] = 1;
+            }
+    }
     return true;
 }
 
@@ -157,18 +169,19 @@ bool GDOP::eval_grad_f(Index n, const Number *x, bool new_x, Number *grad_f) {
 
     // mayer term derivative
     if (problem.M) {
+
         const int xnm = offXUTotal - offXU; // index of 1st x var at collocation point (n,m)
         const int unm = offXUTotal - offU;  // index of 1st u var at collocation point (n,m)
         const auto diffMAY = problem.M->evalDiff(&x[xnm], &x[unm], &x[offXUTotal], mesh.tf);
 
-        for (int k = 0; k < diffMAY[0].size(); k++) {
-            grad_f[xnm + problem.M->adj.indX[k]] += diffMAY[0][k];
+        for (int v = 0; v < diffMAY[0].size(); v++) {
+            grad_f[xnm + problem.M->adj.indX[v]] += diffMAY[0][v];
         }
-        for (int k = 0; k < diffMAY[1].size(); k++) {
-            grad_f[unm + problem.M->adj.indU[k]] += diffMAY[1][k];
+        for (int v = 0; v < diffMAY[1].size(); v++) {
+            grad_f[unm + problem.M->adj.indU[v]] += diffMAY[1][v];
         }
-        for (int k = 0; k < diffMAY[2].size(); k++) {
-            grad_f[offXUTotal + problem.M->adj.indP[k]] += diffMAY[2][k];
+        for (int v = 0; v < diffMAY[2].size(); v++) {
+            grad_f[offXUTotal + problem.M->adj.indP[v]] += diffMAY[2][v];
         }
     }
 
@@ -176,20 +189,21 @@ bool GDOP::eval_grad_f(Index n, const Number *x, bool new_x, Number *grad_f) {
     if (problem.L) {
         for(int i = 0; i < mesh.intervals; i++){
             for (int j = 0; j < rk.steps; j++){
+
                 const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
                 const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
                 const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
                 const double quadCoeff = mesh.deltaT[i] * rk.b[j];
                 const auto diffLAG = problem.L->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
 
-                for (int k = 0; k < diffLAG[0].size(); k++) {
-                    grad_f[xij + problem.L->adj.indX[k]] += quadCoeff * diffLAG[0][k];
+                for (int v = 0; v < diffLAG[0].size(); v++) {
+                    grad_f[xij + problem.L->adj.indX[v]] += quadCoeff * diffLAG[0][v];
                 }
-                for (int k = 0; k < diffLAG[1].size(); k++) {
-                    grad_f[uij + problem.L->adj.indU[k]] += quadCoeff * diffLAG[1][k];
+                for (int v = 0; v < diffLAG[1].size(); v++) {
+                    grad_f[uij + problem.L->adj.indU[v]] += quadCoeff * diffLAG[1][v];
                 }
-                for (int k = 0; k < diffLAG[2].size(); k++) {
-                    grad_f[offXUTotal + problem.L->adj.indP[k]] += quadCoeff * diffLAG[2][k];
+                for (int v = 0; v < diffLAG[2].size(); v++) {
+                    grad_f[offXUTotal + problem.L->adj.indP[v]] += quadCoeff * diffLAG[2][v];
                 }
             }
         }
@@ -201,30 +215,33 @@ bool GDOP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g) {
     int eq = 0;
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
+
             const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
-            const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{i,j}
-            const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{i,j}
+            const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{ij}
+            const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{ij}
             const int xi1_m = i * offXUBlock - offXU;           // first index (dim=0) of x_{i-1,m}; m=rk.steps
 
             // dynamic constraints
-            // 0 = sum_k ~a_{jk} * (x_{ij} - x_{i-1,m)) - del t_i * f(x_{ij}, u_{ij}, p, t_{ij}), i=0 -> x_{i-1,m) = x0
+            // 0 = sum_k ~a_{jk} * (x_{ik} - x_{i-1,m)) - del t_i * f(x_{ij}, u_{ij}, p, t_{ij}), i=0 -> x_{i-1,m) = x0
             if (i == 0){
                 for (int d = 0; d < problem.F.size(); d++) {
-                    double invRkSum = 0;
+                    double rkLinearComb = 0;
                     for (int k = 0; k < rk.steps; k++) {
-                        invRkSum += rk.Ainv[j][k] * (x[xij + d] - problem.x0[d]);
+                        const int xik = i * offXUBlock + k * offXU;  // first index (dim=0) of x_{ik}
+                        rkLinearComb += rk.Ainv[j][k] * (x[xik + d] - problem.x0[d]);
                     }
-                    g[eq] = invRkSum - mesh.deltaT[i] * problem.F[d]->eval(&x[xij], &x[uij], &x[offXUTotal], tij);
+                    g[eq] = rkLinearComb - mesh.deltaT[i] * problem.F[d]->eval(&x[xij], &x[uij], &x[offXUTotal], tij);
                     eq++;
                 }
             }
             else {
                 for (int d = 0; d < problem.F.size(); d++) {
-                    double invRkSum = 0;
+                    double rkLinearComb = 0;
                     for (int k = 0; k < rk.steps; k++) {
-                        invRkSum += rk.Ainv[j][k] * (x[xij + d] - x[xi1_m + d]);
+                        const int xik = i * offXUBlock + k * offXU;  // first index (dim=0) of x_{ik}
+                        rkLinearComb += rk.Ainv[j][k] * (x[xik + d] - x[xi1_m + d]);
                     }
-                    g[eq] = invRkSum - mesh.deltaT[i] * problem.F[d]->eval(&x[xij], &x[uij], &x[offXUTotal], tij);
+                    g[eq] = rkLinearComb - mesh.deltaT[i] * problem.F[d]->eval(&x[xij], &x[uij], &x[offXUTotal], tij);
                     eq++;
                 }
             }
@@ -256,7 +273,132 @@ bool GDOP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g) {
 
 bool GDOP::eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_jac, Index *iRow, Index *jCol,
                       Number *values) {
-    // TODO: constr evalDiff
+
+    assert(n == numberVars);
+    assert(m == sz(problem.A) + sz(problem.R) + (sz(problem.F) + sz(problem.G)) * rk.steps * mesh.intervals);
+    if (values == nullptr) {
+        int it = 0;
+        int eq = 0;
+        for (int i = 0; i < mesh.intervals; i++) {
+            for (int j = 0; j < rk.steps; j++) {
+                // TODO: maybe use block structure of jacobian
+                const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{ij}
+                const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{ij}
+                const int xi1_m = i * offXUBlock - offXU;           // first index (dim=0) of x_{i-1,m}; m=rk.steps
+
+                for (int d = 0; d < problem.F.size(); d++) {
+
+                    // sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
+                    if (i > 0) {
+                        iRow[it] = eq;
+                        jCol[it] = xi1_m + d;
+                        it++;
+                    }
+
+                    // sum_k ~a_{jk} * (x_{i,k})
+                    for (int k = 0; k < rk.steps; k++) {
+                        const int xik = i * offXUBlock + k * offXU;
+                        iRow[it] = eq;
+                        jCol[it] = xik + d;
+                        it++;
+                    }
+
+                    // f(v_{ij})_x: care handle duplicates if d is contained in indX!!
+                    for (int v : problem.F[d]->adj.indX) {
+                        if (v != d) {
+                            iRow[it] = eq;
+                            jCol[it] = xij + v;
+                            it++;
+                        }
+                    }
+
+                    // f(v_{ij})_u
+                    for (int v : problem.F[d]->adj.indU) {
+                        iRow[it] = eq;
+                        jCol[it] = uij + v;
+                        it++;
+                    }
+
+                    // f(v_{ij})_p
+                    for (int v : problem.F[d]->adj.indP) {
+                        iRow[it] = eq;
+                        jCol[it] = offXUTotal + v;
+                        it++;
+                    }
+                    eq++;
+                }
+
+                for (const auto & constrG : problem.G) {
+
+                    // g(v_{ij})_x
+                    for (int v : constrG->adj.indX) {
+                        iRow[it] = eq;
+                        jCol[it] = xij + v;
+                        it++;
+                    }
+
+                    // g(v_{ij})_u
+                    for (int v : constrG->adj.indU) {
+                        iRow[it] = eq;
+                        jCol[it] = uij + v;
+                        it++;
+                    }
+
+                    // g(v_{ij})_p
+                    for (int v : constrG->adj.indP) {
+                        iRow[it] = eq;
+                        jCol[it] = offXUTotal + v;
+                        it++;
+                    }
+                    eq++;
+                }
+            }
+        }
+
+        for (const auto & constrR : problem.R) {
+
+            const int xnm = offXUTotal - offXU;
+            const int unm = offXUTotal - offU;
+
+            // r(v_{nm})_x
+            for (int v : constrR->adj.indX) {
+                iRow[it] = eq;
+                jCol[it] = xnm + v;
+                it++;
+            }
+
+            // r(v_{nm})_u
+            for (int v : constrR->adj.indU) {
+                iRow[it] = eq;
+                jCol[it] = unm + v;
+                it++;
+            }
+
+            // r(v_{nm})_p
+            for (int v : constrR->adj.indP) {
+                iRow[it] = eq;
+                jCol[it] = offXUTotal + v;
+                it++;
+            }
+            eq++;
+        }
+
+        for (const auto & constrA : problem.A) {
+
+            // a_p
+            for (int v : constrA->adj.indP) {
+                iRow[it] = eq;
+                jCol[it] = offXUTotal + v;
+                it++;
+            }
+            eq++;
+        }
+        assert(m == eq);
+    }
+    else
+    {
+        assert(false);
+    }
     return true;
 }
 
@@ -272,5 +414,6 @@ void GDOP::finalize_solution(SolverReturn status, Index n, const Number *x, cons
     // TODO: output solution
 }
 
-GDOP::GDOP(Problem problem, Mesh &mesh, Integrator &rk) : problem(std::move(problem)), mesh(mesh), rk(rk) {
+GDOP::GDOP(Problem problem, Mesh &mesh, Integrator &rk, InitVars initVars) : problem(std::move(problem)), mesh(mesh),
+                                                                             rk(rk), initVars(initVars) {
 }

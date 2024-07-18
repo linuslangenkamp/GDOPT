@@ -47,11 +47,11 @@ public:
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
-        return x[0]*x[0] - x[1] - 0.35;
+        return x[0] - x[1];
     }
 
     std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-        return {std::vector<double>{2*x[0], -1}, {}, {}};
+        return {std::vector<double>{1, -1}, {}, {}};
     }
 private:
     Lagrange(Adjacency adj) : Expression(std::move(adj)) {
@@ -152,7 +152,7 @@ private:
 
 int main() {
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
-    Mesh mesh = Mesh::createEquidistantMesh(50, 2);
+    Mesh mesh = Mesh::createEquidistantMesh(30, 2);
 
     std::vector<std::unique_ptr<Expression>> F;
     F.push_back(F0::create());
@@ -166,17 +166,20 @@ int main() {
 
     Problem problem(
             2, 2, 0,
-            {0, 1}, {MIN_DOUBLE, MIN_DOUBLE}, {MAX_DOUBLE, MAX_DOUBLE},
+            {0, 1},
+            {MIN_DOUBLE, MIN_DOUBLE}, {MAX_DOUBLE, MAX_DOUBLE},
             {0, 0}, {2, 2},
             {}, {},
-            Mayer::create(),
+            {},
             Lagrange::create(),
             std::move(F),
-            std::move(G),
-            std::move(R),
+            {},
+            {},
             {}
     );
-    GDOP gdop(std::move(problem), mesh, rk);
+    GDOP gdop(std::move(problem), mesh, rk, InitVars::CONST);
+
+    /*
     int n, m, nJac, nHes;
     GDOP::IndexStyleEnum index_style;
     gdop.get_nlp_info(n, m, nJac, nHes, index_style);
@@ -193,10 +196,17 @@ int main() {
     SmartPtr<TestNLP> testNLP = new TestNLP;
 
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+    */
 
-    app->Options()->SetNumericValue("tol", 1e-14);
-    //app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+    SmartPtr<GDOP> testNLP = &gdop;
+
+    SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+    app->Options()->SetNumericValue("tol", 1e-12);
+    app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+    app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
     app->Options()->SetStringValue("mu_strategy", "adaptive");
+    app->Options()->SetIntegerValue("print_level", 5);
+    app->Options()->SetStringValue("print_timing_statistics", "yes");
     app->Options()->SetStringValue("output_file", "ipopt.out");
 
     ApplicationReturnStatus status;

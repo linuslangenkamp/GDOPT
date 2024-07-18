@@ -24,6 +24,7 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                     {{1.0}},
                     {1.0},
                     1};
+
         case IntegratorSteps::Steps2:
             return {{0.33333333333333333333333333333333333333333333333333333,
                      1.0},
@@ -38,6 +39,7 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                     {2.0,
                      -2.0},
                     2};
+
         case IntegratorSteps::Steps3:
             return {{0.15505102572168219018027159252941086080340525193433299,
                      0.64494897427831780981972840747058913919659474806566701,
@@ -64,6 +66,7 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                      -1.7393876913398137178367408896470696703591369767880042,
                      3.0},
                     3};
+
         case IntegratorSteps::Steps4:
             return {{0.088587959512703947395546143769456196885729331922749565,
                      0.40946686444073471086492625206882989405190489528056231,
@@ -106,6 +109,7 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                      1.9648779564324137794922406920988232906632983999840183,
                      -4.0},
                     4};
+
         case IntegratorSteps::Steps5:
             return {{0.057104196114517682193121192554115621235077945598750164,
                      0.27684301363812382768004599768562514111088916969503047,

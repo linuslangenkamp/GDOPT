@@ -5,8 +5,8 @@
 #include <cstdlib>
 
 template<typename T>
-int sz(const std::vector<T>& vec) {
-    return static_cast<int>(vec.size());
+inline int sz(const std::vector<T>& vec) {
+    return int(vec.size());
 }
 
 #endif //IPOPT_DO_UTIL_H
