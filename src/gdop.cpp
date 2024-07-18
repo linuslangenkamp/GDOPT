@@ -5,7 +5,10 @@
 #include "util.h"
 
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
+    // #vars
     n = numberVars;
+
+    // #eqs
     m = sz(problem.A) + sz(problem.R) + (sz(problem.F) + sz(problem.G)) * rk.steps * mesh.intervals;
 
     // eval jacobian nnz
@@ -24,16 +27,16 @@ bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, 
             nnzDynBlock -= 1;
         containedIndex++;
     }
-    nnz_jac_g += mesh.intervals * rk.steps * nnzDynBlock; // nnz for f(v_{i,j}) eval
-    nnz_jac_g += mesh.intervals * rk.steps * rk.steps * (sz(problem.F)); // nnz for sum_k ~a_{j,k} * x_{i,k}
-    nnz_jac_g += (mesh.intervals - 1) * rk.steps * sz(problem.F); // nnz for sum_k ~a_{j,k} * (-x_{i-1,m}), i = 1,2,...
+    nnz_jac_g += mesh.intervals * rk.steps * nnzDynBlock;                // nnz for f(v_{ij}) eval
+    nnz_jac_g += mesh.intervals * rk.steps * rk.steps * (sz(problem.F)); // nnz for sum_k ~a_{jk} * x_{ik}
+    nnz_jac_g += (mesh.intervals - 1) * rk.steps * sz(problem.F);        // nnz for sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
 
     // nnz jac: path constraints
     int nnzPathBlock = 0;
     for (const auto& pathConstr : problem.G) {
         nnzPathBlock += sz(pathConstr->adj.indX) + sz(pathConstr->adj.indU) + sz(pathConstr->adj.indP);
     }
-    nnz_jac_g += mesh.intervals * rk.steps * nnzPathBlock; // RHS = nnz for g(v_{i,j}) eval
+    nnz_jac_g += mesh.intervals * rk.steps * nnzPathBlock; // RHS = nnz for g(v_{ij}) eval
 
     // nnz jac: final constraints
     for (const auto& finalConstr : problem.R) {
@@ -54,7 +57,67 @@ bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, 
 }
 
 bool GDOP::get_bounds_info(Index n, Number *x_l, Number *x_u, Index m, Number *g_l, Number *g_u) {
-    // TODO: implement bounds init
+    assert(n == numberVars);
+    assert(m == sz(problem.A) + sz(problem.R) + (sz(problem.F) + sz(problem.G)) * rk.steps * mesh.intervals);
+
+    // var bounds
+    for (int i = 0; i < mesh.intervals; i++) {
+        for (int j = 0; j < rk.steps; j++) {
+            const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+            const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+
+            // state bounds
+            for (int d = 0; d < problem.sizeX; d++) {
+                x_l[xij + d] = problem.lbX[d];
+                x_u[xij + d] = problem.ubX[d];
+            }
+
+            // control bounds
+            for (int d = 0; d < problem.sizeU; d++) {
+                x_l[uij + d] = problem.lbU[d];
+                x_u[uij + d] = problem.ubU[d];
+            }
+        }
+    }
+    // parameter bounds
+    for (int d = 0; d < problem.sizeP; d++) {
+        x_l[offXUTotal + d] = problem.lbP[d];
+        x_u[offXUTotal + d] = problem.ubP[d];
+    }
+
+    // equation bounds
+    int eq = 0;
+    for (int i = 0; i < mesh.intervals; i++) {
+        for (int j = 0; j < rk.steps; j++) {
+            // dynamic bound must equal 0
+            for (int d = 0; d < problem.F.size(); d++) {
+                g_l[eq] = 0.0;
+                g_u[eq] = 0.0;
+                eq++;
+            }
+
+            // path constraint bounds
+            for (auto const& pathConstr : problem.G) {
+                g_l[eq] = pathConstr->lb;
+                g_u[eq] = pathConstr->ub;
+                eq++;
+            }
+        }
+    }
+
+    // final constraint bounds
+    for (auto const& finalConstr : problem.R) {
+        g_l[eq] = finalConstr->lb;
+        g_u[eq] = finalConstr->ub;
+        eq++;
+    }
+
+    // parameter constraint bounds
+    for (auto const& paramConstr : problem.A) {
+        g_l[eq] = paramConstr->lb;
+        g_u[eq] = paramConstr->ub;
+        eq++;
+    }
     return true;
 }
 
@@ -75,7 +138,7 @@ bool GDOP::eval_f(Index n, const Number *x, bool new_x, Number &obj_value) {
 
     // lagrange term evaluation
     if (problem.L) {
-        for(int i = 0; i < mesh.intervals; i++){
+        for (int i = 0; i < mesh.intervals; i++){
             for (int j = 0; j < rk.steps; j++){
                 const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
                 const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
@@ -112,13 +175,12 @@ bool GDOP::eval_grad_f(Index n, const Number *x, bool new_x, Number *grad_f) {
     // lagrange term derivative
     if (problem.L) {
         for(int i = 0; i < mesh.intervals; i++){
-            const double deltaT_i = mesh.deltaT[i];
-            const double grid_i = mesh.grid[i];
             for (int j = 0; j < rk.steps; j++){
                 const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
                 const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+                const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
                 const double quadCoeff = mesh.deltaT[i] * rk.b[j];
-                const auto diffLAG = problem.L->evalDiff(&x[xij], &x[uij], &x[offXUTotal], grid_i + rk.c[j] * deltaT_i);
+                const auto diffLAG = problem.L->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
 
                 for (int k = 0; k < diffLAG[0].size(); k++) {
                     grad_f[xij + problem.L->adj.indX[k]] += quadCoeff * diffLAG[0][k];
@@ -141,8 +203,8 @@ bool GDOP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g) {
         for (int j = 0; j < rk.steps; j++) {
             const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
             const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{i,j}
-            const int xi1_m = i * offXUBlock - offXU;           // first index (dim=0) of x_{i-1,m}; m=rk.steps
             const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{i,j}
+            const int xi1_m = i * offXUBlock - offXU;           // first index (dim=0) of x_{i-1,m}; m=rk.steps
 
             // dynamic constraints
             // 0 = sum_k ~a_{jk} * (x_{ij} - x_{i-1,m)) - del t_i * f(x_{ij}, u_{ij}, p, t_{ij}), i=0 -> x_{i-1,m) = x0
@@ -167,7 +229,7 @@ bool GDOP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g) {
                 }
             }
 
-            // path constraints : LB_g <= g(x_{ij}, u_{ij}, p, t_{ij}) <= UB_g
+            // path constraints: LB_g <= g(x_{ij}, u_{ij}, p, t_{ij}) <= UB_g
             for (auto const& pathConstr : problem.G) {
                 g[eq] = pathConstr->eval(&x[xij], &x[uij], &x[offXUTotal], tij);
                 eq++;
@@ -175,7 +237,7 @@ bool GDOP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g) {
         }
     }
 
-    // final constraints : LB_r <= r(x_{nm}, u_{nm}, p, t_{nm}) <= UB_r
+    // final constraints: LB_r <= r(x_{nm}, u_{nm}, p, t_{nm}) <= UB_r
     const int xnm = offXUTotal - offXU; // first index (dim=0) of x_{n,m}
     const int unm = offXUTotal - offU;  // first index (dim=0) of u_{n,m}
     for (auto const& finalConstr : problem.R) {
@@ -183,7 +245,7 @@ bool GDOP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g) {
         eq++;
     }
 
-    // parameter constraints : LB_a <= a(p) <= UB_a
+    // parameter constraints: LB_a <= a(p) <= UB_a
     for (auto const& paramConstr : problem.A) {
         g[eq] = paramConstr->eval(&x[offXUTotal]);
         eq++;
