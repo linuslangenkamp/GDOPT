@@ -95,6 +95,9 @@ public:
 
     void updateDenseHessianA(const ParamExpression &, std::vector<std::vector<int>> &);
 
+    void createSparseHessian(std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
+        std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, Index&);
+
     void init_jac(Index &nnz_jac_g);
 
     void init_jac_sparsity(Index *iRow, Index *jCol);

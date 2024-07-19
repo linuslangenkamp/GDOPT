@@ -20,4 +20,14 @@ struct n2hash {
     }
 };
 
+inline int fullSum(const std::vector<std::vector<int>>& matrix) {
+    int sum = 0;
+    for (const auto& row : matrix) {
+        for (const auto val : row) {
+            sum += val;
+        }
+    }
+    return sum;
+}
+
 #endif //IPOPT_DO_UTIL_H

@@ -1,6 +1,9 @@
 #include <cassert>
 #include <algorithm>
 #include "gdop.h"
+
+#include <iostream>
+
 #include "util.h"
 
 // TODO: Check entire indices! - LGTM
@@ -63,8 +66,11 @@ void GDOP::init_jac(Index &nnz_jac_g) {
 
 void GDOP::init_h(Index &nnz_h_lag) {
     nnz_h_lag = 0;
+
     // dense local hessian adjacency structure, will be reduced to hashmap later
     std::vector<std::vector<int>> denseS0(offXU), denseS0t(offXU), denseS1(offP), denseS1t(offP), denseS2(offP);
+
+    // init local hessian adjacency
     for (int i = 0; i < offXU; i++) {
         denseS0[i] = std::vector<int>(i + 1, 0);
         denseS0t[i] = std::vector<int>(i + 1, 0);
@@ -74,6 +80,7 @@ void GDOP::init_h(Index &nnz_h_lag) {
         denseS1t[i] = std::vector<int>(offXU, 0);
         denseS2[i] = std::vector<int>(offP, 0);
     }
+
     // update lagrange, dynamics, path constraint hessian structure
     if (problem.L)
         updateDenseHessianLFG(*problem.L, denseS0, denseS0t, denseS1, denseS1t, denseS2);
@@ -98,6 +105,72 @@ void GDOP::init_h(Index &nnz_h_lag) {
     for (const auto& a : problem.A) {
         updateDenseHessianA(*a, denseS2);
     }
+
+    // at this point all local hessian structures have been obtained
+    nnz_h_lag = (fullSum(denseS0) + fullSum(denseS1)) * (mesh.intervals * rk.steps - 1) +
+                 fullSum(denseS0t) + fullSum(denseS1t) + fullSum(denseS2);
+
+    createSparseHessian(denseS0, denseS0t, denseS1, denseS1t, denseS2, nnz_h_lag);
+}
+
+void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0,
+                                std::vector<std::vector<int>>& denseS0t,
+                                std::vector<std::vector<int>>& denseS1,
+                                std::vector<std::vector<int>>& denseS1t,
+                                std::vector<std::vector<int>>& denseS2,
+                                Index &nnz_h_lag) {
+    int it = 0; // eq index
+    for (int i = 0; i < offXU; i++) {
+        for (int j = 0; j <= i; j++) {
+            if (denseS0[i][j] == 1) {
+                S0.insert({{i, j}, it});
+                it++;
+            }
+        }
+    }
+    it *= (mesh.intervals * rk.steps - 1);
+    for (int i = 0; i < offXU; i++) {
+        for (int j = 0; j <= i; j++) {
+            if (denseS0t[i][j] == 1) {
+                S0t.insert({{i, j}, it});
+                it++;
+            }
+        }
+    }
+
+    for (int i = 0; i < offP; i++) {
+        int nnzS1row = 0;
+        for (int j = 0; j < offXU; j++) {
+            if (denseS1[i][j] == 1) {
+                S1.insert({{i, j}, it});
+                it++;
+                nnzS1row++;
+            }
+        }
+
+        it += nnzS1row * (mesh.intervals * rk.steps - 2);   // nnzS1row * (mesh.intervals * rk.steps - 1) - nnzS1row
+        for (int j = 0; j < offXU; j++) {
+            if (denseS1t[i][j] == 1) {
+                S1t.insert({{i, j}, it});
+                it++;
+            }
+        }
+
+        for (int j = 0; j < offXU; j++) {
+            if (denseS1t[i][j] == 1) {
+                S1t.insert({{i, j}, it});
+                it++;
+            }
+        }
+
+        for (int j = 0; j < offP; j++) {
+            if (denseS2[i][j] == 1) {
+                S2.insert({{i, j}, it});
+                it++;
+            }
+        }
+    }
+    assert(it == nnz_h_lag);
 }
 
 void GDOP::updateDenseHessianLFG(const Expression& expr,
