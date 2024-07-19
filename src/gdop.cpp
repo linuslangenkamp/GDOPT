@@ -1,9 +1,6 @@
 #include <cassert>
 #include <algorithm>
 #include "gdop.h"
-
-#include <iostream>
-
 #include "util.h"
 
 // TODO: Check entire indices! - LGTM
@@ -140,7 +137,7 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0,
         }
     }
     lengthS0_S0t = it;
-
+    firstRowIndex.push_back(it);
     for (int i = 0; i < offP; i++) {
         int nnzS1row = 0;
         for (int j = 0; j < offXU; j++) {
@@ -150,7 +147,7 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0,
                 nnzS1row++;
             }
         }
-        rowLengthS1.push_back(nnzS1row);
+        rowLengthS1Block.push_back(nnzS1row);
         it += nnzS1row * (mesh.intervals * rk.steps - 2);   // nnzS1row * (mesh.intervals * rk.steps - 1) - nnzS1row
 
         for (int j = 0; j < offXU; j++) {
@@ -166,6 +163,7 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0,
                 it++;
             }
         }
+        firstRowIndex.push_back(it);
     }
     assert(it == nnz_h_lag);
 }
@@ -712,7 +710,7 @@ void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
                 jCol[idxij] = v2ij;
             }
         }
-        for (int j = 0; j < rk.steps - 1; j++) {
+         for (int j = 0; j < rk.steps - 1; j++) {
             const int idxij = it + lengthS0 * ((mesh.intervals - 1) * rk.steps + j);
             const int v1ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v1;
             const int v2ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v2;
@@ -732,7 +730,47 @@ void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
         }
     }
 
-    // TODO: S1, S1t, S2 :: S1 shift based on row; S1t, S2 no shift needed
+    // TODO: Check hessian block structure
+    // S1 block forall i, j except very last interval (n, m)
+    for (const auto &[vars, it]: S1) {
+        auto const [p, v] = vars;
+        for (int i = 0; i < mesh.intervals - 1; i++) {
+            for (int j = 0; j < rk.steps; j++) {
+                const int idxij = it + firstRowIndex[p] + rowLengthS1Block[j] * (i * rk.steps + j);
+                const int pshifted = offXUTotal + p;
+                const int vij = i * offXUBlock + j * offXU + v;
+                iRow[idxij] = pshifted;
+                jCol[idxij] = vij;
+            }
+        }
+        for (int j = 0; j < rk.steps - 1; j++) {
+            const int idxij = it + firstRowIndex[p] + rowLengthS1Block[j] * ((mesh.intervals - 1) * rk.steps + j);
+            const int pshifted = offXUTotal + p;
+            const int vij = (mesh.intervals - 1) * offXUBlock + j * offXU + v;
+            iRow[idxij] = pshifted;
+            jCol[idxij] = vij;
+        }
+    }
+
+    // S1t for very last interval, note that "it" is the correct array index by construction
+    for (const auto &[vars, it]: S1t) {
+        auto const [p, v] = vars;
+        for (int j = 0; j < rk.steps; j++) {
+            const int pshifted = offXUTotal + p;
+            const int vij = (mesh.intervals - 1) * offXUBlock + j * offXU + v;
+            iRow[it] = pshifted;
+            jCol[it] = vij;
+        }
+    }
+
+    // S2
+    for (const auto &[vars, it]: S1t) {
+        auto const [p1, p2] = vars;
+        const int p1shifted = offXUTotal + p1;
+        const int p2shifted = offXUTotal + p2;
+        iRow[it] = p1shifted;
+        jCol[it] = p2shifted;
+    }
 }
 
 void GDOP::get_h_values(const Number *x, Number *values) {
