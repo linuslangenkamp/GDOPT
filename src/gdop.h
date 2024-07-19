@@ -14,7 +14,7 @@ enum class InitVars {
 
 class GDOP : public TNLP {
 public:
-    GDOP(Problem problem, Mesh& mesh, Integrator& rk, InitVars initVars);
+    GDOP(Problem problem, Mesh &mesh, Integrator &rk, InitVars initVars);
 
     Problem problem;
     Mesh mesh;
@@ -25,8 +25,10 @@ public:
     const int offU = problem.sizeU;
     const int offXU = problem.sizeX + problem.sizeU; // number of vars for one collocation knod
     const int offXUBlock = (problem.sizeX + problem.sizeU) * rk.steps;  // number of vars per interval
-    const int offXUTotal = (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals; // first const parameter variable
-    const int numberVars = (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals + problem.sizeP; // total number of vars
+    const int offXUTotal =
+            (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals; // first const parameter variable
+    const int numberVars =
+            (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals + problem.sizeP; // total number of vars
     // TODO: add tf as optional var?!
 
     bool get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) override;
@@ -53,7 +55,18 @@ public:
     void finalize_solution(SolverReturn status, Index n, const Number *x, const Number *z_L, const Number *z_U, Index m,
                            const Number *g, const Number *lambda, Number obj_value, const IpoptData *ip_data,
                            IpoptCalculatedQuantities *ip_cq) override;
-};
 
+    void init_jac(Index &nnz_jac_g);
+
+    void init_jac_sparsity(Index *iRow, Index *jCol);
+
+    void get_jac_values(const Number *x, Number *values);
+
+    void init_h(Index &nnz_h_lag);
+
+    void init_h_sparsity(Index *iRow, Index *jCol);
+
+    void get_h_values(const Number *x, Number *values);
+};
 
 #endif //IPOPT_DO_GDOP_H

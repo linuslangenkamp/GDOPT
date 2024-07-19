@@ -132,7 +132,7 @@ int main() {
     SmartPtr<GDOP> DOP{new GDOP(std::move(problem), mesh, rk, InitVars::CONST)};
 
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
-    app->Options()->SetNumericValue("tol", 1e-12);
+    app->Options()->SetNumericValue("tol", 1e-9);
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     //app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
     app->Options()->SetStringValue("mu_strategy", "adaptive");

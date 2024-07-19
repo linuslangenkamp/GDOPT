@@ -1,6 +1,5 @@
 #include <cassert>
 #include <algorithm>
-#include <iostream>
 #include "gdop.h"
 #include "util.h"
 
@@ -13,6 +12,18 @@ bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, 
     // #eqs
     m = sz(problem.A) + sz(problem.R) + (sz(problem.F) + sz(problem.G)) * rk.steps * mesh.intervals;
 
+    // #nnz in jac
+    init_jac(nnz_jac_g);
+
+    // # nnz in hessian + creation of sparsity maps and offsets
+    init_h(nnz_h_lag);
+
+    // index starts at 0
+    index_style = TNLP::C_STYLE;
+    return true;
+}
+
+void GDOP::init_jac(Index &nnz_jac_g) {
     // eval jacobian nnz
     nnz_jac_g = 0;
 
@@ -49,13 +60,10 @@ bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, 
     for (const auto& paramConstr : problem.A) {
         nnz_jac_g += sz(paramConstr->adj.indP);
     }
+}
 
-    // TODO: implement hessian sparsity
-    // eval hessian nnz
+void GDOP::init_h(Index &nnz_h_lag) {
     nnz_h_lag = 0;
-
-    index_style = TNLP::C_STYLE; // index starts at 0
-    return true;
 }
 
 bool GDOP::get_bounds_info(Index n, Number *x_l, Number *x_u, Index m, Number *g_l, Number *g_u) {
@@ -271,255 +279,280 @@ bool GDOP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g) {
     return true;
 }
 
-bool GDOP::eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_jac, Index *iRow, Index *jCol,
-                      Number *values) {
+void GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
+    // TODO: maybe use block structure of jacobian (might be slight speed up)
+    // Just iterates over all blocks atm, no use of block struct
+    int it = 0;
+    int eq = 0;
+    for (int i = 0; i < mesh.intervals; i++) {
+        for (int j = 0; j < rk.steps; j++) {
 
-    assert(n == numberVars);
-    assert(m == sz(problem.A) + sz(problem.R) + (sz(problem.F) + sz(problem.G)) * rk.steps * mesh.intervals);
-    if (values == nullptr) {
-        int it = 0;
-        int eq = 0;
-        for (int i = 0; i < mesh.intervals; i++) {
-            for (int j = 0; j < rk.steps; j++) {
-                // TODO: maybe use block structure of jacobian (might be slight speed up)
-                const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{ij}
-                const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{ij}
-                const int xi1_m = i * offXUBlock - offXU;           // first index (dim=0) of x_{i-1,m}; m=rk.steps
+            const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{ij}
+            const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{ij}
+            const int xi1_m = i * offXUBlock - offXU;           // first index (dim=0) of x_{i-1,m}; m=rk.steps
 
-                for (int d = 0; d < problem.F.size(); d++) {
+            for (int d = 0; d < problem.F.size(); d++) {
 
-                    // sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
-                    if (i > 0) {
-                        iRow[it] = eq;
-                        jCol[it] = xi1_m + d;
-                        it++;
-                    }
-
-                    // sum_k ~a_{jk} * (x_{i,k})
-                    for (int k = 0; k < rk.steps; k++) {
-                        const int xik = i * offXUBlock + k * offXU;
-                        iRow[it] = eq;
-                        jCol[it] = xik + d;
-                        it++;
-                    }
-
-                    // f(v_{ij})_x: care handle duplicates if d is contained in indX!!
-                    for (int v : problem.F[d]->adj.indX) {
-                        if (v != d) {
-                            iRow[it] = eq;
-                            jCol[it] = xij + v;
-                            it++;
-                        }
-                    }
-
-                    // f(v_{ij})_u
-                    for (int v : problem.F[d]->adj.indU) {
-                        iRow[it] = eq;
-                        jCol[it] = uij + v;
-                        it++;
-                    }
-
-                    // f(v_{ij})_p
-                    for (int v : problem.F[d]->adj.indP) {
-                        iRow[it] = eq;
-                        jCol[it] = offXUTotal + v;
-                        it++;
-                    }
-                    eq++;
+                // sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
+                if (i > 0) {
+                    iRow[it] = eq;
+                    jCol[it] = xi1_m + d;
+                    it++;
                 }
 
-                for (const auto & constrG : problem.G) {
+                // sum_k ~a_{jk} * (x_{i,k})
+                for (int k = 0; k < rk.steps; k++) {
+                    const int xik = i * offXUBlock + k * offXU;
+                    iRow[it] = eq;
+                    jCol[it] = xik + d;
+                    it++;
+                }
 
-                    // g(v_{ij})_x
-                    for (int v : constrG->adj.indX) {
+                // f(v_{ij})_x: care handle duplicates if d is contained in indX!!
+                for (int v : problem.F[d]->adj.indX) {
+                    if (v != d) {
                         iRow[it] = eq;
                         jCol[it] = xij + v;
                         it++;
                     }
+                }
 
-                    // g(v_{ij})_u
-                    for (int v : constrG->adj.indU) {
-                        iRow[it] = eq;
-                        jCol[it] = uij + v;
+                // f(v_{ij})_u
+                for (int v : problem.F[d]->adj.indU) {
+                    iRow[it] = eq;
+                    jCol[it] = uij + v;
+                    it++;
+                }
+
+                // f(v_{ij})_p
+                for (int v : problem.F[d]->adj.indP) {
+                    iRow[it] = eq;
+                    jCol[it] = offXUTotal + v;
+                    it++;
+                }
+                eq++;
+            }
+
+            for (const auto & constrG : problem.G) {
+
+                // g(v_{ij})_x
+                for (int v : constrG->adj.indX) {
+                    iRow[it] = eq;
+                    jCol[it] = xij + v;
+                    it++;
+                }
+
+                // g(v_{ij})_u
+                for (int v : constrG->adj.indU) {
+                    iRow[it] = eq;
+                    jCol[it] = uij + v;
+                    it++;
+                }
+
+                // g(v_{ij})_p
+                for (int v : constrG->adj.indP) {
+                    iRow[it] = eq;
+                    jCol[it] = offXUTotal + v;
+                    it++;
+                }
+                eq++;
+            }
+        }
+    }
+
+    const int xnm = offXUTotal - offXU;
+    const int unm = offXUTotal - offU;
+
+    for (const auto & constrR : problem.R) {
+
+        // r(v_{nm})_x
+        for (int v : constrR->adj.indX) {
+            iRow[it] = eq;
+            jCol[it] = xnm + v;
+            it++;
+        }
+
+        // r(v_{nm})_u
+        for (int v : constrR->adj.indU) {
+            iRow[it] = eq;
+            jCol[it] = unm + v;
+            it++;
+        }
+
+        // r(v_{nm})_p
+        for (int v : constrR->adj.indP) {
+            iRow[it] = eq;
+            jCol[it] = offXUTotal + v;
+            it++;
+        }
+        eq++;
+    }
+
+    for (const auto & constrA : problem.A) {
+
+        // a_p
+        for (int v : constrA->adj.indP) {
+            iRow[it] = eq;
+            jCol[it] = offXUTotal + v;
+            it++;
+        }
+        eq++;
+    }
+    assert(m == eq);
+}
+
+void GDOP::get_jac_values(const Number *x, Number *values) {
+    int containedIdx = -1;
+    int it = 0;
+    for (int i = 0; i < mesh.intervals; i++) {
+        for (int j = 0; j < rk.steps; j++) {
+            const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{ij}
+            const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{ij}
+            const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
+
+            for (int d = 0; d < problem.F.size(); d++) {
+
+                // sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
+                if (i > 0) {
+                    values[it] = -rk.invRowSum[j];
+                    it++;
+                }
+
+                // sum_k ~a_{jk} * (x_{i,k})
+                for (int k = 0; k < rk.steps; k++) {
+                    values[it] = rk.Ainv[j][k];
+                    if (k == j)
+                        containedIdx = it;
+                    it++;
+                }
+
+
+                // eval grad f(v_{ij})
+                auto const diffF = problem.F[d]->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
+
+                // f(v_{ij})_x: care handle duplicates if d is contained in indX!!
+                for (int v : problem.F[d]->adj.indX) {
+                    if (v != d) {
+                        values[it] = -mesh.deltaT[i] * diffF[0][v];
                         it++;
                     }
-
-                    // g(v_{ij})_p
-                    for (int v : constrG->adj.indP) {
-                        iRow[it] = eq;
-                        jCol[it] = offXUTotal + v;
-                        it++;
+                    else {
+                        values[containedIdx] += -mesh.deltaT[i] * diffF[0][v];
                     }
-                    eq++;
+                }
+
+                // f(v_{ij})_u
+                for (int v : problem.F[d]->adj.indU) {
+                    values[it] = -mesh.deltaT[i] * diffF[1][v];
+                    it++;
+                }
+
+                // f(v_{ij})_p
+                for (int v : problem.F[d]->adj.indP) {
+                    values[it] = mesh.deltaT[i] * diffF[2][v];
+                    it++;
+                }
+            }
+
+            for (const auto & constrG : problem.G) {
+
+                // eval grad g(v_{ij})
+                auto const diffG = constrG->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
+
+                // g(v_{ij})_x
+                for (int v : constrG->adj.indX) {
+                    values[it] = diffG[0][v];
+                    it++;
+                }
+
+                // g(v_{ij})_u
+                for (int v : constrG->adj.indU) {
+                    values[it] = diffG[1][v];
+                    it++;
+                }
+
+                // g(v_{ij})_p
+                for (int v : constrG->adj.indP) {
+                    values[it] = diffG[2][v];
+                    it++;
                 }
             }
         }
+    }
 
-        const int xnm = offXUTotal - offXU;
-        const int unm = offXUTotal - offU;
+    const int xnm = offXUTotal - offXU;
+    const int unm = offXUTotal - offU;
 
-        for (const auto & constrR : problem.R) {
+    for (const auto & constrR : problem.R) {
 
-            // r(v_{nm})_x
-            for (int v : constrR->adj.indX) {
-                iRow[it] = eq;
-                jCol[it] = xnm + v;
-                it++;
-            }
+        // eval grad r(v_{nm})
+        auto const diffR = constrR->evalDiff(&x[xnm], &x[unm], &x[offXUTotal], mesh.tf);
 
-            // r(v_{nm})_u
-            for (int v : constrR->adj.indU) {
-                iRow[it] = eq;
-                jCol[it] = unm + v;
-                it++;
-            }
-
-            // r(v_{nm})_p
-            for (int v : constrR->adj.indP) {
-                iRow[it] = eq;
-                jCol[it] = offXUTotal + v;
-                it++;
-            }
-            eq++;
+        // r(v_{nm})_x
+        for (int v : constrR->adj.indX) {
+            values[it] = diffR[0][v];
+            it++;
         }
 
-        for (const auto & constrA : problem.A) {
-
-            // a_p
-            for (int v : constrA->adj.indP) {
-                iRow[it] = eq;
-                jCol[it] = offXUTotal + v;
-                it++;
-            }
-            eq++;
+        // r(v_{nm})_u
+        for (int v : constrR->adj.indU) {
+            values[it] = diffR[1][v];
+            it++;
         }
-        assert(m == eq);
+
+        // r(v_{nm})_p
+        for (int v : constrR->adj.indP) {
+            values[it] = diffR[2][v];
+            it++;
+        }
+    }
+
+    for (const auto & constrA : problem.A) {
+
+        // eval grad a(p)
+        auto const diffA = constrA->evalDiff(&x[offXUTotal]);
+
+        // a_p
+        for (int v : constrA->adj.indP) {
+            values[it] = diffA[v];
+            it++;
+        }
+    }
+}
+
+bool GDOP::eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_jac, Index *iRow, Index *jCol,
+                      Number *values) {
+    assert(n == numberVars);
+    assert(m == sz(problem.A) + sz(problem.R) + (sz(problem.F) + sz(problem.G)) * rk.steps * mesh.intervals);
+    if (values == nullptr) {
+        init_jac_sparsity(iRow, jCol);
     }
     else
     {
-        int containedIdx = -1;
-        int it = 0;
-        for (int i = 0; i < mesh.intervals; i++) {
-            for (int j = 0; j < rk.steps; j++) {
-                const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{ij}
-                const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{ij}
-                const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
-
-                for (int d = 0; d < problem.F.size(); d++) {
-
-                    // sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
-                    if (i > 0) {
-                        values[it] = -rk.invRowSum[j];
-                        it++;
-                    }
-
-                    // sum_k ~a_{jk} * (x_{i,k})
-                    for (int k = 0; k < rk.steps; k++) {
-                        values[it] = rk.Ainv[j][k];
-                        if (k == j)
-                            containedIdx = it;
-                        it++;
-                    }
-
-
-                    // eval grad f(v_{ij})
-                    auto const diffF = problem.F[d]->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
-
-                    // f(v_{ij})_x: care handle duplicates if d is contained in indX!!
-                    for (int v : problem.F[d]->adj.indX) {
-                        if (v != d) {
-                            values[it] = -mesh.deltaT[i] * diffF[0][v];
-                            it++;
-                        }
-                        else {
-                            values[containedIdx] += -mesh.deltaT[i] * diffF[0][v];
-                        }
-                    }
-
-                    // f(v_{ij})_u
-                    for (int v : problem.F[d]->adj.indU) {
-                        values[it] = -mesh.deltaT[i] * diffF[1][v];
-                        it++;
-                    }
-
-                    // f(v_{ij})_p
-                    for (int v : problem.F[d]->adj.indP) {
-                        values[it] = mesh.deltaT[i] * diffF[2][v];
-                        it++;
-                    }
-                }
-
-                for (const auto & constrG : problem.G) {
-
-                    // eval grad g(v_{ij})
-                    auto const diffG = constrG->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
-
-                    // g(v_{ij})_x
-                    for (int v : constrG->adj.indX) {
-                        values[it] = diffG[0][v];
-                        it++;
-                    }
-
-                    // g(v_{ij})_u
-                    for (int v : constrG->adj.indU) {
-                        values[it] = diffG[1][v];
-                        it++;
-                    }
-
-                    // g(v_{ij})_p
-                    for (int v : constrG->adj.indP) {
-                        values[it] = diffG[2][v];
-                        it++;
-                    }
-                }
-            }
-        }
-
-        const int xnm = offXUTotal - offXU;
-        const int unm = offXUTotal - offU;
-
-        for (const auto & constrR : problem.R) {
-
-            // eval grad r(v_{nm})
-            auto const diffR = constrR->evalDiff(&x[xnm], &x[unm], &x[offXUTotal], mesh.tf);
-
-            // r(v_{nm})_x
-            for (int v : constrR->adj.indX) {
-                values[it] = diffR[0][v];
-                it++;
-            }
-
-            // r(v_{nm})_u
-            for (int v : constrR->adj.indU) {
-                values[it] = diffR[1][v];
-                it++;
-            }
-
-            // r(v_{nm})_p
-            for (int v : constrR->adj.indP) {
-                values[it] = diffR[2][v];
-                it++;
-            }
-        }
-
-        for (const auto & constrA : problem.A) {
-
-            // eval grad a(p)
-            auto const diffA = constrA->evalDiff(&x[offXUTotal]);
-
-            // a_p
-            for (int v : constrA->adj.indP) {
-                values[it] = diffA[v];
-                it++;
-            }
-        }
+        get_jac_values(x, values);
     }
     return true;
 }
 
+void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
+
+}
+
+void GDOP::get_h_values(const Number *x, Number *values) {
+
+}
+
 bool GDOP::eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index m, const Number *lambda,
                   bool new_lambda, Index nele_hess, Index *iRow, Index *jCol, Number *values) {
-    // TODO: hessian eval
+    assert(n == numberVars);
+    assert(m == sz(problem.A) + sz(problem.R) + (sz(problem.F) + sz(problem.G)) * rk.steps * mesh.intervals);
+    if (values == nullptr) {
+        init_h_sparsity(iRow, jCol);
+    }
+    else
+    {
+        get_h_values(x, values);
+    }
     return true;
 }
 
