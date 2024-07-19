@@ -3,7 +3,6 @@
 #include "gdop.h"
 #include "util.h"
 
-
 // TODO: Check entire indices! - LGTM
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
     // #vars
@@ -64,7 +63,6 @@ void GDOP::init_jac(Index &nnz_jac_g) {
 
 void GDOP::init_h(Index &nnz_h_lag) {
     nnz_h_lag = 0;
-
     // dense local hessian adjacency structure, will be reduced to hashmap later
     std::vector<std::vector<int>> denseS0(offXU), denseS0t(offXU), denseS1(offP), denseS1t(offP), denseS2(offP);
     for (int i = 0; i < offXU; i++) {
@@ -75,6 +73,91 @@ void GDOP::init_h(Index &nnz_h_lag) {
         denseS1[i] = std::vector<int>(offXU, 0);
         denseS1t[i] = std::vector<int>(offXU, 0);
         denseS2[i] = std::vector<int>(offP, 0);
+    }
+    // update lagrange, dynamics, path constraint hessian structure
+    if (problem.L)
+        updateDenseHessianLFG(*problem.L, denseS0, denseS0t, denseS1, denseS1t, denseS2);
+
+    for (const auto& f : problem.F) {
+        updateDenseHessianLFG(*f, denseS0, denseS0t, denseS1, denseS1t, denseS2);
+    }
+
+    for (const auto& g : problem.G) {
+        updateDenseHessianLFG(*g, denseS0, denseS0t, denseS1, denseS1t, denseS2);
+    }
+
+    // update mayer, final constraint hessian structure
+    if (problem.M)
+        updateDenseHessianMR(*problem.M,denseS0t, denseS1t, denseS2);
+
+    for (const auto& r : problem.R) {
+        updateDenseHessianMR(*r, denseS0t, denseS1t, denseS2);
+    }
+
+    // update algebraic paramter constraint hessian structure
+    for (const auto& a : problem.A) {
+        updateDenseHessianA(*a, denseS2);
+    }
+}
+
+void GDOP::updateDenseHessianLFG(const Expression& expr,
+                                    std::vector<std::vector<int>>& denseS0,
+                                    std::vector<std::vector<int>>& denseS0t,
+                                    std::vector<std::vector<int>>& denseS1,
+                                    std::vector<std::vector<int>>& denseS1t,
+                                    std::vector<std::vector<int>>& denseS2) {
+    for (auto const [x1, x2] : expr.adjDiff.indXX) {
+        denseS0[x1][x2] = 1;
+        denseS0t[x1][x2] = 1;
+    }
+    for (auto const [u, x] : expr.adjDiff.indUX) {
+        denseS0[offX + u][x] = 1;
+        denseS0t[offX + u][x] = 1;
+    }
+    for (auto const [u1, u2] : expr.adjDiff.indUU) {
+        denseS0[offX + u1][offX + u2] = 1;
+        denseS0t[offX + u1][offX + u2] = 1;
+    }
+    for (auto const [p, x] : expr.adjDiff.indPX) {
+        denseS1[p][x] = 1;
+        denseS1t[p][x] = 1;
+    }
+    for (auto const [p, u] : expr.adjDiff.indPU) {
+        denseS1[p][offX + u] = 1;
+        denseS1t[p][offX + u] = 1;
+    }
+    for (auto const [p1, p2] : expr.adjDiff.indPP) {
+        denseS2[p1][p2] = 1;
+    }
+}
+
+void GDOP::updateDenseHessianMR(const Expression& expr,
+                                std::vector<std::vector<int>>& denseS0t,
+                                std::vector<std::vector<int>>& denseS1t,
+                                std::vector<std::vector<int>>& denseS2) {
+    for (auto const [x1, x2] : expr.adjDiff.indXX) {
+        denseS0t[x1][x2] = 1;
+    }
+    for (auto const [u, x] : expr.adjDiff.indUX) {
+        denseS0t[offX + u][x] = 1;
+    }
+    for (auto const [u1, u2] : expr.adjDiff.indUU) {
+        denseS0t[offX + u1][offX + u2] = 1;
+    }
+    for (auto const [p, x] : expr.adjDiff.indPX) {
+        denseS1t[p][x] = 1;
+    }
+    for (auto const [p, u] : expr.adjDiff.indPU) {
+        denseS1t[p][offX + u] = 1;
+    }
+    for (auto const [p1, p2] : expr.adjDiff.indPP) {
+        denseS2[p1][p2] = 1;
+    }
+}
+
+void GDOP::updateDenseHessianA(const ParamExpression& expr, std::vector<std::vector<int>>& denseS2) {
+    for (auto const [p1, p2] : expr.adjDiff.indPP) {
+        denseS2[p1][p2] = 1;
     }
 }
 

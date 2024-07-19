@@ -10,7 +10,6 @@
 #include "constants.h"
 #include "gdop.h"
 
-
 using namespace Ipopt;
 
 class Mayer : public Expression {
@@ -21,7 +20,15 @@ public:
                 {},
                 {}
         };
-        return std::unique_ptr<Mayer>(new Mayer(std::move(adj)));
+        AdjacencyDiff adjDiff{
+                    {{0, 1}, {1, 1}},
+                    {},
+                    {},
+                    {},
+                    {},
+                    {}
+        };
+        return std::unique_ptr<Mayer>(new Mayer(std::move(adj), std::move(adjDiff)));
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
@@ -31,8 +38,12 @@ public:
     std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{0.23 + x[1] * x[1], 2 * x[1] * x[0]}, {}, {}};
     }
+
+    std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
+        return {std::vector<double>{2 * x[1], 2 * x[0]}, {}, {}, {}, {}, {}};
+    }
 private:
-    Mayer(Adjacency adj) : Expression(std::move(adj)) {
+    Mayer(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {
     }
 };
 
@@ -44,7 +55,15 @@ public:
                 {0},
                 {}
         };
-        return std::unique_ptr<Lagrange>(new Lagrange(std::move(adj)));
+        AdjacencyDiff adjDiff{
+                        {{0, 0}},
+                        {},
+                        {{0, 0}},
+                        {},
+                        {},
+                        {}
+        };
+        return std::unique_ptr<Lagrange>(new Lagrange(std::move(adj), std::move(adjDiff)));
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
@@ -54,8 +73,12 @@ public:
     std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{x[0]}, {u[0]}, {}};
     }
+
+    std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
+        return {std::vector<double>{1}, {}, {1}, {}, {}, {}};
+    }
 private:
-    Lagrange(Adjacency adj) : Expression(std::move(adj)) {
+    Lagrange(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {
     }
 };
 
@@ -67,18 +90,30 @@ public:
                 {0},
                 {}
         };
-        return std::unique_ptr<F0>(new F0(std::move(adj)));
+        AdjacencyDiff adjDiff{
+                            {{0, 0}},
+                            {},
+                            {},
+                            {},
+                            {},
+                            {}
+        };
+        return std::unique_ptr<F0>(new F0(std::move(adj), std::move(adjDiff)));
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
-        return -x[0]*x[0]*x[0] + u[0];
+        return -x[0] * x[0] * x[0] + u[0];
     }
 
     std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{-3*x[0]*x[0]}, {1}, {}};
     }
+    std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
+        return {std::vector<double>{-6*x[0]}, {}, {}, {}, {}, {}};
+    }
+
 private:
-    F0(Adjacency adj) : Expression(std::move(adj)) {
+    F0(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {
     }
 };
 
@@ -90,7 +125,15 @@ public:
                 {},
                 {}
         };
-        return std::unique_ptr<R0>(new R0(std::move(adj), 0, 0));
+        AdjacencyDiff adjDiff{
+                                {},
+                                {},
+                                {},
+                                {},
+                                {},
+                                {}
+        };
+        return std::unique_ptr<R0>(new R0(std::move(adj), std::move(adjDiff), 0, 0));
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
@@ -100,8 +143,11 @@ public:
     std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{-1}, {}, {}};
     }
+    std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
+        return {std::vector<double>{}, {}, {}, {}, {}, {}};
+    }
 private:
-    R0(Adjacency adj, double lb, double ub) : Constraint(std::move(adj), lb, ub) {
+    R0(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {
     }
 };
 

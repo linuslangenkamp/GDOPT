@@ -48,19 +48,19 @@ public:
     **/
 
     // upper left corner of entire hessian, xu block
-    std::unordered_map<std::array<int, 2>, int, n2hash> S0;
+    std::unordered_map<std::tuple<int, int>, int, n2hash> S0;
 
     // lower right corner xu block, might be different since M(.), r(.) are evaluated only at the last grid point
-    std::unordered_map<std::array<int, 2>, int, n2hash> S0t;
+    std::unordered_map<std::tuple<int, int>, int, n2hash> S0t;
 
     // lower left corner of entire hessian, xu-p block
-    std::unordered_map<std::array<int, 2>, int, n2hash> S1;
+    std::unordered_map<std::tuple<int, int>, int, n2hash> S1;
 
     // lower right corner xu-p block, might be different since M(.), r(.) are evaluated only at the last grid point
-    std::unordered_map<std::array<int, 2>, int, n2hash> S1t;
+    std::unordered_map<std::tuple<int, int>, int, n2hash> S1t;
 
     // lower right corner of entire hessian, p-p block
-    std::unordered_map<std::array<int, 2>, int, n2hash> S2;
+    std::unordered_map<std::tuple<int, int>, int, n2hash> S2;
 
     bool get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) override;
 
@@ -86,6 +86,14 @@ public:
     void finalize_solution(SolverReturn status, Index n, const Number *x, const Number *z_L, const Number *z_U, Index m,
                            const Number *g, const Number *lambda, Number obj_value, const IpoptData *ip_data,
                            IpoptCalculatedQuantities *ip_cq) override;
+
+    void updateDenseHessianLFG(const Expression &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
+        std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &);
+
+    void updateDenseHessianMR(const Expression &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
+            std::vector<std::vector<int>> &);
+
+    void updateDenseHessianA(const ParamExpression &, std::vector<std::vector<int>> &);
 
     void init_jac(Index &nnz_jac_g);
 

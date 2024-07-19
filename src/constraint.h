@@ -5,7 +5,7 @@
 
 class Constraint : public Expression {
 public:
-    explicit Constraint(Adjacency adj, double lb = 0.0, double ub = 0.0) : Expression(std::move(adj)), lb{lb}, ub{ub} {}
+    explicit Constraint(Adjacency adj, AdjacencyDiff adjDiff, double lb = 0.0, double ub = 0.0) : Expression(std::move(adj), std::move(adjDiff)), lb{lb}, ub{ub} {}
 
     virtual ~Constraint() = default;
 
@@ -13,11 +13,12 @@ public:
     const double ub;
 };
 
-class paramConstraint : public paramExpression {
+class ParamConstraint : public ParamExpression {
 public:
-    explicit paramConstraint(paramAdjacency adj, double lb = 0.0, double ub = 0.0) : paramExpression(std::move(adj)), lb{lb}, ub{ub} {}
+    explicit ParamConstraint(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb = 0.0, double ub = 0.0) :
+             ParamExpression(std::move(adj), std::move(adjDiff)), lb{lb}, ub{ub} {}
 
-    virtual ~paramConstraint() = default;
+    virtual ~ParamConstraint() = default;
 
     const double lb;
     const double ub;

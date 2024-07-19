@@ -16,7 +16,7 @@ public:
             std::vector<std::unique_ptr<Expression>> F,
             std::vector<std::unique_ptr<Constraint>> G,
             std::vector<std::unique_ptr<Constraint>> R,
-            std::vector<std::unique_ptr<paramConstraint>> A);
+            std::vector<std::unique_ptr<ParamConstraint>> A);
 
     const int sizeX;
     const int sizeU;
@@ -35,7 +35,7 @@ public:
     std::vector<std::unique_ptr<Expression>> F;      // state dynamics, RHS of ODE
     std::vector<std::unique_ptr<Constraint>> G;      // algebraic path constraints for states, control, parameters and time
     std::vector<std::unique_ptr<Constraint>> R;      // algebraic final constraints
-    std::vector<std::unique_ptr<paramConstraint>> A; // algebraic constraints for parameters only:
+    std::vector<std::unique_ptr<ParamConstraint>> A; // algebraic constraints for parameters only:
 };
 
 

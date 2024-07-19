@@ -3,8 +3,7 @@
 
 #include <vector>
 #include <cstdlib>
-#include <unordered_map>
-#include <array>
+#include <tuple>
 
 template<typename T>
 inline int sz(const std::vector<T>& vec) {
@@ -13,9 +12,10 @@ inline int sz(const std::vector<T>& vec) {
 
 struct n2hash {
     // hashing of N x N
-    std::size_t operator()(const std::array<int, 2>& v) const {
-        auto h1 = std::hash<int>{}(v[0]);
-        auto h2 = std::hash<int>{}(v[1]);
+    std::size_t operator()(const std::tuple<int, int>& v) const {
+        auto const [t1, t2] = v;
+        auto h1 = std::hash<int>{}(t1);
+        auto h2 = std::hash<int>{}(t2);
         return h1 ^ (h2 << 1);
     }
 };
