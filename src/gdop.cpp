@@ -123,49 +123,46 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0,
     for (int i = 0; i < offXU; i++) {
         for (int j = 0; j <= i; j++) {
             if (denseS0[i][j] == 1) {
-                S0.insert({{i, j}, it});
+                S0.insert({{i, j}, it});        // "it" not exact; shift needed based on
                 it++;
             }
         }
     }
+    lengthS0 = it;
     it *= (mesh.intervals * rk.steps - 1);
+
     for (int i = 0; i < offXU; i++) {
         for (int j = 0; j <= i; j++) {
             if (denseS0t[i][j] == 1) {
-                S0t.insert({{i, j}, it});
+                S0t.insert({{i, j}, it});      // "it" exact; no shift needed later on
                 it++;
             }
         }
     }
+    lengthS0_S0t = it;
 
     for (int i = 0; i < offP; i++) {
         int nnzS1row = 0;
         for (int j = 0; j < offXU; j++) {
             if (denseS1[i][j] == 1) {
-                S1.insert({{i, j}, it});
+                S1.insert({{i, j}, it});       // "it" not exact; shift needed based on row
                 it++;
                 nnzS1row++;
             }
         }
-
+        rowLengthS1.push_back(nnzS1row);
         it += nnzS1row * (mesh.intervals * rk.steps - 2);   // nnzS1row * (mesh.intervals * rk.steps - 1) - nnzS1row
-        for (int j = 0; j < offXU; j++) {
-            if (denseS1t[i][j] == 1) {
-                S1t.insert({{i, j}, it});
-                it++;
-            }
-        }
 
         for (int j = 0; j < offXU; j++) {
             if (denseS1t[i][j] == 1) {
-                S1t.insert({{i, j}, it});
+                S1t.insert({{i, j}, it});   // "it" exact; no shift needed later on
                 it++;
             }
         }
 
         for (int j = 0; j < offP; j++) {
             if (denseS2[i][j] == 1) {
-                S2.insert({{i, j}, it});
+                S2.insert({{i, j}, it});    // "it" exact; no shift needed later on
                 it++;
             }
         }
@@ -703,6 +700,39 @@ bool GDOP::eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_
 
 void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
 
+    // S0 block forall i, j except very last interval (n, m)
+    for (const auto &[vars, it]: S0) {
+        auto const [v1, v2] = vars;
+        for (int i = 0; i < mesh.intervals - 1; i++) {
+            for (int j = 0; j < rk.steps; j++) {
+                const int idxij = it + lengthS0 * (i * rk.steps + j);
+                const int v1ij = i * offXUBlock + j * offXU + v1;
+                const int v2ij = i * offXUBlock + j * offXU + v2;
+                iRow[idxij] = v1ij;
+                jCol[idxij] = v2ij;
+            }
+        }
+        for (int j = 0; j < rk.steps - 1; j++) {
+            const int idxij = it + lengthS0 * ((mesh.intervals - 1) * rk.steps + j);
+            const int v1ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v1;
+            const int v2ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v2;
+            iRow[idxij] = v1ij;
+            jCol[idxij] = v2ij;
+        }
+    }
+
+    // S0t for very last interval, note that "it" is the correct array index by construction
+    for (const auto &[vars, it]: S0t) {
+        auto const [v1, v2] = vars;
+        for (int j = 0; j < rk.steps; j++) {
+            const int v1ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v1;
+            const int v2ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v2;
+            iRow[it] = v1ij;
+            jCol[it] = v2ij;
+        }
+    }
+
+    // TODO: S1, S1t, S2 :: S1 shift based on row; S1t, S2 no shift needed
 }
 
 void GDOP::get_h_values(const Number *x, Number *values) {

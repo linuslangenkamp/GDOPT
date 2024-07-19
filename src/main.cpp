@@ -179,7 +179,7 @@ int main() {
 
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
     app->Options()->SetNumericValue("tol", 1e-9);
-    app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+    //app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     //app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
     app->Options()->SetStringValue("mu_strategy", "adaptive");
     app->Options()->SetIntegerValue("print_level", 5);
