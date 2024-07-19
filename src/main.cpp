@@ -106,8 +106,8 @@ private:
 };
 
 int main() {
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
-    Mesh mesh = Mesh::createEquidistantMesh(6000, 100);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps7);
+    Mesh mesh = Mesh::createEquidistantMesh(400, 100);
 
     std::vector<std::unique_ptr<Expression>> F;
     F.push_back(F0::create());

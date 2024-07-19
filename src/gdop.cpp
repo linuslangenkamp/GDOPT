@@ -64,6 +64,18 @@ void GDOP::init_jac(Index &nnz_jac_g) {
 
 void GDOP::init_h(Index &nnz_h_lag) {
     nnz_h_lag = 0;
+
+    // dense local hessian adjacency structure, will be reduced to hashmap later
+    std::vector<std::vector<int>> denseS0(offXU), denseS0t(offXU), denseS1(offP), denseS1t(offP), denseS2(offP);
+    for (int i = 0; i < offXU; i++) {
+        denseS0[i] = std::vector<int>(i + 1, 0);
+        denseS0t[i] = std::vector<int>(i + 1, 0);
+    }
+    for (int i = 0; i < offP; i++) {
+        denseS1[i] = std::vector<int>(offXU, 0);
+        denseS1t[i] = std::vector<int>(offXU, 0);
+        denseS2[i] = std::vector<int>(offP, 0);
+    }
 }
 
 bool GDOP::get_bounds_info(Index n, Number *x_l, Number *x_u, Index m, Number *g_l, Number *g_u) {
@@ -398,7 +410,6 @@ void GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
         }
         eq++;
     }
-    assert(m == eq);
 }
 
 void GDOP::get_jac_values(const Number *x, Number *values) {

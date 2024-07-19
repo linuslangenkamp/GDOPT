@@ -5,6 +5,7 @@
 #include "problem.h"
 #include "mesh.h"
 #include "integrator.h"
+#include "util.h"
 
 using namespace Ipopt;
 
@@ -23,6 +24,7 @@ public:
 
     const int offX = problem.sizeX;
     const int offU = problem.sizeU;
+    const int offP = problem.sizeP;
     const int offXU = problem.sizeX + problem.sizeU; // number of vars for one collocation knod
     const int offXUBlock = (problem.sizeX + problem.sizeU) * rk.steps;  // number of vars per interval
     const int offXUTotal =
@@ -30,6 +32,35 @@ public:
     const int numberVars =
             (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals + problem.sizeP; // total number of vars
     // TODO: add tf as optional var?!
+
+    // block hessians as sparse map: (i,j) -> it, it-th index in COO format, (i,j) var indices
+    // note that S0, S0t, S2 only contain the lower triangle
+
+    /**
+    Hessian struct:
+    vars    ...     xu    ...    p
+      .     S0   0   0   0   0   0
+      .      0  S0   0   0   0   0
+      xu     .   .   .   .   .   .
+      .      0   0   0  S0   0   0
+      .      0   0   0   0 S0t   0
+      p     S1    ...   S1 S1t  S2
+    **/
+
+    // upper left corner of entire hessian, xu block
+    std::unordered_map<std::array<int, 2>, int, n2hash> S0;
+
+    // lower right corner xu block, might be different since M(.), r(.) are evaluated only at the last grid point
+    std::unordered_map<std::array<int, 2>, int, n2hash> S0t;
+
+    // lower left corner of entire hessian, xu-p block
+    std::unordered_map<std::array<int, 2>, int, n2hash> S1;
+
+    // lower right corner xu-p block, might be different since M(.), r(.) are evaluated only at the last grid point
+    std::unordered_map<std::array<int, 2>, int, n2hash> S1t;
+
+    // lower right corner of entire hessian, p-p block
+    std::unordered_map<std::array<int, 2>, int, n2hash> S2;
 
     bool get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) override;
 
