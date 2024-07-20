@@ -773,20 +773,77 @@ void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
     }
 }
 
-void GDOP::get_h_values(const Number *x, Number *values) {
-
+void GDOP::evalHessianLFG(Number* values, const Number *x, Expression& expr, const double factor, const int xij,
+        const int uij, const double tij, const int i, const int j) {
+    auto const diff2Expr = expr.evalDiff2(&x[xij], &x[uij], &x[offXUTotal], tij);
+    for (int k = 0; k < sz(expr.adjDiff.indXX); k++) {
+        auto const vars = expr.adjDiff.indXX[k];
+        auto const idx = lengthS0 * (i * rk.steps + j) + S0[vars];
+        values[idx] += factor * diff2Expr[0][k];
+    }
+    for (int k = 0; k < sz(expr.adjDiff.indUX); k++) {
+        auto const [uvar, xvar] = expr.adjDiff.indUX[k];
+        auto const idx = lengthS0 * (i * rk.steps + j) + S0[{offX + uvar, xvar}];
+        values[idx] += factor * diff2Expr[1][k];
+    }
+    for (int k = 0; k < sz(expr.adjDiff.indUU); k++) {
+        auto const [uvar1, uvar2] = expr.adjDiff.indUU[k];
+        auto const idx = lengthS0 * (i * rk.steps + j) + S0[{offX + uvar1, offX + uvar2}];
+        values[idx] += factor * diff2Expr[2][k];
+    }
+    for (int k = 0; k < sz(expr.adjDiff.indPX); k++) {
+        auto const [pvar, xvar] = expr.adjDiff.indPU[k];
+        auto const it = S1[{pvar, xvar}];
+        auto const idx = it + firstRowIndex[pvar] + rowLengthS1Block[j] * (i * rk.steps + j);
+        values[idx] += factor * diff2Expr[3][k];
+    }
+    for (int k = 0; k < sz(expr.adjDiff.indPU); k++) {
+        auto const [pvar, uvar] = expr.adjDiff.indPU[k];
+        auto const it = S1[{pvar, uvar + offX}];
+        auto const idx = it + firstRowIndex[pvar] + rowLengthS1Block[j] * (i * rk.steps + j);
+        values[idx] += factor * diff2Expr[4][k];
+    }
+    for (int k = 0; k < sz(expr.adjDiff.indPP); k++) {
+        auto const vars = expr.adjDiff.indXX[k];
+        auto const it = S2[vars];
+        values[it] += factor * diff2Expr[5][k];
+    }
 }
+
+void GDOP::get_h_values(const Number *x, Number *values, Number obj_factor, const Number *lambda) {
+    int eq = 0;
+    for (int i = 0; i < mesh.intervals; i++) {
+        for (int j = 0; j < rk.steps; j++) {
+            const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
+            const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+            const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+
+            // eval hessian lagrangian
+            const double lagrFactor = obj_factor * mesh.deltaT[i] * rk.b[j];
+            evalHessianLFG(values, x, *problem.L, lagrFactor, xij, uij, tij, i, j);
+
+            // eval hessian dynamics
+            for (auto const& f : problem.F) {
+                const double fFactor = lambda[eq] * (-mesh.deltaT[i]);
+                evalHessianLFG(values, x, *f, fFactor, xij, uij, tij, i, j);
+                eq++;
+            }
+
+
+        }
+    }
+}
+
 
 bool GDOP::eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index m, const Number *lambda,
                   bool new_lambda, Index nele_hess, Index *iRow, Index *jCol, Number *values) {
-    assert(n == numberVars);
-    assert(m == sz(problem.A) + sz(problem.R) + (sz(problem.F) + sz(problem.G)) * rk.steps * mesh.intervals);
     if (values == nullptr) {
         init_h_sparsity(iRow, jCol);
     }
     else
     {
-        get_h_values(x, values);
+        std::fill(values, values + nele_hess, 0);
+        get_h_values(x, values, obj_factor, lambda);
     }
     return true;
 }

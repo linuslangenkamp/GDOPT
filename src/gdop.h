@@ -84,9 +84,9 @@ public:
                     Number *values) override;
 
 
-    bool eval_h(Ipopt::Index n, const Ipopt::Number *x, bool new_x, Ipopt::Number obj_factor, Ipopt::Index m,
-                const Ipopt::Number *lambda, bool new_lambda, Ipopt::Index nele_hess, Ipopt::Index *iRow,
-                Ipopt::Index *jCol, Ipopt::Number *values) override;
+    bool eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index m,
+                const Number *lambda, bool new_lambda, Index nele_hess, Index *iRow,
+                Index *jCol, Number *values) override;
 
     void finalize_solution(SolverReturn status, Index n, const Number *x, const Number *z_L, const Number *z_U, Index m,
                            const Number *g, const Number *lambda, Number obj_value, const IpoptData *ip_data,
@@ -94,6 +94,9 @@ public:
 
     void updateDenseHessianLFG(const Expression &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
         std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &);
+
+    void evalHessianLFG(Number* values, const Number *x, Expression& expr, double factor, int xij,
+        int uij, double tij, int i, int j);
 
     void updateDenseHessianMR(const Expression &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
             std::vector<std::vector<int>> &);
@@ -113,7 +116,7 @@ public:
 
     void init_h_sparsity(Index *iRow, Index *jCol);
 
-    void get_h_values(const Number *x, Number *values);
+    void get_h_values(const Number *x, Number *values, Number obj_factor, const Number *lambda);
 };
 
 #endif //IPOPT_DO_GDOP_H
