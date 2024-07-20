@@ -153,7 +153,7 @@ private:
 
 int main() {
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
-    Mesh mesh = Mesh::createEquidistantMesh(1000, 100);
+    Mesh mesh = Mesh::createEquidistantMesh(10000, 100);
 
     std::vector<std::unique_ptr<Expression>> F;
     F.push_back(F0::create());
@@ -176,25 +176,26 @@ int main() {
     );
 
     SmartPtr<GDOP> DOP{new GDOP(std::move(problem), mesh, rk, InitVars::CONST)};
-
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+
+    // numeric jacobian and hessian
+    // app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+    // app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
+
     app->Options()->SetNumericValue("tol", 1e-9);
-    //app->Options()->SetStringValue("hessian_approximation", "limited-memory");
-    //app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
     app->Options()->SetStringValue("mu_strategy", "adaptive");
     app->Options()->SetIntegerValue("print_level", 5);
     app->Options()->SetStringValue("timing_statistics", "yes");
     app->Options()->SetStringValue("output_file", "ipopt.out");
 
-    ApplicationReturnStatus status;
-    status = app->Initialize();
-    if( status != Solve_Succeeded )
+    ApplicationReturnStatus status = app->Initialize();
+    if(status != Solve_Succeeded)
     {
-        std::cout << std::endl << std::endl << "*** Error during initialization!" << std::endl;
-        return (int) status;
+        std::cout << std::endl << std::endl << "Error during problem initialization!" << std::endl;
+        return status;
     }
 
     status = app->OptimizeTNLP(DOP);
 
-    return (int) status;
+    return status;
 }

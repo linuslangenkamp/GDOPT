@@ -92,11 +92,22 @@ public:
                            const Number *g, const Number *lambda, Number obj_value, const IpoptData *ip_data,
                            IpoptCalculatedQuantities *ip_cq) override;
 
+    void init_jac(Index &nnz_jac_g);
+
+    void init_jac_sparsity(Index *iRow, Index *jCol);
+
+    void get_jac_values(const Number *x, Number *values);
+
     void updateDenseHessianLFG(const Expression &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
         std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &);
 
-    void evalHessianLFG(Number* values, const Number *x, Expression& expr, double factor, int xij,
+    void evalHessianS0_S1(Number* values, const Number *x, Expression& expr, double factor, int xij,
         int uij, double tij, int i, int j);
+
+    void evalHessianS0t_S1t(Number* values, const Number *x, Expression& expr, double factor, int xij,
+        int uij, double tij);
+
+    void evalHessianS2(Number* values, const Number *x, ParamExpression& expr, double factor);
 
     void updateDenseHessianMR(const Expression &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
             std::vector<std::vector<int>> &);
@@ -106,17 +117,11 @@ public:
     void createSparseHessian(std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
         std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, Index&);
 
-    void init_jac(Index &nnz_jac_g);
-
-    void init_jac_sparsity(Index *iRow, Index *jCol);
-
-    void get_jac_values(const Number *x, Number *values);
-
     void init_h(Index &nnz_h_lag);
 
     void init_h_sparsity(Index *iRow, Index *jCol);
 
-    void get_h_values(const Number *x, Number *values, Number obj_factor, const Number *lambda);
+    int get_h_values(const Number *x, Number *values, Number obj_factor, const Number *lambda);
 };
 
 #endif //IPOPT_DO_GDOP_H

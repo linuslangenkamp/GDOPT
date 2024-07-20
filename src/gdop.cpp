@@ -3,7 +3,9 @@
 #include "gdop.h"
 #include "util.h"
 
-// TODO: Check entire indices! - LGTM
+// TODO: Check entire indices! - LGTM#
+// TODO: Check hessian block structure sparsity and values
+// TODO: Insert if #p > 0, to save some checks
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
     // #vars
     n = numberVars;
@@ -697,7 +699,6 @@ bool GDOP::eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_
 }
 
 void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
-
     // S0 block forall i, j except very last interval (n, m)
     for (const auto &[vars, it]: S0) {
         auto const [v1, v2] = vars;
@@ -730,7 +731,6 @@ void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
         }
     }
 
-    // TODO: Check hessian block structure
     // S1 block forall i, j except very last interval (n, m)
     for (const auto &[vars, it]: S1) {
         auto const [p, v] = vars;
@@ -773,7 +773,7 @@ void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
     }
 }
 
-void GDOP::evalHessianLFG(Number* values, const Number *x, Expression& expr, const double factor, const int xij,
+void GDOP::evalHessianS0_S1(Number* values, const Number *x, Expression& expr, const double factor, const int xij,
         const int uij, const double tij, const int i, const int j) {
     auto const diff2Expr = expr.evalDiff2(&x[xij], &x[uij], &x[offXUTotal], tij);
     for (int k = 0; k < sz(expr.adjDiff.indXX); k++) {
@@ -792,7 +792,7 @@ void GDOP::evalHessianLFG(Number* values, const Number *x, Expression& expr, con
         values[idx] += factor * diff2Expr[2][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPX); k++) {
-        auto const [pvar, xvar] = expr.adjDiff.indPU[k];
+        auto const [pvar, xvar] = expr.adjDiff.indPX[k];
         auto const it = S1[{pvar, xvar}];
         auto const idx = it + firstRowIndex[pvar] + rowLengthS1Block[j] * (i * rk.steps + j);
         values[idx] += factor * diff2Expr[3][k];
@@ -804,15 +804,52 @@ void GDOP::evalHessianLFG(Number* values, const Number *x, Expression& expr, con
         values[idx] += factor * diff2Expr[4][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPP); k++) {
-        auto const vars = expr.adjDiff.indXX[k];
+        auto const vars = expr.adjDiff.indPP[k];
         auto const it = S2[vars];
         values[it] += factor * diff2Expr[5][k];
     }
 }
 
-void GDOP::get_h_values(const Number *x, Number *values, Number obj_factor, const Number *lambda) {
+void GDOP::evalHessianS0t_S1t(Number* values, const Number *x, Expression& expr, const double factor, const int xij,
+        const int uij, const double tij) {
+    auto const diff2Expr = expr.evalDiff2(&x[xij], &x[uij], &x[offXUTotal], tij);
+    for (int k = 0; k < sz(expr.adjDiff.indXX); k++) {
+        auto const vars = expr.adjDiff.indXX[k];
+        values[S0t[vars]] += factor * diff2Expr[0][k];
+    }
+    for (int k = 0; k < sz(expr.adjDiff.indUX); k++) {
+        auto const [uvar, xvar] = expr.adjDiff.indUX[k];
+        values[S0t[{offX + uvar, xvar}]] += factor * diff2Expr[1][k];
+    }
+    for (int k = 0; k < sz(expr.adjDiff.indUU); k++) {
+        auto const [uvar1, uvar2] = expr.adjDiff.indUU[k];
+        values[S0t[{offX + uvar1, offX + uvar2}]] += factor * diff2Expr[2][k];
+    }
+    for (int k = 0; k < sz(expr.adjDiff.indPX); k++) {
+        auto const vars = expr.adjDiff.indPX[k];
+        values[S1t[vars]] += factor * diff2Expr[3][k];
+    }
+    for (int k = 0; k < sz(expr.adjDiff.indPU); k++) {
+        auto const [pvar, uvar] = expr.adjDiff.indPU[k];
+        values[S1t[{pvar, uvar + offX}]] += factor * diff2Expr[4][k];
+    }
+    for (int k = 0; k < sz(expr.adjDiff.indPP); k++) {
+        auto const vars = expr.adjDiff.indPP[k];
+        values[S2[vars]] += factor * diff2Expr[5][k];
+    }
+}
+
+void GDOP::evalHessianS2(Number* values, const Number *x, ParamExpression& expr, double factor) {
+    auto const diff2Expr = expr.evalDiff2(&x[offXUTotal]);
+    for (int k = 0; k < sz(expr.adjDiff.indPP); k++) {
+        auto const vars = expr.adjDiff.indPP[k];
+        values[S2[vars]] += factor * diff2Expr[k];
+    }
+}
+
+int GDOP::get_h_values(const Number *x, Number *values, Number obj_factor, const Number *lambda) {
     int eq = 0;
-    for (int i = 0; i < mesh.intervals; i++) {
+    for (int i = 0; i < mesh.intervals - 1; i++) {
         for (int j = 0; j < rk.steps; j++) {
             const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
             const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
@@ -820,20 +857,96 @@ void GDOP::get_h_values(const Number *x, Number *values, Number obj_factor, cons
 
             // eval hessian lagrangian
             const double lagrFactor = obj_factor * mesh.deltaT[i] * rk.b[j];
-            evalHessianLFG(values, x, *problem.L, lagrFactor, xij, uij, tij, i, j);
+            evalHessianS0_S1(values, x, *problem.L, lagrFactor, xij, uij, tij, i, j);
 
             // eval hessian dynamics
             for (auto const& f : problem.F) {
                 const double fFactor = lambda[eq] * (-mesh.deltaT[i]);
-                evalHessianLFG(values, x, *f, fFactor, xij, uij, tij, i, j);
+                evalHessianS0_S1(values, x, *f, fFactor, xij, uij, tij, i, j);
                 eq++;
             }
 
-
+            // eval hessian path constraints
+            for (auto const& g : problem.G) {
+                const double gFactor = lambda[eq];
+                evalHessianS0_S1(values, x, *g, gFactor, xij, uij, tij, i, j);
+                eq++;
+            }
         }
     }
-}
 
+    // same for the last rk-1 blocks excluding the very last block -> S0t handling
+    for (int j = 0; j < rk.steps - 1; j++) {
+        const double tij = mesh.grid[mesh.intervals - 1] + rk.c[j] * mesh.deltaT[mesh.intervals - 1];
+        const int xij = (mesh.intervals - 1) * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+        const int uij = (mesh.intervals - 1) * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+
+        // eval hessian lagrangian
+        if (problem.L) {
+            const double lagrFactor = obj_factor * mesh.deltaT[(mesh.intervals - 1)] * rk.b[j];
+            evalHessianS0_S1(values, x, *problem.L, lagrFactor, xij, uij, tij, (mesh.intervals - 1), j);
+        }
+
+        // eval hessian dynamics
+        for (auto const& f : problem.F) {
+            const double fFactor = lambda[eq] * (-mesh.deltaT[(mesh.intervals - 1)]);
+            evalHessianS0_S1(values, x, *f, fFactor, xij, uij, tij, mesh.intervals - 1, j);
+            eq++;
+        }
+
+        // eval hessian path constraints
+        for (auto const& g : problem.G) {
+            const double gFactor = lambda[eq];
+            evalHessianS0_S1(values, x, *g, gFactor, xij, uij, tij, mesh.intervals - 1, j);
+            eq++;
+        }
+    }
+
+    // S0t, S1t: contains M, L, F, G, R
+    const int xnm = (mesh.intervals - 1) * offXUBlock + (rk.steps - 1) * offXU;         // index of 1st x var at collocation point (n,m)
+    const int unm = (mesh.intervals - 1) * offXUBlock + (rk.steps - 1) * offXU + offX;  // index of 1st u var at collocation point (n,m)
+
+    // eval hessian mayer
+    if (problem.M) {
+        const double mayFactor = obj_factor;
+        evalHessianS0t_S1t(values, x, *problem.M, mayFactor, xnm, unm, mesh.tf);
+    }
+
+    // eval hessian lagrangian
+    if (problem.L) {
+        const double lagrFactor = obj_factor * mesh.deltaT[(mesh.intervals - 1)] * rk.b[rk.steps - 1];
+        evalHessianS0t_S1t(values, x, *problem.L, lagrFactor, xnm, unm, mesh.tf);
+    }
+
+    // eval hessian dynamics
+    for (auto const& f : problem.F) {
+        const double fFactor = lambda[eq] * (-mesh.deltaT[(mesh.intervals - 1)]);
+        evalHessianS0t_S1t(values, x, *f, fFactor, xnm, unm, mesh.tf);
+        eq++;
+    }
+
+    // eval hessian path constraints
+    for (auto const& g : problem.G) {
+        const double gFactor = lambda[eq];
+        evalHessianS0t_S1t(values, x, *g, gFactor, xnm, unm, mesh.tf);
+        eq++;
+    }
+
+    // eval hessian final constraints
+    for (auto const& r : problem.R) {
+        const double rFactor = lambda[eq];
+        evalHessianS0t_S1t(values, x, *r, rFactor, xnm, unm, mesh.tf);
+        eq++;
+    }
+
+    // eval hessian algebraic parameter constraints
+    for (auto const& a : problem.A) {
+        const double aFactor = lambda[eq];
+        evalHessianS2(values, x, *a, aFactor);
+        eq++;
+    }
+    return eq;
+}
 
 bool GDOP::eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index m, const Number *lambda,
                   bool new_lambda, Index nele_hess, Index *iRow, Index *jCol, Number *values) {
@@ -843,7 +956,8 @@ bool GDOP::eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index
     else
     {
         std::fill(values, values + nele_hess, 0);
-        get_h_values(x, values, obj_factor, lambda);
+        int constrCount = get_h_values(x, values, obj_factor, lambda);
+        assert(constrCount == m); //
     }
     return true;
 }
