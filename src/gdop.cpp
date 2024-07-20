@@ -957,8 +957,8 @@ bool GDOP::eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index
     else
     {
         std::fill(values, values + nele_hess, 0);
-        int constrCount = get_h_values(x, values, obj_factor, lambda);
-        assert(constrCount == m); //
+        int eq = get_h_values(x, values, obj_factor, lambda);
+        assert(eq == m); // same as before eq index over lambda must be equal to #constrs
     }
     return true;
 }
