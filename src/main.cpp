@@ -1,7 +1,6 @@
 #include <iostream>
 #include <memory>
 #include <IpIpoptApplication.hpp>
-#include "test_nlp.h"
 #include "integrator.h"
 #include "expression.h"
 #include "constraint.h"

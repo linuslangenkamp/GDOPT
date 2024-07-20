@@ -375,4 +375,4 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                      7.0},
                     7};
     }
-};
+}

@@ -13,7 +13,6 @@ ExternalProject_Add(mumps-ext
         BUILD_COMMAND make -j6
         BUILD_IN_SOURCE true)
 
-
 ExternalProject_Add(ipopt-ext
         GIT_REPOSITORY https://github.com/coin-or/Ipopt.git
         GIT_TAG releases/3.14.16
@@ -23,8 +22,6 @@ ExternalProject_Add(ipopt-ext
         DEPENDS mumps-ext)
 
 add_executable(ipopt_do src/main.cpp
-        src/test_nlp.cpp
-        src/test_nlp.h
         src/integrator.cpp
         src/integrator.h
         src/problem.h
@@ -37,6 +34,7 @@ add_executable(ipopt_do src/main.cpp
         src/constants.h
         src/problem.cpp
         src/util.h)
+
 target_include_directories(ipopt_do PRIVATE ${CMAKE_BINARY_DIR}/third-party-install/usr/local/include/coin-or)
 target_link_directories(ipopt_do PRIVATE ${CMAKE_BINARY_DIR}/third-party-install/usr/local/lib)
-target_link_libraries(ipopt_do ipopt )
+target_link_libraries(ipopt_do ipopt)

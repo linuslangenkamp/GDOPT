@@ -99,7 +99,7 @@ void GDOP::init_h(Index &nnz_h_lag) {
         updateDenseHessianMR(*r, denseS0t, denseS1t, denseS2);
     }
 
-    // update algebraic paramter constraint hessian structure
+    // update algebraic parameter constraint hessian structure
     for (const auto& a : problem.A) {
         updateDenseHessianA(*a, denseS2);
     }
@@ -137,7 +137,6 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0,
             }
         }
     }
-    lengthS0_S0t = it;
     firstRowIndex.push_back(it);
     for (int i = 0; i < offP; i++) {
         int nnzS1row = 0;
@@ -174,7 +173,7 @@ void GDOP::updateDenseHessianLFG(const Expression& expr,
                                     std::vector<std::vector<int>>& denseS0t,
                                     std::vector<std::vector<int>>& denseS1,
                                     std::vector<std::vector<int>>& denseS1t,
-                                    std::vector<std::vector<int>>& denseS2) {
+                                    std::vector<std::vector<int>>& denseS2) const {
     for (auto const [x1, x2] : expr.adjDiff.indXX) {
         denseS0[x1][x2] = 1;
         denseS0t[x1][x2] = 1;
@@ -203,7 +202,7 @@ void GDOP::updateDenseHessianLFG(const Expression& expr,
 void GDOP::updateDenseHessianMR(const Expression& expr,
                                 std::vector<std::vector<int>>& denseS0t,
                                 std::vector<std::vector<int>>& denseS1t,
-                                std::vector<std::vector<int>>& denseS2) {
+                                std::vector<std::vector<int>>& denseS2) const {
     for (auto const [x1, x2] : expr.adjDiff.indXX) {
         denseS0t[x1][x2] = 1;
     }
@@ -443,7 +442,7 @@ bool GDOP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g) {
     return true;
 }
 
-void GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
+int GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
     // TODO: maybe use block structure of jacobian (might be slight speed up)
     // Just iterates over all blocks atm, no use of block struct
     int it = 0;
@@ -562,6 +561,7 @@ void GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
         }
         eq++;
     }
+    return eq;
 }
 
 void GDOP::get_jac_values(const Number *x, Number *values) {
@@ -688,7 +688,8 @@ bool GDOP::eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_
     assert(n == numberVars);
     assert(m == sz(problem.A) + sz(problem.R) + (sz(problem.F) + sz(problem.G)) * rk.steps * mesh.intervals);
     if (values == nullptr) {
-        init_jac_sparsity(iRow, jCol);
+        int eq = init_jac_sparsity(iRow, jCol);
+        assert(eq == m);
     }
     else
     {

@@ -13,7 +13,6 @@ inline int sz(const std::vector<T>& vec) {
 }
 
 struct n2hash {
-    // hashing of N x N
     std::size_t operator()(const std::tuple<int, int>& v) const {
         auto const [t1, t2] = v;
         auto h1 = std::hash<int>{}(t1);
@@ -32,14 +31,19 @@ inline int fullSum(const std::vector<std::vector<int>>& matrix) {
     return sum;
 }
 
-inline void exportIndices(const int* iRow, const int* jCol, const int nnz, const std::string& filename) {
+inline void exportSparsity(const int* iRow, const int* jCol, const int L, const std::tuple<int, int> dim, const std::string& filename) {
     std::ofstream outFile(filename);
     if (!outFile) {
         std::cerr << "Error opening file for writing: " << filename << std::endl;
         return;
     }
-    for (int i = 0; i < nnz; i++) {
-        outFile << iRow[i] << "," << jCol[i] << "\n";
+    auto const [dimRow, dimCol] = dim;
+    outFile << "dimRow" << "," << "dimCol" << ";\n";
+    outFile << dimRow << "," << dimCol << ";\n";
+
+    outFile << "row" << "," << "col" << ";\n";
+    for (int i = 0; i < L; i++) {
+        outFile << iRow[i] << "," << jCol[i] << ";\n";
     }
     outFile.close();
 }

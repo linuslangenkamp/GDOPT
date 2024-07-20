@@ -25,7 +25,7 @@ public:
     const int offX = problem.sizeX;
     const int offU = problem.sizeU;
     const int offP = problem.sizeP;
-    const int offXU = problem.sizeX + problem.sizeU; // number of vars for one collocation knod
+    const int offXU = problem.sizeX + problem.sizeU; // number of vars for one collocation grid point
     const int offXUBlock = (problem.sizeX + problem.sizeU) * rk.steps;  // number of vars per interval
     const int offXUTotal =
             (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals; // first const parameter variable
@@ -47,25 +47,24 @@ public:
       p     S1    ...   S1 S1t  S2
     **/
 
-    int lengthS0;                            // length of one S0 block
-    int lengthS0_S0t;                        // nnz of all S0 and S0t blocks
-    std::vector<int> rowLengthS1Block = {};       // length of the i-th row of one S1 block
+    int lengthS0 = 0;                         // length of one S0 block
+    std::vector<int> rowLengthS1Block = {};   // length of the i-th row of one S1 block
     std::vector<int> firstRowIndex = {};      // last index in i-th row of the parameters
 
     // upper left corner of entire hessian, xu block
-    std::unordered_map<std::tuple<int, int>, int, n2hash> S0;
+    std::unordered_map<std::tuple<int, int>, int, n2hash> S0{};
 
     // lower right corner xu block, might be different since M(.), r(.) are evaluated only at the last grid point
-    std::unordered_map<std::tuple<int, int>, int, n2hash> S0t;
+    std::unordered_map<std::tuple<int, int>, int, n2hash> S0t{};
 
     // lower left corner of entire hessian, xu-p block
-    std::unordered_map<std::tuple<int, int>, int, n2hash> S1;
+    std::unordered_map<std::tuple<int, int>, int, n2hash> S1{};
 
     // lower right corner xu-p block, might be different since M(.), r(.) are evaluated only at the last grid point
-    std::unordered_map<std::tuple<int, int>, int, n2hash> S1t;
+    std::unordered_map<std::tuple<int, int>, int, n2hash> S1t{};
 
     // lower right corner of entire hessian, p-p block
-    std::unordered_map<std::tuple<int, int>, int, n2hash> S2;
+    std::unordered_map<std::tuple<int, int>, int, n2hash> S2{};
 
     bool get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) override;
 
@@ -94,12 +93,12 @@ public:
 
     void init_jac(Index &nnz_jac_g);
 
-    void init_jac_sparsity(Index *iRow, Index *jCol);
+    int init_jac_sparsity(Index *iRow, Index *jCol);
 
     void get_jac_values(const Number *x, Number *values);
 
     void updateDenseHessianLFG(const Expression &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
-        std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &);
+        std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &) const;
 
     void evalHessianS0_S1(Number* values, const Number *x, Expression& expr, double factor, int xij,
         int uij, double tij, int i, int j);
@@ -110,9 +109,9 @@ public:
     void evalHessianS2(Number* values, const Number *x, ParamExpression& expr, double factor);
 
     void updateDenseHessianMR(const Expression &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
-            std::vector<std::vector<int>> &);
+            std::vector<std::vector<int>> &) const;
 
-    void updateDenseHessianA(const ParamExpression &, std::vector<std::vector<int>> &);
+    static void updateDenseHessianA(const ParamExpression &, std::vector<std::vector<int>> &);
 
     void createSparseHessian(std::vector<std::vector<int>> &, std::vector<std::vector<int>> &,
         std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, std::vector<std::vector<int>> &, Index&);
