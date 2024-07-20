@@ -38,12 +38,12 @@ inline void exportSparsity(const int* iRow, const int* jCol, const int L, const 
         return;
     }
     auto const [dimRow, dimCol] = dim;
-    outFile << "dimRow" << "," << "dimCol" << ";\n";
-    outFile << dimRow << "," << dimCol << ";\n";
+    outFile << "dimRow" << "," << "dimCol" << "\n";
+    outFile << dimRow << "," << dimCol << "\n";
 
-    outFile << "row" << "," << "col" << ";\n";
+    outFile << "row" << "," << "col" << "\n";
     for (int i = 0; i < L; i++) {
-        outFile << iRow[i] << "," << jCol[i] << ";\n";
+        outFile << iRow[i] << "," << jCol[i] << "\n";
     }
     outFile.close();
 }
