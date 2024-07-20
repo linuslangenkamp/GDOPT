@@ -3,8 +3,7 @@
 #include "gdop.h"
 #include "util.h"
 
-// TODO: Check entire indices! - LGTM#
-// TODO: Check hessian block structure sparsity and values
+// TODO: Check entire indices! - LGTM
 // TODO: Insert if #p > 0, to save some checks
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
     // #vars
@@ -699,6 +698,7 @@ bool GDOP::eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_
 }
 
 void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
+
     // S0 block forall i, j except very last interval (n, m)
     for (const auto &[vars, it]: S0) {
         auto const [v1, v2] = vars;
@@ -731,6 +731,7 @@ void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
         }
     }
 
+    // TODO: Check hessian block structure
     // S1 block forall i, j except very last interval (n, m)
     for (const auto &[vars, it]: S1) {
         auto const [p, v] = vars;
