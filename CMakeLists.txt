@@ -21,20 +21,16 @@ ExternalProject_Add(ipopt-ext
         BUILD_IN_SOURCE true
         DEPENDS mumps-ext)
 
-add_executable(ipopt_do src/main.cpp
-        src/integrator.cpp
-        src/integrator.h
-        src/problem.h
-        src/expression.h
-        src/constraint.h
-        src/mesh.h
-        src/gdop.h
-        src/gdop.cpp
-        src/mesh.cpp
-        src/constants.h
-        src/problem.cpp
-        src/util.h)
+file(GLOB SRC_FILES "src/*.cpp")
 
+set(EXAMPLE_FILES "examples/hypersensitive.cpp"
+        examples/hypersensitive.h)
+
+include_directories(src examples)
+
+add_executable(ipopt_do ${SRC_FILES} ${EXAMPLE_FILES})
 target_include_directories(ipopt_do PRIVATE ${CMAKE_BINARY_DIR}/third-party-install/usr/local/include/coin-or)
 target_link_directories(ipopt_do PRIVATE ${CMAKE_BINARY_DIR}/third-party-install/usr/local/lib)
 target_link_libraries(ipopt_do ipopt)
+get_property(dirs DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+message("Include directories: ${dirs}")

@@ -858,8 +858,10 @@ int GDOP::get_h_values(const Number *x, Number *values, Number obj_factor, const
             const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
             // eval hessian lagrangian
-            const double lagrFactor = obj_factor * mesh.deltaT[i] * rk.b[j];
-            evalHessianS0_S1(values, x, *problem.L, lagrFactor, xij, uij, tij, i, j);
+            if (problem.L) {
+                const double lagrFactor = obj_factor * mesh.deltaT[i] * rk.b[j];
+                evalHessianS0_S1(values, x, *problem.L, lagrFactor, xij, uij, tij, i, j);
+            }
 
             // eval hessian dynamics
             for (auto const& f : problem.F) {

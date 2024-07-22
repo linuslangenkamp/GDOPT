@@ -3,7 +3,7 @@
 
 #include <limits>
 
-const double MAX_DOUBLE = std::numeric_limits<double>::infinity();
-const double MIN_DOUBLE = -std::numeric_limits<double>::infinity();
+const double PLUS_INFINITY = std::numeric_limits<double>::infinity();
+const double MINUS_INFINITY = -std::numeric_limits<double>::infinity();
 
 #endif //IPOPT_DO_CONSTANTS_H
