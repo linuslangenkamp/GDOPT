@@ -4,7 +4,7 @@
 #include "util.h"
 
 // TODO: Check entire indices! - LGTM
-// TODO: Check why MUMPS has severe problems with rk.steps > 1: looks like jac structure causes it -> Maybe get HSL solvers
+// TODO: Check derivatives (again :))
 // TODO: Insert if #p > 0, to save some checks
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
     // #vars
@@ -513,14 +513,14 @@ int GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
                 }
 
                 // g(v_{ij})_u
-                for (int v : constrG->adj.indU) {
+                for (const int v : constrG->adj.indU) {
                     iRow[it] = eq;
                     jCol[it] = uij + v;
                     it++;
                 }
 
                 // g(v_{ij})_p
-                for (int v : constrG->adj.indP) {
+                for (const int v : constrG->adj.indP) {
                     iRow[it] = eq;
                     jCol[it] = offXUTotal + v;
                     it++;
@@ -536,21 +536,21 @@ int GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
     for (const auto & constrR : problem.R) {
 
         // r(v_{nm})_x
-        for (int v : constrR->adj.indX) {
+        for (const int v : constrR->adj.indX) {
             iRow[it] = eq;
             jCol[it] = xnm + v;
             it++;
         }
 
         // r(v_{nm})_u
-        for (int v : constrR->adj.indU) {
+        for (const int v : constrR->adj.indU) {
             iRow[it] = eq;
             jCol[it] = unm + v;
             it++;
         }
 
         // r(v_{nm})_p
-        for (int v : constrR->adj.indP) {
+        for (const int v : constrR->adj.indP) {
             iRow[it] = eq;
             jCol[it] = offXUTotal + v;
             it++;
@@ -561,7 +561,7 @@ int GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
     for (const auto & constrA : problem.A) {
 
         // a_p
-        for (int v : constrA->adj.indP) {
+        for (const int v : constrA->adj.indP) {
             iRow[it] = eq;
             jCol[it] = offXUTotal + v;
             it++;
@@ -618,7 +618,7 @@ void GDOP::get_jac_values(const Number *x, Number *values) {
 
                 // f(v_{ij})_p
                 for (int v : problem.F[d]->adj.indP) {
-                    values[it] = mesh.deltaT[i] * diffF[2][v];
+                    values[it] = -mesh.deltaT[i] * diffF[2][v];
                     it++;
                 }
             }
@@ -699,6 +699,7 @@ bool GDOP::eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_
     }
     else
     {
+        std::fill(values, values + nele_jac, 0);
         get_jac_values(x, values);
     }
     return true;
@@ -738,7 +739,6 @@ void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
         }
     }
 
-    // TODO: Check hessian block structure
     // S1 block forall i, j except very last interval (n, m)
     for (const auto &[vars, it]: S1) {
         auto const [p, v] = vars;
@@ -871,7 +871,7 @@ int GDOP::get_h_values(const Number *x, Number *values, Number obj_factor, const
 
             // eval hessian dynamics
             for (auto const& f : problem.F) {
-                const double fFactor = lambda[eq] * (-mesh.deltaT[i]);
+                const double fFactor = -lambda[eq] * mesh.deltaT[i];
                 evalHessianS0_S1(values, x, *f, fFactor, xij, uij, tij, i, j);
                 eq++;
             }

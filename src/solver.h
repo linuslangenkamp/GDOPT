@@ -3,11 +3,22 @@
 
 #include "gdop.h"
 
+enum class LinearSolver {
+    MUMPS,
+    MA27,
+    MA57,
+    MA77,
+    MA86,
+    MA97,
+    PARDISO
+};
+
 class Solver {
 public:
-    explicit Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations);
+    explicit Solver(const SmartPtr<GDOP>& gdop, int maxMeshIterations, LinearSolver linearSolver);
 
     SmartPtr<GDOP> gdop;
+    LinearSolver linearSolver;
     const int maxMeshIterations;
     const double tolerance = 1e-14;
 

@@ -16,7 +16,7 @@ ExternalProject_Add(mumps-ext
 ExternalProject_Add(ipopt-ext
         GIT_REPOSITORY https://github.com/coin-or/Ipopt.git
         GIT_TAG releases/3.14.16
-        CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/third-party-install/usr/local
+        CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/third-party-install/usr/local --enable-pardisomkl
         BUILD_COMMAND make -j6
         BUILD_IN_SOURCE true
         DEPENDS mumps-ext)
