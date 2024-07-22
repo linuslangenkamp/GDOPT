@@ -589,7 +589,6 @@ void GDOP::get_jac_values(const Number *x, Number *values) {
                     it++;
                 }
 
-
                 // eval grad f(v_{ij})
                 auto const diffF = problem.F[d]->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
 
@@ -738,15 +737,15 @@ void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
         auto const [p, v] = vars;
         for (int i = 0; i < mesh.intervals - 1; i++) {
             for (int j = 0; j < rk.steps; j++) {
-                const int idxij = it + firstRowIndex[p] + rowLengthS1Block[j] * (i * rk.steps + j);
-                const int pshifted = offXUTotal + p;
-                const int vij = i * offXUBlock + j * offXU + v;
+                int idxij = it + rowLengthS1Block[j] * (i * rk.steps + j);
+                int pshifted = offXUTotal + p;
+                int vij = i * offXUBlock + j * offXU + v;
                 iRow[idxij] = pshifted;
                 jCol[idxij] = vij;
             }
         }
         for (int j = 0; j < rk.steps - 1; j++) {
-            const int idxij = it + firstRowIndex[p] + rowLengthS1Block[j] * ((mesh.intervals - 1) * rk.steps + j);
+            const int idxij = it + rowLengthS1Block[j] * ((mesh.intervals - 1) * rk.steps + j);
             const int pshifted = offXUTotal + p;
             const int vij = (mesh.intervals - 1) * offXUBlock + j * offXU + v;
             iRow[idxij] = pshifted;
@@ -766,7 +765,7 @@ void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
     }
 
     // S2
-    for (const auto &[vars, it]: S1t) {
+    for (const auto &[vars, it]: S2) {
         auto const [p1, p2] = vars;
         const int p1shifted = offXUTotal + p1;
         const int p2shifted = offXUTotal + p2;
@@ -793,6 +792,7 @@ void GDOP::evalHessianS0_S1(Number* values, const Number *x, Expression& expr, c
         auto const idx = lengthS0 * (i * rk.steps + j) + S0[{offX + uvar1, offX + uvar2}];
         values[idx] += factor * diff2Expr[2][k];
     }
+    // TODO: refactor it for S1 blocks, its not correct, with firstRowIndex
     for (int k = 0; k < sz(expr.adjDiff.indPX); k++) {
         auto const [pvar, xvar] = expr.adjDiff.indPX[k];
         auto const it = S1[{pvar, xvar}];
@@ -969,6 +969,7 @@ bool GDOP::eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index
 void GDOP::finalize_solution(SolverReturn status, Index n, const Number *x, const Number *z_L, const Number *z_U,
                              Index m, const Number *g, const Number *lambda, Number obj_value, const IpoptData *ip_data,
                              IpoptCalculatedQuantities *ip_cq) {
+    std::cout << x[600] << std::endl;
     // TODO: output solution
 }
 

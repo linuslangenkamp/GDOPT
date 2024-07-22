@@ -3,14 +3,14 @@
 #include "integrator.h"
 #include "mesh.h"
 #include "gdop.h"
-#include "hypersensitive.h"
+#include "parameterSweep.h"
 
 using namespace Ipopt;
 
 int main() {
-    Problem problem = createProblem_hypersensitive();
+    Problem problem = createProblem_parameterSweep();
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
-    Mesh mesh = Mesh::createEquidistantMesh(10000, 100);
+    Mesh mesh = Mesh::createEquidistantMesh(100, 1);
 
     SmartPtr<GDOP> DOP{new GDOP(std::move(problem), mesh, rk, InitVars::CONST)};
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
