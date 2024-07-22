@@ -117,6 +117,14 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0,
                                 std::vector<std::vector<int>>& denseS1t,
                                 std::vector<std::vector<int>>& denseS2,
                                 Index &nnz_h_lag) {
+    /**
+     it: equation index in COO format
+     S0: shift block 0,0 -> i,j: shift by lengthS0 * (i * rk.steps + j)
+     S0t: is exact -> it = correct eq index
+     S1: is not exact, it = starting index for p-th parameter:  rowLengthS1Block[p] * (i * rk.steps + j)
+     S1t: is exact -> it = correct eq index
+     S2: is exact -> it = correct eq index
+    **/
     int it = 0; // eq index
     for (int i = 0; i < offXU; i++) {
         for (int j = 0; j <= i; j++) {
@@ -137,7 +145,7 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0,
             }
         }
     }
-    firstRowIndex.push_back(it);
+
     for (int i = 0; i < offP; i++) {
         int nnzS1row = 0;
         for (int j = 0; j < offXU; j++) {
@@ -163,7 +171,6 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0,
                 it++;
             }
         }
-        firstRowIndex.push_back(it);
     }
     assert(it == nnz_h_lag);
 }
@@ -737,15 +744,15 @@ void GDOP::init_h_sparsity(Index *iRow, Index *jCol) {
         auto const [p, v] = vars;
         for (int i = 0; i < mesh.intervals - 1; i++) {
             for (int j = 0; j < rk.steps; j++) {
-                int idxij = it + rowLengthS1Block[j] * (i * rk.steps + j);
-                int pshifted = offXUTotal + p;
-                int vij = i * offXUBlock + j * offXU + v;
+                const int idxij = it + rowLengthS1Block[p] * (i * rk.steps + j);
+                const int pshifted = offXUTotal + p;
+                const int vij = i * offXUBlock + j * offXU + v;
                 iRow[idxij] = pshifted;
                 jCol[idxij] = vij;
             }
         }
         for (int j = 0; j < rk.steps - 1; j++) {
-            const int idxij = it + rowLengthS1Block[j] * ((mesh.intervals - 1) * rk.steps + j);
+            const int idxij = it + rowLengthS1Block[p] * ((mesh.intervals - 1) * rk.steps + j);
             const int pshifted = offXUTotal + p;
             const int vij = (mesh.intervals - 1) * offXUBlock + j * offXU + v;
             iRow[idxij] = pshifted;
@@ -792,17 +799,16 @@ void GDOP::evalHessianS0_S1(Number* values, const Number *x, Expression& expr, c
         auto const idx = lengthS0 * (i * rk.steps + j) + S0[{offX + uvar1, offX + uvar2}];
         values[idx] += factor * diff2Expr[2][k];
     }
-    // TODO: refactor it for S1 blocks, its not correct, with firstRowIndex
     for (int k = 0; k < sz(expr.adjDiff.indPX); k++) {
         auto const [pvar, xvar] = expr.adjDiff.indPX[k];
         auto const it = S1[{pvar, xvar}];
-        auto const idx = it + firstRowIndex[pvar] + rowLengthS1Block[j] * (i * rk.steps + j);
+        auto const idx = it + rowLengthS1Block[pvar] * (i * rk.steps + j);
         values[idx] += factor * diff2Expr[3][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPU); k++) {
         auto const [pvar, uvar] = expr.adjDiff.indPU[k];
         auto const it = S1[{pvar, uvar + offX}];
-        auto const idx = it + firstRowIndex[pvar] + rowLengthS1Block[j] * (i * rk.steps + j);
+        auto const idx = it + rowLengthS1Block[pvar] * (i * rk.steps + j);
         values[idx] += factor * diff2Expr[4][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPP); k++) {
@@ -969,7 +975,7 @@ bool GDOP::eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index
 void GDOP::finalize_solution(SolverReturn status, Index n, const Number *x, const Number *z_L, const Number *z_U,
                              Index m, const Number *g, const Number *lambda, Number obj_value, const IpoptData *ip_data,
                              IpoptCalculatedQuantities *ip_cq) {
-    std::cout << x[600] << std::endl;
+    std::cout << x[n - 1] << std::endl;
     // TODO: output solution
 }
 

@@ -49,7 +49,6 @@ public:
 
     int lengthS0 = 0;                         // length of one S0 block
     std::vector<int> rowLengthS1Block = {};   // length of the i-th row of one S1 block
-    std::vector<int> firstRowIndex = {};      // last index in i-th row of the parameters
 
     // upper left corner of entire hessian, xu block
     std::unordered_map<std::tuple<int, int>, int, n2hash> S0{};

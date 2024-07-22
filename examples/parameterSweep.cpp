@@ -1,5 +1,4 @@
 #include "expression.h"
-#include "constraint.h"
 #include "problem.h"
 #include "constants.h"
 
