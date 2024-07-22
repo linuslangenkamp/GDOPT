@@ -120,7 +120,7 @@ Problem createProblem_parameterSweep() {
             {1, 1},
             {MINUS_INFINITY, MINUS_INFINITY}, {PLUS_INFINITY, PLUS_INFINITY},
             {}, {},
-            {0.0}, {0.7},
+            {0.5}, {5},
             {},
             LagrangeP::create(),
             std::move(F),

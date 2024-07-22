@@ -22,6 +22,8 @@ public:
     Integrator rk;
     InitVars initVars;
 
+    std::vector<double> optimum;
+
     const int offX = problem.sizeX;
     const int offU = problem.sizeU;
     const int offP = problem.sizeP;

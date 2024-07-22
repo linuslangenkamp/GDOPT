@@ -4,6 +4,7 @@
 #include "util.h"
 
 // TODO: Check entire indices! - LGTM
+// TODO: Check why MUMPS has severe problems with rk.steps > 1: looks like jac structure causes it -> Maybe get HSL solvers
 // TODO: Insert if #p > 0, to save some checks
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
     // #vars
@@ -32,7 +33,6 @@ void GDOP::init_jac(Index &nnz_jac_g) {
     int containedIndex = 0; // target idx
     for (const auto& dyn : problem.F) {
         nnzDynBlock += sz(dyn->adj.indX) + sz(dyn->adj.indU) + sz(dyn->adj.indP);
-        // intersection of state indices may not be empty!
         // check if the k-th component of x, that is always contained in this block equation,
         // is contained in grad f_k(.) as well => reduce block nnz by 1
         auto it = std::find(dyn->adj.indX.begin(), dyn->adj.indX.end(), containedIndex);
@@ -865,8 +865,8 @@ int GDOP::get_h_values(const Number *x, Number *values, Number obj_factor, const
 
             // eval hessian lagrangian
             if (problem.L) {
-                const double lagrFactor = obj_factor * mesh.deltaT[i] * rk.b[j];
-                evalHessianS0_S1(values, x, *problem.L, lagrFactor, xij, uij, tij, i, j);
+                const double lFactor = obj_factor * mesh.deltaT[i] * rk.b[j];
+                evalHessianS0_S1(values, x, *problem.L, lFactor, xij, uij, tij, i, j);
             }
 
             // eval hessian dynamics
@@ -885,7 +885,7 @@ int GDOP::get_h_values(const Number *x, Number *values, Number obj_factor, const
         }
     }
 
-    // same for the last rk-1 blocks excluding the very last block -> S0t handling
+    // same for the last rk.steps-1 blocks excluding the very last block -> S0t handling
     for (int j = 0; j < rk.steps - 1; j++) {
         const double tij = mesh.grid[mesh.intervals - 1] + rk.c[j] * mesh.deltaT[mesh.intervals - 1];
         const int xij = (mesh.intervals - 1) * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
@@ -975,8 +975,7 @@ bool GDOP::eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index
 void GDOP::finalize_solution(SolverReturn status, Index n, const Number *x, const Number *z_L, const Number *z_U,
                              Index m, const Number *g, const Number *lambda, Number obj_value, const IpoptData *ip_data,
                              IpoptCalculatedQuantities *ip_cq) {
-    std::cout << x[n - 1] << std::endl;
-    // TODO: output solution
+    optimum.assign(x, x + n);
 }
 
 GDOP::GDOP(Problem problem, Mesh &mesh, Integrator &rk, InitVars initVars) : problem(std::move(problem)), mesh(mesh),
