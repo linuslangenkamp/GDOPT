@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
+#include <iomanip>
 
 template<typename T>
 inline int sz(const std::vector<T>& vec) {
@@ -47,6 +48,12 @@ inline void exportSparsity(const int* iRow, const int* jCol, const int L, const 
         outFile << iRow[i] << "," << jCol[i] << "\n";
     }
     outFile.close();
+}
+
+inline std::string double2Str(double x) {
+    std::stringstream strStream;
+    strStream << std::fixed << std::setprecision(19) << x;
+    return strStream.str();
 }
 
 inline double calculateMean(const std::vector<double>& vec) {

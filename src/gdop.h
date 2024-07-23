@@ -10,7 +10,8 @@
 using namespace Ipopt;
 
 enum class InitVars {
-    CONST
+    CONST,
+    CALLBACK
 };
 
 class GDOP : public TNLP {
@@ -22,7 +23,11 @@ public:
     Integrator rk;
     InitVars initVars;
 
-    std::vector<double> optimum;
+    std::vector<double> optimum; // optimal solution - variables
+    double objective;            // optimal solution - objective
+    std::vector<double> x_cb;    // used for setting the initial guess after an optimization (adaptive refinements)
+    bool exportSolution = false; // TODO: later add export attributes
+    std::string exportPath;
 
     const int offX = problem.sizeX;
     const int offU = problem.sizeU;
@@ -122,6 +127,8 @@ public:
     void init_h_sparsity(Index *iRow, Index *jCol);
 
     int get_h_values(const Number *x, Number *values, Number obj_factor, const Number *lambda);
+
+    void exportOptimum(const std::string&) const;
 };
 
 #endif //IPOPT_DO_GDOP_H

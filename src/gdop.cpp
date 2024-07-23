@@ -313,6 +313,12 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
             for (int i = 0; i < n; i++) {
                 x[i] = 1;
             }
+            break;
+        case InitVars::CALLBACK:
+            for (int i = 0; i < n; i++) {
+                x[i] = x_cb[i];
+            }
+            break;
     }
     return true;
 }
@@ -976,8 +982,46 @@ void GDOP::finalize_solution(SolverReturn status, Index n, const Number *x, cons
                              Index m, const Number *g, const Number *lambda, Number obj_value, const IpoptData *ip_data,
                              IpoptCalculatedQuantities *ip_cq) {
     optimum.assign(x, x + n);
+    objective = obj_value;
+    if (exportSolution)
+        exportOptimum(exportPath);
+}
+
+void GDOP::exportOptimum(const std::string& filename) const {
+    std::ofstream outFile(filename);
+    if (!outFile) {
+        std::cerr << "Error opening file for writing: " << filename << std::endl;
+        return;
+    }
+    std::string vars;
+    for (int vx = 0; vx < problem.sizeX; vx++) {
+        vars += ",x" + std::to_string(vx);
+    }
+    for (int vu = 0; vu < problem.sizeU; vu++) {
+        vars += ",u" + std::to_string(vu);
+    }
+    for (int vp = 0; vp < problem.sizeP; vp++) {
+        vars += ",p" + std::to_string(vp);
+    }
+    auto header = "time" + vars;
+    outFile << header << "\n";
+
+    for (int i = 0; i < mesh.intervals; i++) {
+        for (int j = 0; j < rk.steps; j++) {
+            std::string values = double2Str(mesh.grid[i] + rk.c[j] * mesh.deltaT[i]);
+            for (int vx = 0; vx < problem.sizeX; vx++) {
+                values += "," + double2Str(optimum[vx + offXU * j + offXUBlock * i]);
+            }
+            for (int vu = 0; vu < problem.sizeU; vu++) {
+                values += "," + double2Str(optimum[vu + offX + offXU * j + offXUBlock * i]);
+            }
+            for (int vp = 0; vp < problem.sizeP; vp++) {
+                values += "," + double2Str(optimum[vp + offXUTotal]);
+            }
+            outFile << values << "\n";
+        }
+    }
 }
 
 GDOP::GDOP(Problem problem, Mesh &mesh, Integrator &rk, InitVars initVars) : problem(std::move(problem)), mesh(mesh),
-                                                                             rk(rk), initVars(initVars) {
-}
+                                                                             rk(rk), initVars(initVars) {}

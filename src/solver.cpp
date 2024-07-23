@@ -44,18 +44,19 @@ int Solver::solve() const {
     app->Options()->SetStringValue("output_file", "ipopt.out");
 
     ApplicationReturnStatus status = app->Initialize();
+    status = app->OptimizeTNLP(gdop);
 
     int iteration = 0;
-    bool stopRefinement = false;
-    while (iteration <= maxMeshIterations || stopRefinement){
-        status = app->OptimizeTNLP(gdop);
+    while (iteration < maxMeshIterations){
         const double sigma = 2.5;
         auto intervals = basicStochasticStrategy(sigma);
+        if (sz(intervals) == 0)
+            break;
         // interpolate x and u
         // rebuild gdop -> run OptimizeTNLP again
+        status = app->OptimizeTNLP(gdop);
         iteration++;
     }
-
     return status;
 }
 
