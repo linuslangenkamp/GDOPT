@@ -50,19 +50,19 @@ inline void exportSparsity(const int* iRow, const int* jCol, const int L, const 
 }
 
 inline double calculateMean(const std::vector<double>& vec) {
-    double sum = 0.0;
+    double sum = 0;
     for (double num : vec) {
         sum += num;
     }
-    return sum / vec.size();
+    return sum / sz(vec);
 }
 
 inline double calculateStdDev(const std::vector<double>& vec, double mean) {
-    double sum = 0.0;
+    double sum = 0;
     for (double num : vec) {
         sum += (num - mean) * (num - mean);
     }
-    return std::sqrt(sum / vec.size());
+    return std::sqrt(sum / sz(vec));
 }
 
 #endif //IPOPT_DO_UTIL_H

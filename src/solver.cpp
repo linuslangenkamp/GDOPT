@@ -28,7 +28,8 @@ int Solver::solve() const {
     // app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
 
     // test derivatives
-    //app->Options()->SetStringValue("derivative_test", "second-order");
+    // app->Options()->SetStringValue("derivative_test", "second-order");
+    // app->Options()->SetNumericValue("derivative_test_tol", 1e-2);
 
     app->Options()->SetNumericValue("tol", tolerance);
     app->Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
@@ -48,7 +49,8 @@ int Solver::solve() const {
     bool stopRefinement = false;
     while (iteration <= maxMeshIterations || stopRefinement){
         status = app->OptimizeTNLP(gdop);
-        auto intervals = basicStochasticStrategy();
+        const double sigma = 2.5;
+        auto intervals = basicStochasticStrategy(sigma);
         // interpolate x and u
         // rebuild gdop -> run OptimizeTNLP again
         iteration++;
@@ -57,11 +59,12 @@ int Solver::solve() const {
     return status;
 }
 
-std::vector<int> Solver::basicStochasticStrategy() const {
+std::vector<int> Solver::basicStochasticStrategy(const double sigma) const {
     std::vector<int> intervals = {};
     std::vector<std::vector<double>> absIntSum = {};
     std::vector<double> means;
     std::vector<double> stds;
+
     for (int u = 0; u < gdop->problem.sizeU; u++) {
         absIntSum.emplace_back();
         for (int i = 0; i < gdop->mesh.intervals; i++) {
@@ -80,19 +83,19 @@ std::vector<int> Solver::basicStochasticStrategy() const {
             }
             absIntSum[u].push_back(sum);
         }
-        std::sort(absIntSum[u].begin(), absIntSum[u].end());
-
-        std::vector<double> absIntSumMid(absIntSum[u].begin() + static_cast<int>(0.025 * absIntSum[u].size()),
-                                         absIntSum[u].begin() + static_cast<int>(0.975 * absIntSum[u].size()));
-
-        double mean = calculateMean(absIntSumMid);
+        std::vector<double> absIntSumCopy = absIntSum[u];
+        std::sort(absIntSumCopy.begin(), absIntSumCopy.end());
+        std::vector<double> absSum95 = std::vector<double>(absIntSumCopy.begin(),
+                                                           absIntSumCopy.begin() + int(0.95 * sz(absIntSumCopy)));
+        const double mean = calculateMean(absSum95);
         means.push_back(mean);
-        stds.push_back(calculateStdDev(absIntSumMid, mean));
+        stds.push_back(calculateStdDev(absSum95, mean));
     }
+
     for (int i = 0; i < gdop->mesh.intervals; i++) {
         bool containsInterval = false;
         for (int u = 0; u < gdop->problem.sizeU; u++) {
-            if (absIntSum[u][i] > means[u] + 2.5 * stds[u] || containsInterval) {
+            if (absIntSum[u][i] > means[u] + sigma * stds[u] || containsInterval) {
                 intervals.push_back(i);
                 containsInterval = true;
             }

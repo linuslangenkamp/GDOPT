@@ -12,7 +12,7 @@ int main() {
     Problem problem = createProblem_hypersensitive();
     InitVars initVars = InitVars::CONST;
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
-    Mesh mesh = Mesh::createEquidistantMesh(300, 100);
+    Mesh mesh = Mesh::createEquidistantMesh(100, 100);
     LinearSolver linearSolver = LinearSolver::MA57;
     int meshIterations = 0;
 
