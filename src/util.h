@@ -6,6 +6,7 @@
 #include <tuple>
 #include <fstream>
 #include <iostream>
+#include <cmath>
 
 template<typename T>
 inline int sz(const std::vector<T>& vec) {
@@ -46,6 +47,22 @@ inline void exportSparsity(const int* iRow, const int* jCol, const int L, const 
         outFile << iRow[i] << "," << jCol[i] << "\n";
     }
     outFile.close();
+}
+
+inline double calculateMean(const std::vector<double>& vec) {
+    double sum = 0.0;
+    for (double num : vec) {
+        sum += num;
+    }
+    return sum / vec.size();
+}
+
+inline double calculateStdDev(const std::vector<double>& vec, double mean) {
+    double sum = 0.0;
+    for (double num : vec) {
+        sum += (num - mean) * (num - mean);
+    }
+    return std::sqrt(sum / vec.size());
 }
 
 #endif //IPOPT_DO_UTIL_H

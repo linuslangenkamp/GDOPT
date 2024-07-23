@@ -48,11 +48,55 @@ int Solver::solve() const {
     bool stopRefinement = false;
     while (iteration <= maxMeshIterations || stopRefinement){
         status = app->OptimizeTNLP(gdop);
-        // get intervals that ve to be refined -> returns interval indices (i)
+        auto intervals = basicStochasticStrategy();
         // interpolate x and u
         // rebuild gdop -> run OptimizeTNLP again
         iteration++;
     }
 
     return status;
+}
+
+std::vector<int> Solver::basicStochasticStrategy() const {
+    std::vector<int> intervals = {};
+    std::vector<std::vector<double>> absIntSum = {};
+    std::vector<double> means;
+    std::vector<double> stds;
+    for (int u = 0; u < gdop->problem.sizeU; u++) {
+        absIntSum.emplace_back();
+        for (int i = 0; i < gdop->mesh.intervals; i++) {
+            double sum = 0;
+            for (int j = -1; j < gdop->rk.steps; j++) {
+                if (i != 0 || j != -1) {
+                    double u1 = gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + (j + 1) * gdop->offXU];
+                    double u2 = gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU];
+                    if (u1 > u2) {
+                        sum += u1 - u2;
+                    }
+                    else {
+                        sum += u2 - u1;
+                    }
+                }
+            }
+            absIntSum[u].push_back(sum);
+        }
+        std::sort(absIntSum[u].begin(), absIntSum[u].end());
+
+        std::vector<double> absIntSumMid(absIntSum[u].begin() + static_cast<int>(0.025 * absIntSum[u].size()),
+                                         absIntSum[u].begin() + static_cast<int>(0.975 * absIntSum[u].size()));
+
+        double mean = calculateMean(absIntSumMid);
+        means.push_back(mean);
+        stds.push_back(calculateStdDev(absIntSumMid, mean));
+    }
+    for (int i = 0; i < gdop->mesh.intervals; i++) {
+        bool containsInterval = false;
+        for (int u = 0; u < gdop->problem.sizeU; u++) {
+            if (absIntSum[u][i] > means[u] + 2.5 * stds[u] || containsInterval) {
+                intervals.push_back(i);
+                containsInterval = true;
+            }
+        }
+    }
+    return intervals;
 }

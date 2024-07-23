@@ -513,14 +513,14 @@ int GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
                 }
 
                 // g(v_{ij})_u
-                for (const int v : constrG->adj.indU) {
+                for (int v : constrG->adj.indU) {
                     iRow[it] = eq;
                     jCol[it] = uij + v;
                     it++;
                 }
 
                 // g(v_{ij})_p
-                for (const int v : constrG->adj.indP) {
+                for (int v : constrG->adj.indP) {
                     iRow[it] = eq;
                     jCol[it] = offXUTotal + v;
                     it++;
@@ -536,21 +536,21 @@ int GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
     for (const auto & constrR : problem.R) {
 
         // r(v_{nm})_x
-        for (const int v : constrR->adj.indX) {
+        for (int v : constrR->adj.indX) {
             iRow[it] = eq;
             jCol[it] = xnm + v;
             it++;
         }
 
         // r(v_{nm})_u
-        for (const int v : constrR->adj.indU) {
+        for (int v : constrR->adj.indU) {
             iRow[it] = eq;
             jCol[it] = unm + v;
             it++;
         }
 
         // r(v_{nm})_p
-        for (const int v : constrR->adj.indP) {
+        for (int v : constrR->adj.indP) {
             iRow[it] = eq;
             jCol[it] = offXUTotal + v;
             it++;
@@ -561,7 +561,7 @@ int GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
     for (const auto & constrA : problem.A) {
 
         // a_p
-        for (const int v : constrA->adj.indP) {
+        for (int v : constrA->adj.indP) {
             iRow[it] = eq;
             jCol[it] = offXUTotal + v;
             it++;

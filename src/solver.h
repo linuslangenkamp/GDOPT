@@ -23,6 +23,7 @@ public:
     const double tolerance = 1e-14;
 
     int solve() const;
+    std::vector<int> basicStochasticStrategy() const;
 };
 
 /* add interpolation type

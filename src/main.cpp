@@ -9,11 +9,11 @@
 using namespace Ipopt;
 
 int main() {
-    Problem problem = createProblem_parameterSweep();
+    Problem problem = createProblem_hypersensitive();
     InitVars initVars = InitVars::CONST;
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
-    Mesh mesh = Mesh::createEquidistantMesh(400, 1);
-    LinearSolver linearSolver = LinearSolver::MA86;
+    Mesh mesh = Mesh::createEquidistantMesh(300, 100);
+    LinearSolver linearSolver = LinearSolver::MA57;
     int meshIterations = 0;
 
     Solver solver = Solver(new GDOP(std::move(problem), mesh, rk, initVars), meshIterations, linearSolver);
