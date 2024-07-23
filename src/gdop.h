@@ -25,7 +25,8 @@ public:
 
     std::vector<double> optimum; // optimal solution - variables
     double objective;            // optimal solution - objective
-    std::vector<double> x_cb;    // used for setting the initial guess after an optimization (adaptive refinements)
+    std::vector<double> x_cb;
+
     bool exportSolution = false; // TODO: later add export attributes
     std::string exportPath;
 

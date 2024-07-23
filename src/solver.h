@@ -15,15 +15,17 @@ enum class LinearSolver {
 
 class Solver {
 public:
-    explicit Solver(const SmartPtr<GDOP>& gdop, int maxMeshIterations, LinearSolver linearSolver);
+    Solver(const SmartPtr<GDOP>& gdop, int maxMeshIterations, LinearSolver linearSolver);
 
     SmartPtr<GDOP> gdop;
     LinearSolver linearSolver;
     const int maxMeshIterations;
     const double tolerance = 1e-14;
+    std::vector<double> cbValues;           // starting values after refinement
 
-    int solve() const;
-    std::vector<int> basicStochasticStrategy(double sigma) const;
+    int solve();
+    std::vector<int> basicStochasticStrategy(double) const;
+    void refine(std::vector<int>&);
 };
 
 /* add interpolation type

@@ -38,5 +38,4 @@ public:
     std::vector<std::unique_ptr<ParamConstraint>> A; // algebraic constraints for parameters only:
 };
 
-
 #endif //IPOPT_DO_PROBLEM_H
