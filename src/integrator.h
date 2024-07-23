@@ -23,6 +23,13 @@ public:
     const std::vector<double> invRowSum;
     const std::vector<double> b;
     const int steps;
+    const std::vector<std::vector<double>> firstLagrangeBasis;
+    const std::vector<std::vector<double>> lagrangeBasis;
+
+    std::vector<std::vector<double>> firstBasisPolynomial();       // inner basis poly, needed for 1st interval of u
+    std::vector<std::vector<double>>  basisPolynomial();         // standard collocation polynomial
+    std::vector<double> interpolateFirstControl(std::vector<double> &uValues);
+    std::vector<double> interpolate(std::vector<double>&);
 private:
     Integrator(const std::vector<double>& c,
                const std::vector<std::vector<double>>& A,

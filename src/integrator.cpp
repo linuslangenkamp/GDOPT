@@ -6,13 +6,15 @@ a_{s,s} = 1/s^2 and ainv_{s,s} = 1/2 (1 + s^2) hold.
 */
 
 #include "integrator.h"
+#include "util.h"
 
 Integrator::Integrator(const std::vector<double>& c,
                        const std::vector<std::vector<double>>& A,
                        const std::vector<std::vector<double>>& Ainv,
                        const std::vector<double>& invRowSum,
                        int steps)
-        : c(c), A(A), Ainv(Ainv), b(A.back()), invRowSum(invRowSum), steps(steps) {
+        : c(c), A(A), Ainv(Ainv), b(A.back()), invRowSum(invRowSum), steps(steps),
+          firstLagrangeBasis(firstBasisPolynomial()), lagrangeBasis(basisPolynomial()) {
 }
 
 Integrator Integrator::radauIIA(IntegratorSteps steps) {
@@ -375,4 +377,87 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                      7.0},
                     7};
     }
+}
+
+/*
+Different interpolation options: only c_j (inner, 1st interval control) or standard 0, c[0], ..., c[m]
+*/
+
+// use this for first control interval
+std::vector<std::vector<double>> Integrator::firstBasisPolynomial() {
+    std::vector<double> newGrid;
+    for (int k = 0; k < 2; k++) {
+        for (int idx = 0; idx < sz(c); idx++) {
+            newGrid.push_back(0.5 * (k + c[idx]));
+        }
+    }
+
+    std::vector<std::vector<double>> lagr;
+    for (auto coll : newGrid){
+        std::vector<double> lagrC = {};
+        for (int k = 0; k < steps; k++) {
+            double factor = 1;
+            for (int d = 0; d < steps; d++) {
+                if (d != k)
+                    factor *= (coll - c[d]) / (c[k] - c[d]);
+            }
+            lagrC.push_back(factor);
+        }
+        lagr.push_back(lagrC);
+    }
+    return lagr;
+}
+
+// use this for every interval, but the 0-th control interval
+std::vector<std::vector<double>> Integrator::basisPolynomial() {
+    std::vector<double> collocationPoints = c;
+    collocationPoints.insert(collocationPoints.begin(), 0);
+    std::vector<double> newGrid;
+    for (int k = 0; k < 2; k++) {
+        for (int idx = 0; idx < sz(collocationPoints); idx++) {
+            if (k != 1 || idx != 0)
+                newGrid.push_back(0.5 * (k + collocationPoints[idx]));
+        }
+    }
+
+    std::vector<std::vector<double>> lagr;
+    for (auto coll : newGrid){
+        std::vector<double> lagrC = {};
+        for (int k = 0; k < steps + 1; k++) {
+            double factor = 1;
+            for (int d = 0; d < steps + 1; d++) {
+                if (d != k)
+                    factor *= (coll - collocationPoints[d]) / (collocationPoints[k] - collocationPoints[d]);
+            }
+            lagrC.push_back(factor);
+        }
+        lagr.push_back(lagrC);
+    }
+    return lagr;
+}
+
+// output values at c_0/2, c_1/2, ..., c_m/2 = 1/2, 1/2 + c_0/2, 1/2 + c_1/2, ..., 1
+std::vector<double> Integrator::interpolateFirstControl(std::vector<double>& uValues) {
+    std::vector<double> vals;
+    for (auto coeffs: firstLagrangeBasis) {
+        double sum = 0;
+        for (int k = 0; k < steps; k++) {
+            sum += uValues[k] * coeffs[k];
+        }
+        vals.push_back(sum);
+    }
+    return vals;
+}
+
+// output values at c_0/2, c_1/2, ..., c_m/2 = 1/2, 1/2 + c_0/2, 1/2 + c_1/2, ..., 1
+std::vector<double> Integrator::interpolate(std::vector<double>& values) {
+    std::vector<double> vals;
+    for (int j = 1; j < sz(lagrangeBasis); j++) {
+        double sum = 0;
+        for (int k = 0; k < steps + 1; k++) {
+            sum += values[k] * lagrangeBasis[j][k];
+        }
+        vals.push_back(sum);
+    }
+    return vals;
 }

@@ -51,8 +51,9 @@ int Solver::solve() const {
         const double sigma = 2.5;
         auto intervals = basicStochasticStrategy(sigma);
         if (sz(intervals) == 0)
-            break;
+            return status;
         // interpolate x and u
+
         // rebuild gdop -> run OptimizeTNLP again
         status = app->OptimizeTNLP(gdop);
         iteration++;
