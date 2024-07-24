@@ -30,13 +30,14 @@ public:
     bool exportSolution = false; // TODO: later add export attributes
     std::string exportPath;
 
-    int offX;
-    int offU;
-    int offP;
-    int offXU;
-    int offXUBlock;
-    int offXUTotal;
-    int numberVars;
+    const int offX = problem->sizeX;
+    const int offU = problem->sizeU;
+    const int offP =  problem->sizeP;
+    const int offXU = problem->sizeX + problem->sizeU;  // number of vars for one collocation grid point
+    const int offXUBlock = (problem->sizeX + problem->sizeU) * rk.steps; // number of vars in one interval
+    const int offXUTotal = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals;   // first parameter variable
+    const int numberVars = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals + problem->sizeP;
+
     // TODO: add tf as optional var?!
 
     // block hessians as sparse map: (i,j) -> it, it-th index in COO format, (i,j) var indices

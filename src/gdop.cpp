@@ -1023,17 +1023,5 @@ void GDOP::exportOptimum(const std::string& filename) const {
     }
 }
 
-GDOP::GDOP(const std::shared_ptr<const Problem> & problem, Mesh &mesh, Integrator &rk, InitVars initVars) : rk(rk) {
-  this->mesh = mesh;
-  this->problem = problem;
-  this->initVars = initVars;
-  offX = problem->sizeX;
-  offU = problem->sizeU;
-  offP = problem->sizeP;
-  offXU = problem->sizeX + problem->sizeU; // number of vars for one collocation grid point
-  offXUBlock = (problem->sizeX + problem->sizeU) * rk.steps;  // number of vars per interval
-  offXUTotal =
-            (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals; // first const parameter variable
-  numberVars =
-            (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals + problem->sizeP; // total number of vars
-}
+GDOP::GDOP(const std::shared_ptr<const Problem> & problem, Mesh &mesh, Integrator &rk, InitVars initVars) :
+                problem(problem), mesh(mesh), rk(rk), initVars(initVars) {}

@@ -72,4 +72,14 @@ inline double calculateStdDev(const std::vector<double>& vec, double mean) {
     return std::sqrt(sum / sz(vec));
 }
 
+inline void printObjectiveHistory(const std::vector<double>& objectiveHistory) {
+    // TODO: Output with scientific notation
+    std::cout << "\nMesh refinement history\n" << std::endl;
+    std::cout << std::setw(5) << "iteration" << std::setw(17) << "objective" << std::endl;
+    std::cout << "--------------------------------" << std::endl;
+    for (int iteration = 0; iteration < sz(objectiveHistory); iteration++) {
+        std::cout << std::setw(5) << iteration << std::setw(27) << double2Str(objectiveHistory[iteration]) << std::endl;
+    }
+}
+
 #endif //IPOPT_DO_UTIL_H

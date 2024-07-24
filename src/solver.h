@@ -22,13 +22,12 @@ public:
     const int maxMeshIterations;
     const double tolerance = 1e-14;
     std::vector<double> cbValues;           // starting values after refinement
+    std::vector<double> objectiveHistory;   // history of objectives in refinement process
 
     int solve();
     std::vector<int> basicStochasticStrategy(double) const;
     void refine(std::vector<int>&);
+    void finalizeSolution() const;
 };
 
-/* add interpolation type
- * add flags: mesh iterations, type of mesh refinement
- */
 #endif //IPOPT_DO_SOLVER_H

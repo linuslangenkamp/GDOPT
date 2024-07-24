@@ -45,29 +45,45 @@ int Solver::solve() {
     app->Options()->SetStringValue("output_file", "ipopt.out");
 
     ApplicationReturnStatus status = app->Initialize();
+
+    // initial optimization
     status = app->OptimizeTNLP(gdop);
+    objectiveHistory = {gdop->objective};
 
     int meshIteration = 0;
     while (meshIteration < maxMeshIterations) {
         const double sigma = 2.5;
         auto markedIntervals = basicStochasticStrategy(sigma);
-        if (sz(markedIntervals) == 0)
+        if (sz(markedIntervals) == 0) {
+            finalizeSolution();
             return status;
+        }
 
         // interpolate x and u, update the mesh
         refine(markedIntervals);
 
         // small overhead because of the reinitializing of the GDOP, but thus all variables are initialized correctly
         // and invariant constant during each optimization remain const
-        gdop = new GDOP(gdop->problem, gdop->mesh, gdop->rk, InitVars::CALLBACK);;
+        gdop = new GDOP(gdop->problem, gdop->mesh, gdop->rk, InitVars::CALLBACK);
+
+        // set new starting values
         gdop->x_cb = cbValues;
 
         // optimize again
         status = app->OptimizeTNLP(gdop);
+        objectiveHistory.push_back(gdop->objective);
 
         meshIteration++;
     }
+
+    finalizeSolution();
     return status;
+}
+
+void Solver::finalizeSolution() const {
+    if (maxMeshIterations > 0) {
+        printObjectiveHistory(objectiveHistory);
+    }
 }
 
 std::vector<int> Solver::basicStochasticStrategy(const double sigma) const {
@@ -82,8 +98,8 @@ std::vector<int> Solver::basicStochasticStrategy(const double sigma) const {
             double sum = 0;
             for (int j = -1; j < gdop->rk.steps; j++) {
                 if (!((i == 0 && j == -1) || (i == gdop->mesh.intervals - 1 && j == gdop->rk.steps - 1)))  {
-                    double u1 = gdop->optimum.at(u + gdop->offX + i * gdop->offXUBlock + (j + 1) * gdop->offXU);
-                    double u2 = gdop->optimum.at(u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU);
+                    double u1 = gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + (j + 1) * gdop->offXU];
+                    double u2 = gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU];
                     if (u1 > u2) {
                         sum += u1 - u2;
                     } else {
@@ -161,14 +177,14 @@ void Solver::refine(std::vector<int> &markedIntervals) {
                     }
                 }
             }
-            index++;       // go to next marked interval
+            index++;    // go to next marked interval
         }
         // not marked interval: copy optimal values
         else {
             for (int v = 0; v < gdop->offXU; v++) {
                 for (int k = 0; k < gdop->rk.steps; k++) {
                     cbValues[v + (i + index) * gdop->offXUBlock + k * gdop->offXU] =
-                    gdop->optimum.at(v + i * gdop->offXUBlock + k * gdop->offXU);
+                    gdop->optimum[v + i * gdop->offXUBlock + k * gdop->offXU];
                 }
             }
         }
