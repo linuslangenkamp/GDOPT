@@ -16,9 +16,9 @@ enum class InitVars {
 
 class GDOP : public TNLP {
 public:
-    GDOP(Problem problem, Mesh &mesh, Integrator &rk, InitVars initVars);
+    GDOP(const std::shared_ptr<const Problem> & problem, Mesh &mesh, Integrator &rk, InitVars initVars);
 
-    Problem problem;
+    std::shared_ptr<const Problem> problem;
     Mesh mesh;
     Integrator rk;
     InitVars initVars;
@@ -30,15 +30,13 @@ public:
     bool exportSolution = false; // TODO: later add export attributes
     std::string exportPath;
 
-    const int offX = problem.sizeX;
-    const int offU = problem.sizeU;
-    const int offP = problem.sizeP;
-    const int offXU = problem.sizeX + problem.sizeU; // number of vars for one collocation grid point
-    const int offXUBlock = (problem.sizeX + problem.sizeU) * rk.steps;  // number of vars per interval
-    const int offXUTotal =
-            (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals; // first const parameter variable
-    const int numberVars =
-            (problem.sizeX + problem.sizeU) * rk.steps * mesh.intervals + problem.sizeP; // total number of vars
+    int offX;
+    int offU;
+    int offP;
+    int offXU;
+    int offXUBlock;
+    int offXUTotal;
+    int numberVars;
     // TODO: add tf as optional var?!
 
     // block hessians as sparse map: (i,j) -> it, it-th index in COO format, (i,j) var indices

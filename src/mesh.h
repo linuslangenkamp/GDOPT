@@ -6,6 +6,7 @@
 
 class Mesh {
 public:
+    Mesh() = default;
     Mesh(int intervals,
     double tf,
     std::vector<double> grid,
