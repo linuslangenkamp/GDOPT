@@ -47,28 +47,31 @@ int Solver::solve() {
     ApplicationReturnStatus status = app->Initialize();
     status = app->OptimizeTNLP(gdop);
 
-    int iteration = 0;
-    while (iteration < maxMeshIterations) {
+    int meshIteration = 0;
+    while (meshIteration < maxMeshIterations) {
         const double sigma = 2.5;
-        auto intervals = basicStochasticStrategy(sigma);
-        if (sz(intervals) == 0)
+        auto markedIntervals = basicStochasticStrategy(sigma);
+        if (sz(markedIntervals) == 0)
             return status;
 
         // interpolate x and u, update the mesh
-        refine(intervals);
+        refine(markedIntervals);
 
         // small overhead because of the reinitializing of the GDOP, but thus all variables are initialized correctly
         // and invariant constant during each optimization remain const
-        this->gdop = new GDOP(std::move(gdop->problem), gdop->mesh, gdop->rk, InitVars::CALLBACK);
+        gdop = new GDOP(std::move(gdop->problem), gdop->mesh, gdop->rk, InitVars::CALLBACK);
         gdop->x_cb = cbValues;
+
+        // optimize again
         status = app->OptimizeTNLP(gdop);
-        iteration++;
+
+        meshIteration++;
     }
     return status;
 }
 
 std::vector<int> Solver::basicStochasticStrategy(const double sigma) const {
-    std::vector<int> intervals = {};
+    std::vector<int> markedIntervals = {};
     std::vector<std::vector<double>> absIntSum = {};
     std::vector<double> means;
     std::vector<double> stds;
@@ -103,46 +106,71 @@ std::vector<int> Solver::basicStochasticStrategy(const double sigma) const {
         bool containsInterval = false;
         for (int u = 0; u < gdop->problem.sizeU; u++) {
             if (absIntSum[u][i] > means[u] + sigma * stds[u] || containsInterval) {
-                intervals.push_back(i);
+                markedIntervals.push_back(i);
                 containsInterval = true;
             }
         }
     }
-    return intervals;
+    return markedIntervals;
 }
 
-void Solver::refine(std::vector<int> &intervals) {
-    gdop->mesh.update(intervals);
+void Solver::refine(std::vector<int> &markedIntervals) {
+    gdop->mesh.update(markedIntervals);
     int varCount = (gdop->problem.sizeX + gdop->problem.sizeU) * gdop->rk.steps * gdop->mesh.intervals +
                    gdop->problem.sizeP;
-    cbValues.reserve(varCount);
+    cbValues.resize(varCount, 0.0);
 
-    // INTERPOLATE / EXTRAPOLATE OTHER VALUES
-    // TODO: init cbValues with range as 0 -> later set values
+    // interpolate all values on marked intervals
     int index = 0;
     for (int i = 0; i < gdop->mesh.intervals; i++) {
-        if (intervals[index] == i) {
-            for (int v = 0; v < gdop->offXU; v++) {
+        if (markedIntervals[index] == i) {
+            for (int v = 0; v < gdop->offXU; v++) {         // iterate over every var in {x, u} -> interpolate
                 std::vector<double> localVars;
+                // i > 0 interval cases
                 if (i > 0) {
-                    /*
-                    if (i == 0 && v < gdop->offX) {
-                        localVars.push_back(gdop->problem.x0[v]);
-                    }
-                    if (i == 0) {
-                        int jstart = 0;
-                    }
-                    else {
-                        int jstart = -1;*/
-
                     for (int j = -1; j < gdop->rk.steps; j++) {
                         localVars.push_back(gdop->optimum[v + i * gdop->offXUBlock + j * gdop->offXU]);
                     }
-                    auto const vals = gdop->rk.interpolate(localVars);
+                    auto const polyVals = gdop->rk.interpolate(localVars);
+                    for (int k = 0; k < sz(polyVals); k++) {
+                        cbValues[v + (i + index) * gdop->offXUBlock + k * gdop->offXU] = polyVals[k];
+                    }
+                }
+                else {
+                    // 0-th interval cases
+                    if (v < gdop->offX) {
+                        localVars.push_back(gdop->problem.x0[v]);
+                        for (int j = 0; j < gdop->rk.steps; j++) {
+                            localVars.push_back(gdop->optimum[v + j * gdop->offXU]);
+                            auto const polyVals = gdop->rk.interpolate(localVars);
+                            for (int k = 0; k < sz(polyVals); k++) {
+                                cbValues[v + i * gdop->offXUBlock + k * gdop->offXU] = polyVals[k];
+                            }
+                        }
+                    }
+                    else {
+                        // 0-th control -> interpolate with order one less (only not rk.steps points, not rk.steps + 1)
+                        for (int j = 0; j < gdop->rk.steps; j++) {
+                            localVars.push_back(gdop->optimum[v + j * gdop->offXU]);
+                            }
+                        auto const polyVals = gdop->rk.interpolateFirstControl(localVars);
+                        for (int k = 0; k < sz(polyVals); k++) {
+                            cbValues[v + i * gdop->offXUBlock + k * gdop->offXU] = polyVals[k];
+                        }
+                    }
+
                 }
             }
-            index++;
+            index++;       // go to next marked interval
+        }
+        // not marked interval: copy optimal values
+        else {
+            for (int v = 0; v < gdop->offXU; v++) {
+                for (int k = 0; k < gdop->rk.steps; k++) {
+                    cbValues[v + (i + index) * gdop->offXUBlock + k * gdop->offXU] =
+                    gdop->optimum[v + i * gdop->offXUBlock + k * gdop->offXU];
+                }
+            }
         }
     }
-    cbValues.push_back(0);
 }

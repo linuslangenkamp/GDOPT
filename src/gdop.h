@@ -24,8 +24,8 @@ public:
     InitVars initVars;
 
     std::vector<double> optimum; // optimal solution - variables
-    double objective;            // optimal solution - objective
-    std::vector<double> x_cb;
+    double objective{};          // optimal solution - objective
+    std::vector<double> x_cb;    // optimal solution (interpolated after refinement)
 
     bool exportSolution = false; // TODO: later add export attributes
     std::string exportPath;
