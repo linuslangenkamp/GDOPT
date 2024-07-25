@@ -2,10 +2,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData/batchReactorRefinement"
-model = "BatchReactor"
+model = "Hypersensitive"
 it = 0
 specifCol = 'u0'
-interval = [0, 1]
+interval = [9995, 10000]
 
 df = pd.read_csv(path + "/" + model + str(it) + ".csv" , sep=",")
 print(df.head())
@@ -15,6 +15,7 @@ if specifCol == None:
     for column in df.columns[1:]:
         plt.plot(df['time'], df[column], label=column)
         plt.scatter(df['time'], df[column], color='red', s=10)
+        plt.scatter(df['time'], [0] * len(df['time']), color='red', s=10)
         plt.xlabel('Time')
         plt.ylabel(column)
         plt.xlim(interval[0], interval[1])
@@ -24,6 +25,7 @@ if specifCol == None:
 else:
     plt.plot(df['time'], df[specifCol], label=specifCol)
     plt.scatter(df['time'], df[specifCol], color='red', s=10)
+    plt.scatter(df['time'], [0] * len(df['time']), color='red', s=10)
     plt.xlabel('Time')
     plt.ylabel(specifCol)
     plt.xlim(interval[0], interval[1])

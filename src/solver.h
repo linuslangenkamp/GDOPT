@@ -31,13 +31,14 @@ public:
     void finalizeOptimization() const;
 
 
-    // additional / optional flags, ...
-    void postOptimization();
+    // additional / optional flags, printouts, ...
     std::vector<double> objectiveHistory;   // history of objectives in refinement process
     std::string exportOptimumPath;
+    std::chrono::_V2::system_clock::time_point solveStartTime;
+    void postOptimization();
     bool exportOptimum = false;
     void setExportOptimumPath(const std::string&);
-
+    void initSolvingProcess();
 };
 
 #endif //IPOPT_DO_SOLVER_H

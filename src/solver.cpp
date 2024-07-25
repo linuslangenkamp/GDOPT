@@ -1,3 +1,4 @@
+#include <chrono>
 #include "solver.h"
 #include "IpIpoptApplication.hpp"
 
@@ -20,6 +21,7 @@ std::string getLinearSolverName(LinearSolver solver) {
 }
 
 int Solver::solve() {
+    initSolvingProcess();
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
 
     // numeric jacobian and hessian
@@ -75,6 +77,15 @@ int Solver::solve() {
     return status;
 }
 
+void Solver::setExportOptimumPath(const std::string& exportPath) {
+    this->exportOptimumPath = exportPath;
+    this->exportOptimum = true;
+}
+
+void Solver::initSolvingProcess() {
+    solveStartTime = std::chrono::high_resolution_clock::now();
+}
+
 void Solver::postOptimization() {
     objectiveHistory.push_back(gdop->objective);
     if (exportOptimum) {
@@ -87,6 +98,8 @@ void Solver::finalizeOptimization() const {
     if (maxMeshIterations > 0) {
         printObjectiveHistory(objectiveHistory);
     }
+    auto timeTaken = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - solveStartTime).count();
+    std::cout << "\nSolving took: " << timeTaken << " seconds" << std::endl;
 }
 
 std::vector<int> Solver::basicStochasticStrategy(const double sigma) const {
@@ -195,9 +208,4 @@ void Solver::refine(std::vector<int> &markedIntervals) {
     for (int p = 0; p < gdop->offP; p++) {
         cbValues[newOffXUTotal + p] = gdop->optimum[gdop->offXUTotal + p];
     }
-}
-
-void Solver::setExportOptimumPath(const std::string& exportPath) {
-    this->exportOptimumPath = exportPath;
-    this->exportOptimum = true;
 }

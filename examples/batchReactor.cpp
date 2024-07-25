@@ -1,9 +1,7 @@
 #include <string>
 #include "batchReactor.h"
 #include "expression.h"
-#include "constraint.h"
 #include "problem.h"
-#include "constants.h"
 
 /**
  * Batch Reactor from Parallel Multiple-Shooting and Collocation Optimization with OpenModelica,
@@ -17,14 +15,14 @@
                              -0.57354505670893241 with n = 5e5, m = 7, time = 223.389s, MA57
 
  model batchReactor
-  Real x1(start =1, fixed=true, min=0, max=1);
-  Real x2(start =0, fixed=true, min=0, max=1);
-  Real may = -x2 annotation(isMayer = true);
+  Real x1(start=1, fixed=true, min=0, max=1);
+  Real x2(start=0, fixed=true, min=0, max=1);
+  Real may = -x2 annotation(isMayer=true);
   input Real u(min=0, max=5);
 equation
-  der(x1) = -(u+u^2/2)*x1;
-  der(x2) = u*x1;
-  annotation(experiment(StartTime = 0, StopTime = 1, Tolerance = 1e-14),
+  der(x1) = -(u + u^2/2) * x1;
+  der(x2) = u * x1;
+  annotation(experiment(StartTime=0, StopTime=1, Tolerance=1e-14),
 __OpenModelica_simulationFlags(solver="optimization", optimizerNP="3"),
 __OpenModelica_commandLineOptions="+g=Optimica");
 end BatchReactor;
