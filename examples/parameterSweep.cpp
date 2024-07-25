@@ -1,3 +1,4 @@
+#include <string>
 #include "expression.h"
 #include "problem.h"
 #include "constants.h"
@@ -126,6 +127,7 @@ Problem createProblem_parameterSweep() {
             std::move(F),
             {},
             {},
-            {});
+            {},
+            "ParameterSweep");
     return problem;
 };

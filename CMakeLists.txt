@@ -26,7 +26,9 @@ file(GLOB SRC_FILES "src/*.cpp")
 set(EXAMPLE_FILES "examples/hypersensitive.cpp"
         examples/hypersensitive.h
         examples/parameterSweep.h
-        examples/parameterSweep.cpp)
+        examples/parameterSweep.cpp
+        examples/batchReactor.cpp
+        examples/batchReactor.h)
 
 include_directories(src examples)
 

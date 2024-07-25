@@ -5,6 +5,7 @@
 #include <vector>
 #include <array>
 
+// TODO: maybe rename adj and adjdiff -> adjdiff, adjdiff2
 struct Adjacency {
     const std::vector<int> indX;    // Indices X
     const std::vector<int> indU;    // Indices U

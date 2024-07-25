@@ -1,3 +1,4 @@
+#include <string>
 #include "expression.h"
 #include "constraint.h"
 #include "problem.h"
@@ -64,6 +65,7 @@ public:
     std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{-3*x[0]*x[0]}, {1}, {}};
     }
+
     std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{-6*x[0]}, {}, {}, {}, {}, {}};
     }
@@ -99,6 +101,7 @@ public:
     std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{-1}, {}, {}};
     }
+
     std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
         return {std::vector<double>{}, {}, {}, {}, {}, {}};
     }
@@ -126,6 +129,7 @@ Problem createProblem_hypersensitive() {
             std::move(F),
             {},
             std::move(R),
-            {});
+            {},
+            "Hypersensitive");
     return problem;
 };

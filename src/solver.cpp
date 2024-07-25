@@ -1,8 +1,6 @@
 #include "solver.h"
 #include "IpIpoptApplication.hpp"
 
-// TODO: Output solution to csv, refine
-
 Solver::Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations, LinearSolver linearSolver) :
                gdop(gdop), maxMeshIterations(maxMeshIterations), linearSolver(linearSolver){}
 
@@ -48,14 +46,13 @@ int Solver::solve() {
 
     // initial optimization
     status = app->OptimizeTNLP(gdop);
-    objectiveHistory = {gdop->objective};
+    postOptimization();
 
-    int meshIteration = 0;
-    while (meshIteration < maxMeshIterations) {
+    while (meshIteration <= maxMeshIterations) {
         const double sigma = 2.5;
         auto markedIntervals = basicStochasticStrategy(sigma);
         if (sz(markedIntervals) == 0) {
-            finalizeSolution();
+            finalizeOptimization();
             return status;
         }
 
@@ -71,16 +68,22 @@ int Solver::solve() {
 
         // optimize again
         status = app->OptimizeTNLP(gdop);
-        objectiveHistory.push_back(gdop->objective);
-
-        meshIteration++;
+        postOptimization();
     }
 
-    finalizeSolution();
+    finalizeOptimization();
     return status;
 }
 
-void Solver::finalizeSolution() const {
+void Solver::postOptimization() {
+    objectiveHistory.push_back(gdop->objective);
+    if (exportOptimum) {
+        gdop->exportOptimum(exportOptimumPath + "/" + gdop->problem->name + std::to_string(meshIteration) + ".csv");
+    }
+    meshIteration++;
+}
+
+void Solver::finalizeOptimization() const {
     if (maxMeshIterations > 0) {
         printObjectiveHistory(objectiveHistory);
     }
@@ -192,4 +195,9 @@ void Solver::refine(std::vector<int> &markedIntervals) {
     for (int p = 0; p < gdop->offP; p++) {
         cbValues[newOffXUTotal + p] = gdop->optimum[gdop->offXUTotal + p];
     }
+}
+
+void Solver::setExportOptimumPath(const std::string& exportPath) {
+    this->exportOptimumPath = exportPath;
+    this->exportOptimum = true;
 }

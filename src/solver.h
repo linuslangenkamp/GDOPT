@@ -19,15 +19,25 @@ public:
 
     SmartPtr<GDOP> gdop;
     LinearSolver linearSolver;
+    int meshIteration = 0;
     const int maxMeshIterations;
     const double tolerance = 1e-14;
     std::vector<double> cbValues;           // starting values after refinement
-    std::vector<double> objectiveHistory;   // history of objectives in refinement process
 
+    // important methods
     int solve();
     std::vector<int> basicStochasticStrategy(double) const;
     void refine(std::vector<int>&);
-    void finalizeSolution() const;
+    void finalizeOptimization() const;
+
+
+    // additional / optional flags, ...
+    void postOptimization();
+    std::vector<double> objectiveHistory;   // history of objectives in refinement process
+    std::string exportOptimumPath;
+    bool exportOptimum = false;
+    void setExportOptimumPath(const std::string&);
+
 };
 
 #endif //IPOPT_DO_SOLVER_H
