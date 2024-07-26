@@ -125,12 +125,12 @@ class F2RT : public Expression {
 public:
     static std::unique_ptr<F2RT> create() {
         Adjacency adj{
-                {},
+                {0, 1},
                 {0, 1},
                 {}
         };
         AdjacencyDiff adjDiff{
-                {},
+                {{0,0}, {1, 0}, {1, 1}},
                 {},
                 {{1, 1}, {1, 0}},
                 {},
@@ -141,15 +141,20 @@ public:
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
-        return u[0]*cos(u[1]);
+        return c1*(earthX - x[0])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -1.5) + c2*(moonX - x[0])*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -1.5) + u[0]*cos(u[1]);
     }
 
     std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-        return {std::vector<double>{}, {cos(u[1]), -u[0]*sin(u[1])}, {}};
+        return {std::vector<double>{3.0*c1*pow(earthX - x[0], 2)*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -2.5) - c1*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -1.5) + 3.0*c2*pow(moonX - x[0], 2)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -2.5) - c2*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -1.5),
+                                    3.0*(c1*(earthX - x[0])*(earthY - x[1])*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 2.5) + c2*(moonX - x[0])*(moonY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 2.5))*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -2.5)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -2.5)},
+                                    {cos(u[1]), -u[0]*sin(u[1])}, {}};
     }
 
     std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-        return {std::vector<double>{}, {}, {-u[0]*cos(u[1]), -sin(u[1])}, {}, {}, {}};
+        return {std::vector<double>{-9.0*c1*earthX*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -2.5) + 9.0*c1*x[0]*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -2.5) + 15.0*c1*pow(earthX - x[0], 3)*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -3.5) - 9.0*c2*moonX*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -2.5) + 9.0*c2*x[0]*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -2.5) + 15.0*c2*pow(moonX - x[0], 3)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -3.5),
+                                    pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -6.0)*(15.0*c1*pow(earthX - x[0], 2)*(earthY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 2.5)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 6.0) - 3.0*c1*(earthY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 3.5)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 6.0) + 15.0*c2*pow(moonX - x[0], 2)*(moonY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 2.5) - 3.0*c2*(moonY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 3.5)),
+                                    pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -6.0)*(15.0*c1*(earthX - x[0])*pow(earthY - x[1], 2)*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 2.5)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 6.0) - 3.0*c1*(earthX - x[0])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 3.5)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 6.0) + 15.0*c2*(moonX - x[0])*pow(moonY - x[1], 2)*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 2.5) - 3.0*c2*(moonX - x[0])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 3.5))},
+                                    {}, {-u[0]*cos(u[1]), -sin(u[1])}, {}, {}, {}};
     }
 
 private:
@@ -161,12 +166,12 @@ class F3RT : public Expression {
 public:
     static std::unique_ptr<F3RT> create() {
         Adjacency adj{
-                {},
+                {0, 1},
                 {0, 1},
                 {}
         };
         AdjacencyDiff adjDiff{
-                {},
+                {{0,0}, {1, 0}, {1, 1}},
                 {},
                 {{1, 1}, {1, 0}},
                 {},
@@ -177,16 +182,20 @@ public:
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
-        return u[0]*sin(u[1]);
+        return c1*(earthY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -1.5) + c2*(moonY - x[1])*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -1.5) + u[0]*sin(u[1]);
     }
 
     std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-        return {std::vector<double>{}, {sin(u[1]), u[0]*cos(u[1])}, {}};
+        return {std::vector<double>{3.0*(c1*(earthX - x[0])*(earthY - x[1])*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 2.5) + c2*(moonX - x[0])*(moonY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 2.5))*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -2.5)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -2.5),
+                                    3.0*c1*pow(earthY - x[1], 2)*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -2.5) - c1*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -1.5) + 3.0*c2*pow(moonY - x[1], 2)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -2.5) - c2*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -1.5)},
+                                    {sin(u[1]), u[0]*cos(u[1])}, {}};
     }
 
     std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-
-        return {std::vector<double>{}, {}, {-u[0]*sin(u[1]), cos(u[1])}, {}, {}, {}};
+        return {std::vector<double>{pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -6.0)*(15.0*c1*pow(earthX - x[0], 2)*(earthY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 2.5)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 6.0) - 3.0*c1*(earthY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 3.5)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 6.0) + 15.0*c2*pow(moonX - x[0], 2)*(moonY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 2.5) - 3.0*c2*(moonY - x[1])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 3.5)),
+                                    pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -6.0)*(15.0*c1*(earthX - x[0])*pow(earthY - x[1], 2)*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 2.5)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 6.0) - 3.0*c1*(earthX - x[0])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 3.5)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 6.0) + 15.0*c2*(moonX - x[0])*pow(moonY - x[1], 2)*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 2.5) - 3.0*c2*(moonX - x[0])*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), 6.0)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), 3.5)),
+                                    -9.0*c1*earthY*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -2.5) + 9.0*c1*x[1]*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -2.5) + 15.0*c1*pow(earthY - x[1], 3)*pow(pow(earthX - x[0], 2) + pow(earthY - x[1], 2), -3.5) - 9.0*c2*moonY*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -2.5) + 9.0*c2*x[1]*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -2.5) + 15.0*c2*pow(moonY - x[1], 3)*pow(pow(moonX - x[0], 2) + pow(moonY - x[1], 2), -3.5)},
+                                    {}, {-u[0]*sin(u[1]), cos(u[1])}, {}, {}, {}};
     }
 
 private:

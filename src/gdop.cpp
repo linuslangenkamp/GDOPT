@@ -316,7 +316,7 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
                     x[i] = problem->x0[v];
                 }
                 else {
-                    x[i] = 1.5;
+                    x[i] = 0;
                 }
 
             }

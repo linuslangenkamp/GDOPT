@@ -29,11 +29,12 @@ int Solver::solve() {
     // app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
 
     // test derivatives
-     app->Options()->SetStringValue("derivative_test", "second-order");
+    // app->Options()->SetStringValue("derivative_test", "second-order");
 
     app->Options()->SetNumericValue("tol", tolerance);
     app->Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
     app->Options()->SetStringValue("mu_strategy", "adaptive");
+    app->Options()->SetIntegerValue("max_iter", 100000);
 
     app->Options()->SetIntegerValue("print_level", 5);
     app->Options()->SetStringValue("timing_statistics", "yes");

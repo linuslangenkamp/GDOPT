@@ -27,7 +27,7 @@ public:
     double objective{};          // optimal solution - objective
     std::vector<double> x_cb;    // optimal solution (interpolated after refinement)
 
-    bool exportSolution = false; // TODO: later add export attributes
+    bool exportSolution = false;
     std::string exportPath;
 
     const int offX = problem->sizeX;

@@ -12,19 +12,18 @@
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_rocketTrajectory());
+    auto problem = std::make_shared<const Problem>(createProblem_batchReactor());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
-    Mesh mesh = Mesh::createEquidistantMesh(10, 33);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps2);
+    Mesh mesh = Mesh::createEquidistantMesh(50, 1);
     LinearSolver linearSolver = LinearSolver::MUMPS;
-    int meshIterations = 0;
+    int meshIterations = 25;
 
     Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver);
 
     // set solver flags
     solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData/rocketTrajectory");
-    solver.setTolerance(1e-9);
-
+    solver.setTolerance(1e-14);
 
     // optimize
     int status = solver.solve();
