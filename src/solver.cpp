@@ -29,8 +29,7 @@ int Solver::solve() {
     // app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
 
     // test derivatives
-    // app->Options()->SetStringValue("derivative_test", "second-order");
-    // app->Options()->SetNumericValue("derivative_test_tol", 1e-2);
+     app->Options()->SetStringValue("derivative_test", "second-order");
 
     app->Options()->SetNumericValue("tol", tolerance);
     app->Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
@@ -208,4 +207,8 @@ void Solver::refine(std::vector<int> &markedIntervals) {
     for (int p = 0; p < gdop->offP; p++) {
         cbValues[newOffXUTotal + p] = gdop->optimum[gdop->offXUTotal + p];
     }
+}
+
+void Solver::setTolerance(double d) {
+    tolerance = d;
 }

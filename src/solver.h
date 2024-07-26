@@ -21,7 +21,7 @@ public:
     LinearSolver linearSolver;
     int meshIteration = 0;
     const int maxMeshIterations;
-    const double tolerance = 1e-14;
+    double tolerance = 1e-14;
     std::vector<double> cbValues;           // starting values after refinement
 
     // important methods
@@ -39,6 +39,8 @@ public:
     bool exportOptimum = false;
     void setExportOptimumPath(const std::string&);
     void initSolvingProcess();
+
+    void setTolerance(double d);
 };
 
 #endif //IPOPT_DO_SOLVER_H

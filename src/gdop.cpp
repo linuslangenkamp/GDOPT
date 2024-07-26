@@ -311,7 +311,14 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
     switch (initVars) {
         case InitVars::CONST:
             for (int i = 0; i < n; i++) {
-                x[i] = 1;
+                int v = i % offXU;
+                if (v < offX && i < offXUTotal) {
+                    x[i] = problem->x0[v];
+                }
+                else {
+                    x[i] = 1.5;
+                }
+
             }
             break;
         case InitVars::CALLBACK:
@@ -606,8 +613,9 @@ void GDOP::get_jac_values(const Number *x, Number *values) {
                 auto const diffF = problem->F[d]->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
 
                 // f(v_{ij})_x: care handle duplicates if d is contained in indX!!
-                for (int v : problem->F[d]->adj.indX) {
-                    if (v != d) {
+                for (int v = 0; v < sz(problem->F[d]->adj.indX); v++) {
+                    auto idx = problem->F[d]->adj.indX[v];
+                    if (idx != d) {
                         values[it] = -mesh.deltaT[i] * diffF[0][v];
                         it++;
                     }
@@ -617,13 +625,13 @@ void GDOP::get_jac_values(const Number *x, Number *values) {
                 }
 
                 // f(v_{ij})_u
-                for (int v : problem->F[d]->adj.indU) {
+                for (int v = 0; v < sz(problem->F[d]->adj.indU); v++) {
                     values[it] = -mesh.deltaT[i] * diffF[1][v];
                     it++;
                 }
 
                 // f(v_{ij})_p
-                for (int v : problem->F[d]->adj.indP) {
+                for (int v = 0; v < sz(problem->F[d]->adj.indP); v++) {
                     values[it] = -mesh.deltaT[i] * diffF[2][v];
                     it++;
                 }
@@ -635,19 +643,19 @@ void GDOP::get_jac_values(const Number *x, Number *values) {
                 auto const diffG = constrG->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
 
                 // g(v_{ij})_x
-                for (int v : constrG->adj.indX) {
+                for (int v = 0; v < sz(constrG->adj.indX); v++) {
                     values[it] = diffG[0][v];
                     it++;
                 }
 
                 // g(v_{ij})_u
-                for (int v : constrG->adj.indU) {
+                for (int v = 0; v < sz(constrG->adj.indU); v++) {
                     values[it] = diffG[1][v];
                     it++;
                 }
 
                 // g(v_{ij})_p
-                for (int v : constrG->adj.indP) {
+                for (int v = 0; v < sz(constrG->adj.indP); v++) {
                     values[it] = diffG[2][v];
                     it++;
                 }
@@ -664,19 +672,19 @@ void GDOP::get_jac_values(const Number *x, Number *values) {
         auto const diffR = constrR->evalDiff(&x[xnm], &x[unm], &x[offXUTotal], mesh.tf);
 
         // r(v_{nm})_x
-        for (int v : constrR->adj.indX) {
+        for (int v = 0; v < sz(constrR->adj.indX); v++) {
             values[it] = diffR[0][v];
             it++;
         }
 
         // r(v_{nm})_u
-        for (int v : constrR->adj.indU) {
+        for (int v = 0; v < sz(constrR->adj.indU); v++) {
             values[it] = diffR[1][v];
             it++;
         }
 
         // r(v_{nm})_p
-        for (int v : constrR->adj.indP) {
+        for (int v = 0; v < sz(constrR->adj.indP); v++) {
             values[it] = diffR[2][v];
             it++;
         }
@@ -688,7 +696,7 @@ void GDOP::get_jac_values(const Number *x, Number *values) {
         auto const diffA = constrA->evalDiff(&x[offXUTotal]);
 
         // a_p
-        for (int v : constrA->adj.indP) {
+        for (int v = 0; v < sz(constrA->adj.indP); v++) {
             values[it] = diffA[v];
             it++;
         }

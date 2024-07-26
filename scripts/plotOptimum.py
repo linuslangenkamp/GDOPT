@@ -1,11 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData/batchReactorRefinement"
+path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData/hypersensitiveRefinement"
 model = "Hypersensitive"
-it = 0
+it = 15
 specifCol = 'u0'
-interval = [9995, 10000]
+interval = [8000, 10000]
 
 df = pd.read_csv(path + "/" + model + str(it) + ".csv" , sep=",")
 print(df.head())

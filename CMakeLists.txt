@@ -28,7 +28,9 @@ set(EXAMPLE_FILES "examples/hypersensitive.cpp"
         examples/parameterSweep.h
         examples/parameterSweep.cpp
         examples/batchReactor.cpp
-        examples/batchReactor.h)
+        examples/batchReactor.h
+        examples/rocketTrajectory.cpp
+        examples/rocketTrajectory.h)
 
 include_directories(src examples)
 
