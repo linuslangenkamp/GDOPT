@@ -30,7 +30,9 @@ set(EXAMPLE_FILES "examples/hypersensitive.cpp"
         examples/batchReactor.cpp
         examples/batchReactor.h
         examples/rocketTrajectory.cpp
-        examples/rocketTrajectory.h)
+        examples/rocketTrajectory.h
+        examples/trivialBangBang.cpp
+        examples/trivialBangBang.h)
 
 include_directories(src examples)
 
