@@ -1,9 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData/trivialBangBang"
-model = "trivialBangBang"
-it = 0
+path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData/batchReactorRefinement"
+model = "BatchReactor"
+it = 4
 specifCol = 'u0'
 interval = [0, 1]
 

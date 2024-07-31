@@ -13,12 +13,19 @@ enum class LinearSolver {
     PARDISO
 };
 
+enum class MeshAlgorithm {
+    NONE,
+    BASIC,
+    L2_BOUNDARY_NORM
+};
+
 class Solver {
 public:
-    Solver(const SmartPtr<GDOP>& gdop, int maxMeshIterations, LinearSolver linearSolver);
+    Solver(const SmartPtr<GDOP>& gdop, int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm);
 
     SmartPtr<GDOP> gdop;
     LinearSolver linearSolver;
+    MeshAlgorithm meshAlgorithm;
     int meshIteration = 0;
     const int maxMeshIterations;
     double tolerance = 1e-14;
@@ -26,20 +33,25 @@ public:
 
     // important methods
     int solve();
-    std::vector<int> basicStochasticStrategy(double) const;
+    std::vector<int> detect();
     void refine(std::vector<int>&);
-    void finalizeOptimization() const;
+    void finalizeOptimization();
 
+    // detection methods
+    std::vector<int> basicStrategy(double) const;
+    std::vector<int> l2BoundaryNorm() const;
 
     // additional / optional flags, printouts, ...
     std::vector<double> objectiveHistory;   // history of objectives in refinement process
     std::string exportOptimumPath;
+    int initialIntervals;
     std::chrono::_V2::system_clock::time_point solveStartTime;
     void postOptimization();
     bool exportOptimum = false;
+    void printObjectiveHistory();
+    void printMeshStats();
     void setExportOptimumPath(const std::string&);
     void initSolvingProcess();
-
     void setTolerance(double d);
 };
 

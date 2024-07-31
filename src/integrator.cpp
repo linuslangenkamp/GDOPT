@@ -379,9 +379,10 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
     }
 }
 
-/*
-Different interpolation options: only c_j (inner, 1st interval control) or standard 0, c[0], ..., c[m]
-*/
+// First and second derivative of the Lagrange interpolating polynomial on the nominal interval [0, 1]
+// Will be used for detecting discontinuities, corners, sections that are steep or have a huge curvature
+
+// Interpolation methods for bisection of an interval
 
 // use this for first control interval
 std::vector<std::vector<double>> Integrator::firstBasisPolynomial() {

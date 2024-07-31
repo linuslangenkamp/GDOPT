@@ -2,8 +2,8 @@
 #include "solver.h"
 #include "IpIpoptApplication.hpp"
 
-Solver::Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations, LinearSolver linearSolver) :
-               gdop(gdop), maxMeshIterations(maxMeshIterations), linearSolver(linearSolver){}
+Solver::Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm) :
+               gdop(gdop), maxMeshIterations(maxMeshIterations), linearSolver(linearSolver), meshAlgorithm(meshAlgorithm){}
 
 std::string getLinearSolverName(LinearSolver solver) {
     switch (solver) {
@@ -47,12 +47,13 @@ int Solver::solve() {
     ApplicationReturnStatus status = app->Initialize();
 
     // initial optimization
+    initialIntervals = gdop->mesh.intervals;
     status = app->OptimizeTNLP(gdop);
     postOptimization();
 
     while (meshIteration <= maxMeshIterations) {
-        const double sigma = 2.5;
-        auto markedIntervals = basicStochasticStrategy(sigma);
+        auto markedIntervals = detect();
+
         if (sz(markedIntervals) == 0) {
             finalizeOptimization();
             return status;
@@ -77,32 +78,20 @@ int Solver::solve() {
     return status;
 }
 
-void Solver::setExportOptimumPath(const std::string& exportPath) {
-    this->exportOptimumPath = exportPath;
-    this->exportOptimum = true;
-}
-
-void Solver::initSolvingProcess() {
-    solveStartTime = std::chrono::high_resolution_clock::now();
-}
-
-void Solver::postOptimization() {
-    objectiveHistory.push_back(gdop->objective);
-    if (exportOptimum) {
-        gdop->exportOptimum(exportOptimumPath + "/" + gdop->problem->name + std::to_string(meshIteration) + ".csv");
+std::vector<int> Solver::detect() {
+    switch (meshAlgorithm) {
+        case MeshAlgorithm::NONE: return {};
+        case MeshAlgorithm::BASIC: return basicStrategy(2.5);
+        case MeshAlgorithm::L2_BOUNDARY_NORM: return l2BoundaryNorm();
+        default: return {};
     }
-    meshIteration++;
 }
 
-void Solver::finalizeOptimization() const {
-    if (maxMeshIterations > 0) {
-        printObjectiveHistory(objectiveHistory);
-    }
-    auto timeTaken = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - solveStartTime).count();
-    std::cout << "\nSolving took: " << timeTaken << " seconds" << std::endl;
+std::vector<int> Solver::l2BoundaryNorm() const {
+    return {};
 }
 
-std::vector<int> Solver::basicStochasticStrategy(const double sigma) const {
+std::vector<int> Solver::basicStrategy(const double sigma) const {
     std::vector<int> markedIntervals = {};
     std::vector<std::vector<double>> absIntSum = {};
     std::vector<double> means;
@@ -212,4 +201,46 @@ void Solver::refine(std::vector<int> &markedIntervals) {
 
 void Solver::setTolerance(double d) {
     tolerance = d;
+}
+
+void Solver::setExportOptimumPath(const std::string& exportPath) {
+    this->exportOptimumPath = exportPath;
+    this->exportOptimum = true;
+}
+
+void Solver::initSolvingProcess() {
+    solveStartTime = std::chrono::high_resolution_clock::now();
+}
+
+void Solver::postOptimization() {
+    objectiveHistory.push_back(gdop->objective);
+    if (exportOptimum) {
+        gdop->exportOptimum(exportOptimumPath + "/" + gdop->problem->name + std::to_string(meshIteration) + ".csv");
+    }
+    meshIteration++;
+}
+
+void Solver::printObjectiveHistory() {
+    // TODO: Output with scientific notation
+    std::cout << "\nMesh refinement history\n" << std::endl;
+    std::cout << std::setw(5) << "iteration" << std::setw(17) << "objective" << std::endl;
+    std::cout << "--------------------------------" << std::endl;
+    for (int iteration = 0; iteration < sz(objectiveHistory); iteration++) {
+        std::cout << std::setw(5) << iteration << std::setw(27) << double2Str(objectiveHistory[iteration]) << std::endl;
+    }
+}
+void Solver::finalizeOptimization() {
+    if (maxMeshIterations > 0) {
+        printMeshStats();
+        printObjectiveHistory();
+    }
+    auto timeTaken = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - solveStartTime).count();
+    std::cout << "\nSolving took: " << timeTaken << " seconds" << std::endl;
+}
+
+void Solver::printMeshStats() {
+    std::cout << "\nNumber of intervals\n" << std::endl;
+    std::cout << "Initial:" << std::setw(7) << initialIntervals << std::endl;
+    std::cout << "Inserted:  "<< std::setw(4) << gdop->mesh.intervals - initialIntervals << std::endl;
+    std::cout << "Final:" << std::setw(9) << gdop->mesh.intervals << std::endl;
 }
