@@ -27,7 +27,9 @@ public:
     const std::vector<std::vector<double>> lagrangeBasis;
 
     std::vector<std::vector<double>> firstBasisPolynomial();       // inner basis poly, needed for 1st interval of u
-    std::vector<std::vector<double>>  basisPolynomial();         // standard collocation polynomial
+    std::vector<std::vector<double>> basisPolynomial();         // standard collocation polynomial
+    std::vector<std::vector<double>> basisPolynomialDiff();
+    std::vector<std::vector<double>> basisPolynomialDiff2();
     std::vector<double> interpolateFirstControl(std::vector<double> &uValues);
     std::vector<double> interpolate(std::vector<double>&);
 private:

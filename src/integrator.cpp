@@ -381,7 +381,85 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
 
 // First and second derivative of the Lagrange interpolating polynomial on the nominal interval [0, 1]
 // Will be used for detecting discontinuities, corners, sections that are steep or have a huge curvature
+// use this for every interval, but the 0-th control interval
+std::vector<std::vector<double>> Integrator::basisPolynomialDiff() {
+    // returns vector of the lagrange basis coeffs diff for all grid points 0, c_1, ...
+    // i.e. w_j(c_i) where c_i are the collocation points including 0
+    std::vector<double> collocationPoints = c;
+    collocationPoints.insert(collocationPoints.begin(), 0);
 
+    std::vector<std::vector<double>> lagr;
+    for (int i = 0; i < sz(collocationPoints); i++){
+        std::vector<double> lagrC = {};
+        for (int j = 0; j < steps + 1; j++) {
+            double sum = 0;
+            for (int d = 0; d < sz(collocationPoints); d++) {
+                if (d != j) {
+                    double factor = 1;
+                    for (int m = 0; m < sz(collocationPoints); m++) {
+                        if (m != d && m != j) {
+                            factor *= (collocationPoints[i] - collocationPoints[m]);
+                        }
+                    }
+                    sum += factor;
+                }
+            }
+            double factor = 1;
+            for (int m = 0; m < sz(collocationPoints); m++) {
+                if (m != j) {
+                    factor *= (collocationPoints[j] - collocationPoints[m]);
+                }
+            }
+            sum /= factor;
+            lagrC.push_back(sum);
+        }
+        lagr.push_back(lagrC);
+    }
+    return lagr;
+}
+
+std::vector<std::vector<double>> Integrator::basisPolynomialDiff2() {
+    // returns vector of the lagrange basis coeffs 2nd diff for all grid points 0, c_1, ...
+    // i.e. w_j(c_i) where c_i are the collocation points including 0
+    // WIP WIP WIP TODO
+    std::vector<double> collocationPoints = c;
+    collocationPoints.insert(collocationPoints.begin(), 0);
+
+    std::vector<std::vector<double>> lagr;
+    for (int i = 0; i < sz(collocationPoints); i++){
+        std::vector<double> lagrC = {};
+        for (int j = 0; j < steps + 1; j++) {
+            if (j == i) {
+                lagrC.push_back(0);
+            }
+            else {
+                double sum = 0;
+                for (int k = 0; k < steps + 1; k++) {
+                    if (k != j) {
+                        double factor = 1;
+                        for (int m = 0; m < steps + 1; m++) {
+                            if (m != i && m != k) {
+                                factor *= (collocationPoints[i] - collocationPoints[m]);
+                            }
+                        }
+                        factor /= (collocationPoints[i] - collocationPoints[k]);
+                        sum += factor;
+                    }
+                }
+                double factor = 1;
+                for (int m = 0; m < steps + 1; m++) {
+                    if (m != j) {
+                        factor *= (collocationPoints[i] - collocationPoints[m]);
+                    }
+                }
+                sum /= factor;
+                lagrC.push_back(sum);
+            }
+        }
+        lagr.push_back(lagrC);
+    }
+    return lagr;
+}
 // Interpolation methods for bisection of an interval
 
 // use this for first control interval
