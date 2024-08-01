@@ -50,7 +50,6 @@ int Solver::solve() {
     initialIntervals = gdop->mesh.intervals;
     status = app->OptimizeTNLP(gdop);
     postOptimization();
-    auto x = gdop->rk.lagrangeBasisDiff2;
     while (meshIteration <= maxMeshIterations) {
         auto markedIntervals = detect();
 
@@ -88,7 +87,40 @@ std::vector<int> Solver::detect() {
 }
 
 std::vector<int> Solver::l2BoundaryNorm() const {
-    return {};
+    std::vector<int> markedIntervals = {};
+
+    for (int i = 0; i < gdop->mesh.intervals; i++) {
+        for (int u = 0; u < gdop->problem->sizeU; u++) {
+            if (i > 0) {
+                // TODO: i = 0 -> interpolate with deg 1 less, clean up integrator, last interval new interval
+                // -> mark based on tolerances
+
+                std::vector<double> uCoeffs;
+                for (int j = -1; j < gdop->rk.steps; j++) {
+                    uCoeffs.push_back(gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU]);
+                }
+
+                // values of the (1st, 2nd) diff of the interpolating polynomial at 0, c1, c2, ...
+                std::vector<double> p_uDiff = gdop->rk.evalLagrangeDiff(uCoeffs);
+                std::vector<double> p_uDiff2 = gdop->rk.evalLagrangeDiff2(uCoeffs);
+
+                // squared values of the (1st, 2nd) diff of the interpolating polynomial at c1, c2, ...
+                std::vector<double> sq_p_uDiff;
+                std::vector<double> sq_p_uDiff2;
+                for (int k = 1; k < sz(p_uDiff); k++) {
+                    sq_p_uDiff.push_back(p_uDiff[k] * p_uDiff[k]);
+                    sq_p_uDiff2.push_back(p_uDiff2[k] * p_uDiff2[k]);
+                }
+
+                // int_0^1 d^{1,2}/dt^{1,2} p_u(t)^2 dt - L2 norm of the (1st, 2nd) diff
+                double L2Diff1 = gdop->rk.integrate(sq_p_uDiff);
+                double L2Diff2 = gdop->rk.integrate(sq_p_uDiff2);
+            }
+
+        }
+
+    }
+    return markedIntervals;
 }
 
 std::vector<int> Solver::basicStrategy(const double sigma) const {

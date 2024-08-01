@@ -18,7 +18,7 @@ int main() {
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
     Mesh mesh = Mesh::createEquidistantMesh(50, 1);
     LinearSolver linearSolver = LinearSolver::MA57;
-    MeshAlgorithm meshAlgorithm = MeshAlgorithm::BASIC;
+    MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 10;
 
     Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);

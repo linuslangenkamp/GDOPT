@@ -13,7 +13,11 @@ Integrator::Integrator(const std::vector<double>& c,
                        const std::vector<std::vector<double>>& Ainv,
                        const std::vector<double>& invRowSum,
                        int steps)
-        : c(c), A(A), Ainv(Ainv), b(A.back()), invRowSum(invRowSum), steps(steps),
+        : c(c), A(A), Ainv(Ainv), b(A.back()), invRowSum(invRowSum), steps(steps),  c0([&c]() {
+        std::vector<double> temp(1, 0.0);
+        temp.insert(temp.end(), c.begin(), c.end());
+        return temp;
+        }()),
           interpolationFirstLagrangeBasis(interpolationFirstBasisPolynomial()), interpolationLagrangeBasis(interpolationBasisPolynomial()),
           lagrangeBasisDiff(basisPolynomialDiff()), lagrangeBasisDiff2(basisPolynomialDiff2()){
 }
@@ -384,32 +388,39 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
 // Will be used for detecting discontinuities, corners, sections that are steep or have a huge curvature
 // use this for every interval, but the 0-th control interval
 
+double Integrator::integrate(std::vector<double>& f) {
+    // input: vector of f(c_j) excluding c_0 = 0
+    // integrates according to Radau scheme
+    double integral = 0;
+    for (int j = 0; j < sz(b); j++) {
+        integral += b[j] * f[j];
+    }
+    return integral;
+}
+
 std::vector<std::vector<double>> Integrator::basisPolynomialDiff() {
     // returns vector of the lagrange basis coeffs diff for all grid points 0, c_1, ...
     // i.e. w_j(c_i) where c_i are the collocation points including 0
-    std::vector<double> collocationPoints = c;
-    collocationPoints.insert(collocationPoints.begin(), 0);
-
     std::vector<std::vector<double>> lagr;
-    for (int i = 0; i < sz(collocationPoints); i++){
+    for (int i = 0; i < sz(c0); i++){
         std::vector<double> lagrC = {};
         for (int j = 0; j < steps + 1; j++) {
             double sum = 0;
-            for (int d = 0; d < sz(collocationPoints); d++) {
+            for (int d = 0; d < sz(c0); d++) {
                 if (d != j) {
                     double factor = 1;
-                    for (int m = 0; m < sz(collocationPoints); m++) {
+                    for (int m = 0; m < sz(c0); m++) {
                         if (m != d && m != j) {
-                            factor *= (collocationPoints[i] - collocationPoints[m]);
+                            factor *= (c0[i] - c0[m]);
                         }
                     }
                     sum += factor;
                 }
             }
             double factor = 1;
-            for (int m = 0; m < sz(collocationPoints); m++) {
+            for (int m = 0; m < sz(c0); m++) {
                 if (m != j) {
-                    factor *= (collocationPoints[j] - collocationPoints[m]);
+                    factor *= (c0[j] - c0[m]);
                 }
             }
             sum /= factor;
@@ -420,14 +431,24 @@ std::vector<std::vector<double>> Integrator::basisPolynomialDiff() {
     return lagr;
 }
 
+std::vector<double> Integrator::evalLagrangeDiff(std::vector<double>& coefficients) {
+    // evaluates the diff of the lagrange polynomial of given coefficients at c0 = 0, c1, c2, ...
+    std::vector<double> lagrangeDiff;
+    for (int i = 0; i < sz(lagrangeBasisDiff); i++) {
+        double diffC = 0;
+        for (int j = 0; j < sz(coefficients); j++) {
+            diffC += lagrangeBasisDiff[i][j] * coefficients[j];
+        }
+        lagrangeDiff.push_back(diffC);
+    }
+    return lagrangeDiff;
+}
+
 std::vector<std::vector<double>> Integrator::basisPolynomialDiff2() {
     // returns vector of the lagrange basis coeffs 2nd diff for all grid points 0, c_1, ...
     // i.e. w_j(c_i) where c_i are the collocation points including 0
-    std::vector<double> collocationPoints = c;
-    collocationPoints.insert(collocationPoints.begin(), 0);
-
     std::vector<std::vector<double>> lagr;
-    for (int i = 0; i < sz(collocationPoints); i++){
+    for (int i = 0; i < sz(c0); i++){
         std::vector<double> lagrC = {};
         for (int j = 0; j < steps + 1; j++) {
             double sum = 0;
@@ -438,7 +459,7 @@ std::vector<std::vector<double>> Integrator::basisPolynomialDiff2() {
                             double factor = 1;
                             for (int m = 0; m < steps + 1; m++) {
                                 if (m != j && m != d && m != l) {
-                                    factor *= (collocationPoints[i] - collocationPoints[m]);
+                                    factor *= (c0[i] - c0[m]);
                                 }
                             }
                             sum += factor;
@@ -449,7 +470,7 @@ std::vector<std::vector<double>> Integrator::basisPolynomialDiff2() {
             double factor = 1;
             for (int m = 0; m < steps + 1; m++) {
                 if (m != j) {
-                    factor *= (collocationPoints[j] - collocationPoints[m]);
+                    factor *= (c0[j] - c0[m]);
                 }
             }
             sum /= factor;
@@ -460,6 +481,20 @@ std::vector<std::vector<double>> Integrator::basisPolynomialDiff2() {
     }
     return lagr;
 }
+
+std::vector<double> Integrator::evalLagrangeDiff2(std::vector<double>& coefficients) {
+    // evaluates the 2nd diff of the lagrange polynomial of given coefficients at c0 = 0, c1, c2, ...
+    std::vector<double> lagrangeDiff;
+    for (int i = 0; i < sz(lagrangeBasisDiff2); i++) {
+        double diffC = 0;
+        for (int j = 0; j < sz(coefficients); j++) {
+            diffC += lagrangeBasisDiff2[i][j] * coefficients[j];
+        }
+        lagrangeDiff.push_back(diffC);
+    }
+    return lagrangeDiff;
+}
+
 // Interpolation methods for bisection of an interval
 
 // use this for first control interval
@@ -489,13 +524,11 @@ std::vector<std::vector<double>> Integrator::interpolationFirstBasisPolynomial()
 
 // use this for every interval, but the 0-th control interval
 std::vector<std::vector<double>> Integrator::interpolationBasisPolynomial() {
-    std::vector<double> collocationPoints = c;
-    collocationPoints.insert(collocationPoints.begin(), 0);
     std::vector<double> newGrid;
     for (int k = 0; k < 2; k++) {
-        for (int idx = 0; idx < sz(collocationPoints); idx++) {
+        for (int idx = 0; idx < sz(c0); idx++) {
             if (k != 1 || idx != 0)
-                newGrid.push_back(0.5 * (k + collocationPoints[idx]));
+                newGrid.push_back(0.5 * (k + c0[idx]));
         }
     }
 
@@ -506,7 +539,7 @@ std::vector<std::vector<double>> Integrator::interpolationBasisPolynomial() {
             double factor = 1;
             for (int d = 0; d < steps + 1; d++) {
                 if (d != k)
-                    factor *= (coll - collocationPoints[d]) / (collocationPoints[k] - collocationPoints[d]);
+                    factor *= (coll - c0[d]) / (c0[k] - c0[d]);
             }
             lagrC.push_back(factor);
         }

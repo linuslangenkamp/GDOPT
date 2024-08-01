@@ -18,11 +18,14 @@ public:
     static Integrator radauIIA(IntegratorSteps steps);
 
     const std::vector<double> c;
+    const std::vector<double> c0; // c including 0 point, i.e. [0, c1, c2, ..., cm]
     const std::vector<std::vector<double>> A;
     const std::vector<std::vector<double>> Ainv;
     const std::vector<double> invRowSum;
     const std::vector<double> b;
     const int steps;
+
+    double integrate(std::vector<double> &);
 
     // interpolation stuff, lagrange basis at c_j/2, c_j/2 + 1/2 for j=0...m
     std::vector<std::vector<double>> interpolationFirstBasisPolynomial();       // inner basis poly, needed for 1st interval of u
@@ -35,9 +38,10 @@ public:
     // all basis coefficients at all c_j for p_u, p_u', p_u''
     std::vector<std::vector<double>> basisPolynomialDiff();
     std::vector<std::vector<double>> basisPolynomialDiff2();
+    std::vector<double> evalLagrangeDiff(std::vector<double>&);
+    std::vector<double> evalLagrangeDiff2(std::vector<double>&);
     const std::vector<std::vector<double>> lagrangeBasisDiff;
     const std::vector<std::vector<double>> lagrangeBasisDiff2;
-
 private:
     Integrator(const std::vector<double>& c,
                const std::vector<std::vector<double>>& A,
