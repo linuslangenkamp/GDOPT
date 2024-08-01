@@ -23,15 +23,21 @@ public:
     const std::vector<double> invRowSum;
     const std::vector<double> b;
     const int steps;
-    const std::vector<std::vector<double>> firstLagrangeBasis;
-    const std::vector<std::vector<double>> lagrangeBasis;
 
-    std::vector<std::vector<double>> firstBasisPolynomial();       // inner basis poly, needed for 1st interval of u
-    std::vector<std::vector<double>> basisPolynomial();         // standard collocation polynomial
-    std::vector<std::vector<double>> basisPolynomialDiff();
-    std::vector<std::vector<double>> basisPolynomialDiff2();
+    // interpolation stuff, lagrange basis at c_j/2, c_j/2 + 1/2 for j=0...m
+    std::vector<std::vector<double>> interpolationFirstBasisPolynomial();       // inner basis poly, needed for 1st interval of u
+    std::vector<std::vector<double>> interpolationBasisPolynomial();         // standard collocation polynomial
     std::vector<double> interpolateFirstControl(std::vector<double> &uValues);
     std::vector<double> interpolate(std::vector<double>&);
+    const std::vector<std::vector<double>> interpolationFirstLagrangeBasis;
+    const std::vector<std::vector<double>> interpolationLagrangeBasis;
+
+    // all basis coefficients at all c_j for p_u, p_u', p_u''
+    std::vector<std::vector<double>> basisPolynomialDiff();
+    std::vector<std::vector<double>> basisPolynomialDiff2();
+    const std::vector<std::vector<double>> lagrangeBasisDiff;
+    const std::vector<std::vector<double>> lagrangeBasisDiff2;
+
 private:
     Integrator(const std::vector<double>& c,
                const std::vector<std::vector<double>>& A,

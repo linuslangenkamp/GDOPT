@@ -50,7 +50,7 @@ int Solver::solve() {
     initialIntervals = gdop->mesh.intervals;
     status = app->OptimizeTNLP(gdop);
     postOptimization();
-    auto x = gdop->rk.basisPolynomialDiff2();
+    auto x = gdop->rk.lagrangeBasisDiff2;
     while (meshIteration <= maxMeshIterations) {
         auto markedIntervals = detect();
 
