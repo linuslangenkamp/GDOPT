@@ -27,6 +27,9 @@ public:
 
     double integrate(std::vector<double> &);
 
+    // eval lagrange poly based on coefficients, values at some x; O(n^2)
+    static double evalLagrange(std::vector<double>, std::vector<double>&, double);
+
     // interpolation stuff, lagrange basis at c_j/2, c_j/2 + 1/2 for j=0...m
     std::vector<std::vector<double>> interpolationFirstBasisPolynomial();       // inner basis poly, needed for 1st interval of u
     std::vector<std::vector<double>> interpolationBasisPolynomial();         // standard collocation polynomial

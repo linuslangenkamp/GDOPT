@@ -1,9 +1,12 @@
 #include <chrono>
+#include <utility>
 #include "solver.h"
 #include "IpIpoptApplication.hpp"
 
-Solver::Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm) :
-               gdop(gdop), maxMeshIterations(maxMeshIterations), linearSolver(linearSolver), meshAlgorithm(meshAlgorithm){}
+Solver::Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm,
+               std::unordered_map<std::string, double> meshParameters) :
+               gdop(gdop), maxMeshIterations(maxMeshIterations), linearSolver(linearSolver), meshAlgorithm(meshAlgorithm),
+               meshParameters(std::move(meshParameters)){}
 
 std::string getLinearSolverName(LinearSolver solver) {
     switch (solver) {
@@ -72,8 +75,16 @@ std::vector<int> Solver::detect() {
     }
 }
 
+void Solver::setRefinementParameters() {
+    switch (meshAlgorithm) {
+        case MeshAlgorithm::NONE: return;
+        case MeshAlgorithm::BASIC: return setBasicStrategy();
+        case MeshAlgorithm::L2_BOUNDARY_NORM: return setl2BoundaryNorm();
+        default: return;
+    }
+}
+
 std::vector<int> Solver::l2BoundaryNorm() const {
-    const double level = 0;
     const double cDiff = 1;
     const double cDiff2 = cDiff / 2;
     std::vector<int> markedIntervals = {};
@@ -117,8 +128,8 @@ std::vector<int> Solver::l2BoundaryNorm() const {
     std::vector<double> boundsDiff;
     std::vector<double> boundsDiff2;
     for (int u = 0; u < gdop->problem->sizeU; u++) {
-        boundsDiff.push_back(cDiff * rangeU[u] / initialIntervals * pow(10, -level));
-        boundsDiff2.push_back(cDiff2 * rangeU[u] / initialIntervals * pow(10, -level));
+        boundsDiff.push_back(cDiff * rangeU[u] / initialIntervals * pow(10, -L2Level));
+        boundsDiff2.push_back(cDiff2 * rangeU[u] / initialIntervals * pow(10, -L2Level));
     }
 
     for (int i = 0; i < gdop->mesh.intervals; i++) {
@@ -129,11 +140,10 @@ std::vector<int> Solver::l2BoundaryNorm() const {
                 for (int j = 0; j < gdop->rk.steps; j++) {
                     uCoeffs.push_back(gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU]);
                 }
-                uCoeffs.insert(uCoeffs.begin(), uCoeffs[0]); // TODO: not simplification but interpolation
+                uCoeffs.insert(uCoeffs.begin(), gdop->rk.evalLagrange(gdop->rk.c, uCoeffs, 0.0));
+
             }
             else {
-                // TODO: i = 0 -> interpolate with deg 1 less, clean up integrator, last interval new interval
-                // -> mark based on tolerances
                 for (int j = -1; j < gdop->rk.steps; j++) {
                     uCoeffs.push_back(gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU]);
                 }
@@ -156,16 +166,36 @@ std::vector<int> Solver::l2BoundaryNorm() const {
             double L2Diff2 = std::sqrt(gdop->rk.integrate(sq_p_uDiff2));
 
             // difference in derivatives from polynomial of adjacent intervals must not exceed some eps
-            if (i > 0 && (std::abs(p_uDiff[0]  - lastDiffs[u][0]) > boundsDiff[u]  / 2 ||
-                          std::abs(p_uDiff2[0] - lastDiffs[u][1]) > boundsDiff2[u] / 2)) {
-                if (sz(markedIntervals) > 0 && markedIntervals[sz(markedIntervals) - 1] != i - 1) {
+            double absErrDiff = std::abs(p_uDiff[0]  - lastDiffs[u][0]);
+            double absErrDiff2 = std::abs(p_uDiff2[0] - lastDiffs[u][1]);
+            double maxDiff = std::max({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])});
+            double maxDiff2 = std::max({std::abs(p_uDiff2[0]), std::abs(lastDiffs[u][1])});
+            double relErrDiff = absErrDiff / maxDiff;
+            double relErrDiff2 = absErrDiff2 / maxDiff2;
+            double bound, bound2;
+            if (maxDiff > 1) {
+                bound = 0.1;
+            }
+            else {
+                bound = pow(10, -1 - std::log10(maxDiff));
+            }
+
+            if (maxDiff2 > 1) {
+                bound2 = 0.1;
+            }
+            else {
+                bound2 = pow(10, -1 - std::log10(maxDiff2));
+            }
+
+            if (i > 0 && (relErrDiff  > bound || relErrDiff2 > bound2)) {
+                if (sz(markedIntervals) == 0 || markedIntervals[sz(markedIntervals) - 1] != i - 1) {
                     markedIntervals.push_back(i - 1);
+                    intervalInserted = true;
                 }
-                intervalInserted = true;
             }
             lastDiffs[u] = {p_uDiff[sz(gdop->rk.c)], p_uDiff2[sz(gdop->rk.c)]};
 
-            // detection if i has to be inserted
+            // detection if "i" has to be inserted
             if (intervalInserted || L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u]) {
                 markedIntervals.push_back(i);
                 break;
@@ -293,6 +323,7 @@ void Solver::setExportOptimumPath(const std::string& exportPath) {
 }
 
 void Solver::initSolvingProcess() {
+    setRefinementParameters();
     solveStartTime = std::chrono::high_resolution_clock::now();
     initialIntervals = gdop->mesh.intervals;
 }
@@ -307,6 +338,7 @@ void Solver::postOptimization() {
 
 void Solver::printObjectiveHistory() {
     // TODO: Output with scientific notation
+    std::cout << "\n----------------------------------------------------------------" << std::endl;
     std::cout << "\nMesh refinement history\n" << std::endl;
     std::cout << std::setw(5) << "iteration" << std::setw(17) << "objective" << std::endl;
     std::cout << "--------------------------------" << std::endl;
@@ -316,6 +348,10 @@ void Solver::printObjectiveHistory() {
 }
 void Solver::finalizeOptimization() {
     if (maxMeshIterations > 0) {
+        std::cout << "\n----------------------------------------------------------------" << std::endl;
+        std::cout << "----------------------------------------------------------------" << std::endl;
+        std::cout << "----------------------------------------------------------------" << std::endl;
+        std::cout << "\nOutput for optimization of model: " << gdop->problem->name << std::endl;
         printMeshStats();
         printObjectiveHistory();
     }
@@ -324,6 +360,7 @@ void Solver::finalizeOptimization() {
 }
 
 void Solver::printMeshStats() {
+    std::cout << "\n----------------------------------------------------------------" << std::endl;
     std::cout << "\nNumber of intervals\n" << std::endl;
     std::cout << "Initial:" << std::setw(7) << initialIntervals << std::endl;
     std::cout << "Inserted:  "<< std::setw(4) << gdop->mesh.intervals - initialIntervals << std::endl;
@@ -351,4 +388,14 @@ void Solver::setSolverFlags(SmartPtr<IpoptApplication> app) const {
     app->Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
 
     app->Options()->SetStringValue("output_file", "ipopt.out");
+}
+
+void Solver::setl2BoundaryNorm() {
+    if(meshParameters.count("level") > 0)
+        L2Level = meshParameters["level"];
+}
+
+void Solver::setBasicStrategy() {
+    if(meshParameters.count("sigma") > 0)
+        basicStrategySigma = meshParameters["sigma"];
 }

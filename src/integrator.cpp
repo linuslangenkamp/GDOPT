@@ -384,6 +384,8 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
     }
 }
 
+//TODO: clean up integrator
+
 // First and second derivative of the Lagrange interpolating polynomial on the nominal interval [0, 1]
 // Will be used for detecting discontinuities, corners, sections that are steep or have a huge curvature
 // use this for every interval, but the 0-th control interval
@@ -493,6 +495,22 @@ std::vector<double> Integrator::evalLagrangeDiff2(std::vector<double>& coefficie
         lagrangeDiff.push_back(diffC);
     }
     return lagrangeDiff;
+}
+
+double Integrator::evalLagrange(std::vector<double> grid, std::vector<double>& f, double x) {
+    // evaluates the interpolating polynomial p with p(grid[i]) = f[i], at x -> returns p(x)
+    // runtime O(n^2) with n = #gridpoints
+    double val = 0;
+    for (int j = 0; j < sz(grid); j++) {
+        double basisFactor = 1;
+        for (int m = 0; m < sz(grid); m++) {
+            if (m != j) {
+                basisFactor *= (x - grid[m]) / (grid[j] - grid[m]);
+            }
+        }
+        val += basisFactor * f[j];
+    }
+    return val;
 }
 
 // Interpolation methods for bisection of an interval

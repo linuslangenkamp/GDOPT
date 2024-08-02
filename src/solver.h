@@ -22,7 +22,8 @@ enum class MeshAlgorithm {
 
 class Solver {
 public:
-    Solver(const SmartPtr<GDOP>& gdop, int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm);
+    Solver(const SmartPtr<GDOP>& gdop, int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm,
+           std::unordered_map<std::string, double> meshParameters);
 
     SmartPtr<GDOP> gdop;
     LinearSolver linearSolver;
@@ -31,6 +32,7 @@ public:
     const int maxMeshIterations;
     double tolerance = 1e-14;
     std::vector<double> cbValues;           // starting values after refinement
+    std::unordered_map<std::string, double> meshParameters;
 
     // important methods
     int solve();
@@ -55,6 +57,15 @@ public:
     void initSolvingProcess();
     void setTolerance(double);
     void setSolverFlags(SmartPtr<IpoptApplication>) const;
+    void setRefinementParameters();
+    void setl2BoundaryNorm();
+    void setBasicStrategy();
+
+    // parameters
+    double basicStrategySigma = 2.5;
+
+    double L2Level = 0;
+
 };
 
 #endif //IPOPT_DO_SOLVER_H

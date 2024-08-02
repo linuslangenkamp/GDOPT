@@ -13,18 +13,20 @@
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_hypersensitive());
+    auto problem = std::make_shared<const Problem>(createProblem_batchReactor());
     InitVars initVars = InitVars::CONST;
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps7);
-    Mesh mesh = Mesh::createEquidistantMesh(200, 10000);
-    LinearSolver linearSolver = LinearSolver::MA57;
+    Mesh mesh = Mesh::createEquidistantMesh(1000, 1);
+    LinearSolver linearSolver = LinearSolver::MUMPS;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
-    int meshIterations = 15;
+    int meshIterations = 5;
+    std::unordered_map<std::string, double> meshParameters;
+    meshParameters.emplace("level", 0);
 
-    Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
+    Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm, meshParameters);
 
     // set solver flags
-    solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData/batchReactorRefinement");
+    solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData");
     solver.setTolerance(1e-14);
 
     // optimize
