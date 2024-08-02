@@ -2,6 +2,7 @@
 #define IPOPT_DO_SOLVER_H
 
 #include "gdop.h"
+#include "IpIpoptApplication.hpp"
 
 enum class LinearSolver {
     MUMPS,
@@ -42,7 +43,7 @@ public:
     std::vector<int> l2BoundaryNorm() const;
 
     // additional / optional flags, printouts, ...
-    std::vector<double> objectiveHistory;   // history of objectives in refinement process
+    std::vector<double> objectiveHistory;
     std::string exportOptimumPath;
     int initialIntervals;
     std::chrono::_V2::system_clock::time_point solveStartTime;
@@ -52,7 +53,8 @@ public:
     void printMeshStats();
     void setExportOptimumPath(const std::string&);
     void initSolvingProcess();
-    void setTolerance(double d);
+    void setTolerance(double);
+    void setSolverFlags(SmartPtr<IpoptApplication>) const;
 };
 
 #endif //IPOPT_DO_SOLVER_H

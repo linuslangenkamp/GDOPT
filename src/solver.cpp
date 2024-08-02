@@ -21,36 +21,22 @@ std::string getLinearSolverName(LinearSolver solver) {
 }
 
 int Solver::solve() {
+
+    // init solving, pre optimization
     initSolvingProcess();
+
+    // create IPOPT application, set linear solver, tolerances, etc.
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
-
-    // numeric jacobian and hessian
-    // app->Options()->SetStringValue("hessian_approximation", "limited-memory");
-    // app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
-
-    // test derivatives
-    // app->Options()->SetStringValue("derivative_test", "second-order");
-
-    app->Options()->SetNumericValue("tol", tolerance);
-    app->Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
-    app->Options()->SetStringValue("mu_strategy", "adaptive");
-    app->Options()->SetIntegerValue("max_iter", 100000);
-
-    app->Options()->SetIntegerValue("print_level", 5);
-    app->Options()->SetStringValue("timing_statistics", "yes");
-
-    app->Options()->SetStringValue("linear_solver", getLinearSolverName(linearSolver));
-    app->Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
-
-    app->Options()->SetStringValue("output_file", "ipopt.out");
-
+    setSolverFlags(app);
     ApplicationReturnStatus status = app->Initialize();
 
     // initial optimization
-    initialIntervals = gdop->mesh.intervals;
     status = app->OptimizeTNLP(gdop);
     postOptimization();
+
     while (meshIteration <= maxMeshIterations) {
+
+        // detect intervals that have to be refined
         auto markedIntervals = detect();
 
         if (sz(markedIntervals) == 0) {
@@ -62,7 +48,7 @@ int Solver::solve() {
         refine(markedIntervals);
 
         // small overhead because of the reinitializing of the GDOP, but thus all variables are initialized correctly
-        // and invariant constant during each optimization remain const
+        // and invariant constants during each optimization remain constant
         gdop = new GDOP(gdop->problem, gdop->mesh, gdop->rk, InitVars::CALLBACK);
 
         // set new starting values
@@ -87,38 +73,104 @@ std::vector<int> Solver::detect() {
 }
 
 std::vector<int> Solver::l2BoundaryNorm() const {
+    const double level = 0;
+    const double cDiff = 1;
+    const double cDiff2 = cDiff / 2;
     std::vector<int> markedIntervals = {};
 
+    // init last derivatives u^(d)_{i-1,m} as 0
+    std::vector<std::vector<double>> lastDiffs;
+    lastDiffs.reserve(gdop->problem->sizeU);
+    for (int u = 0; u < gdop->problem->sizeU; u++) {
+        lastDiffs.push_back({0, 0});
+    }
+
+    // calculate max, min of u^(d)
+    std::vector<double> maxU;
+    std::vector<double> minU;
+    maxU.reserve(gdop->problem->sizeU);
+    minU.reserve(gdop->problem->sizeU);
     for (int i = 0; i < gdop->mesh.intervals; i++) {
+        for (int j = 0; j < gdop->rk.steps; j++) {
+            for (int u = 0; u < gdop->problem->sizeU; u++) {
+                if (i == 0 && j == 0) {
+                    maxU.push_back(gdop->optimum[u + gdop->offX]);
+                    minU.push_back(gdop->optimum[u + gdop->offX]);
+                }
+                else {
+                    if (gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU] > maxU[u]) {
+                        maxU[u] = gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU];
+                    }
+                    else if (gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU] < minU[u]) {
+                        minU[u] = gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU];
+                    }
+                }
+            }
+        }
+    }
+    std::vector<double> rangeU;
+    rangeU.reserve(gdop->problem->sizeU);
+    for (int u = 0; u < gdop->problem->sizeU; u++) {
+        rangeU.push_back(maxU[u] - minU[u]);
+    }
+
+    std::vector<double> boundsDiff;
+    std::vector<double> boundsDiff2;
+    for (int u = 0; u < gdop->problem->sizeU; u++) {
+        boundsDiff.push_back(cDiff * rangeU[u] / initialIntervals * pow(10, -level));
+        boundsDiff2.push_back(cDiff2 * rangeU[u] / initialIntervals * pow(10, -level));
+    }
+
+    for (int i = 0; i < gdop->mesh.intervals; i++) {
+        bool intervalInserted = false;
         for (int u = 0; u < gdop->problem->sizeU; u++) {
-            if (i > 0) {
+            std::vector<double> uCoeffs;
+            if (i == 0) {
+                for (int j = 0; j < gdop->rk.steps; j++) {
+                    uCoeffs.push_back(gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU]);
+                }
+                uCoeffs.insert(uCoeffs.begin(), uCoeffs[0]); // TODO: not simplification but interpolation
+            }
+            else {
                 // TODO: i = 0 -> interpolate with deg 1 less, clean up integrator, last interval new interval
                 // -> mark based on tolerances
-
-                std::vector<double> uCoeffs;
                 for (int j = -1; j < gdop->rk.steps; j++) {
                     uCoeffs.push_back(gdop->optimum[u + gdop->offX + i * gdop->offXUBlock + j * gdop->offXU]);
                 }
-
-                // values of the (1st, 2nd) diff of the interpolating polynomial at 0, c1, c2, ...
-                std::vector<double> p_uDiff = gdop->rk.evalLagrangeDiff(uCoeffs);
-                std::vector<double> p_uDiff2 = gdop->rk.evalLagrangeDiff2(uCoeffs);
-
-                // squared values of the (1st, 2nd) diff of the interpolating polynomial at c1, c2, ...
-                std::vector<double> sq_p_uDiff;
-                std::vector<double> sq_p_uDiff2;
-                for (int k = 1; k < sz(p_uDiff); k++) {
-                    sq_p_uDiff.push_back(p_uDiff[k] * p_uDiff[k]);
-                    sq_p_uDiff2.push_back(p_uDiff2[k] * p_uDiff2[k]);
-                }
-
-                // int_0^1 d^{1,2}/dt^{1,2} p_u(t)^2 dt - L2 norm of the (1st, 2nd) diff
-                double L2Diff1 = gdop->rk.integrate(sq_p_uDiff);
-                double L2Diff2 = gdop->rk.integrate(sq_p_uDiff2);
             }
 
-        }
+            // values of the (1st, 2nd) diff of the interpolating polynomial at 0, c1, c2, ...
+            std::vector<double> p_uDiff = gdop->rk.evalLagrangeDiff(uCoeffs);
+            std::vector<double> p_uDiff2 = gdop->rk.evalLagrangeDiff2(uCoeffs);
 
+            // squared values of the (1st, 2nd) diff of the interpolating polynomial at c1, c2, ...
+            std::vector<double> sq_p_uDiff;
+            std::vector<double> sq_p_uDiff2;
+            for (int k = 1; k < sz(p_uDiff); k++) {
+                sq_p_uDiff.push_back(p_uDiff[k] * p_uDiff[k]);
+                sq_p_uDiff2.push_back(p_uDiff2[k] * p_uDiff2[k]);
+            }
+
+            // (int_0^1 d^{1,2}/dt^{1,2} p_u(t)^2 dt)^0.5 - L2 norm of the (1st, 2nd) diff
+            double L2Diff1 = std::sqrt(gdop->rk.integrate(sq_p_uDiff));
+            double L2Diff2 = std::sqrt(gdop->rk.integrate(sq_p_uDiff2));
+
+            // difference in derivatives from polynomial of adjacent intervals must not exceed some eps
+            if (i > 0 && (std::abs(p_uDiff[0]  - lastDiffs[u][0]) > boundsDiff[u]  / 2 ||
+                          std::abs(p_uDiff2[0] - lastDiffs[u][1]) > boundsDiff2[u] / 2)) {
+                if (sz(markedIntervals) > 0 && markedIntervals[sz(markedIntervals) - 1] != i - 1) {
+                    markedIntervals.push_back(i - 1);
+                }
+                intervalInserted = true;
+            }
+            lastDiffs[u] = {p_uDiff[sz(gdop->rk.c)], p_uDiff2[sz(gdop->rk.c)]};
+
+            // detection if i has to be inserted
+            if (intervalInserted || L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u]) {
+                markedIntervals.push_back(i);
+                break;
+            }
+        }
     }
     return markedIntervals;
 }
@@ -236,12 +288,13 @@ void Solver::setTolerance(double d) {
 }
 
 void Solver::setExportOptimumPath(const std::string& exportPath) {
-    this->exportOptimumPath = exportPath;
-    this->exportOptimum = true;
+    exportOptimumPath = exportPath;
+    exportOptimum = true;
 }
 
 void Solver::initSolvingProcess() {
     solveStartTime = std::chrono::high_resolution_clock::now();
+    initialIntervals = gdop->mesh.intervals;
 }
 
 void Solver::postOptimization() {
@@ -275,4 +328,27 @@ void Solver::printMeshStats() {
     std::cout << "Initial:" << std::setw(7) << initialIntervals << std::endl;
     std::cout << "Inserted:  "<< std::setw(4) << gdop->mesh.intervals - initialIntervals << std::endl;
     std::cout << "Final:" << std::setw(9) << gdop->mesh.intervals << std::endl;
+}
+
+void Solver::setSolverFlags(SmartPtr<IpoptApplication> app) const {
+
+    // numeric jacobian and hessian
+    // app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+    // app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
+
+    // test derivatives
+    // app->Options()->SetStringValue("derivative_test", "second-order");
+
+    app->Options()->SetNumericValue("tol", tolerance);
+    app->Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
+    app->Options()->SetStringValue("mu_strategy", "adaptive");
+    app->Options()->SetIntegerValue("max_iter", 100000);
+
+    app->Options()->SetIntegerValue("print_level", 5);
+    app->Options()->SetStringValue("timing_statistics", "yes");
+
+    app->Options()->SetStringValue("linear_solver", getLinearSolverName(linearSolver));
+    app->Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
+
+    app->Options()->SetStringValue("output_file", "ipopt.out");
 }

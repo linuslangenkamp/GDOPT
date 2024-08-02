@@ -7,11 +7,11 @@ from mpmath import *
 
 path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData/batchReactorRefinement"
 model = "BatchReactor"
-it = 4
+it = 0
 specifCol = 'u0'
 interval = [0, 1]
-intervals = 50
-steps = 4
+intervals = 100
+steps = 3
 
 x = sy.symbols('x')
 function = x**(steps-1) * (x-1)**steps
@@ -71,10 +71,10 @@ for i in range(intervals):
 
 print(timeBasePoints)
 #plt.plot(timeBasePoints, zdashAbs, label="absolute")
-plt.plot(timeBasePoints, relativeRescale(zdashL2), label="L2")
-plt.plot(timeBasePoints, relativeRescale(z2dashL2), label="L2'")
-plt.plot(timeBasePoints, relativeRescale(differencesDiff), label="Δp'")
-plt.plot(timeBasePoints, relativeRescale(differencesDiff2), label="Δp''")
+plt.plot(timeBasePoints, (zdashL2), label="L2")
+plt.plot(timeBasePoints, (z2dashL2), label="L2'")
+plt.plot(timeBasePoints, (differencesDiff), label="Δp'")
+plt.plot(timeBasePoints, (differencesDiff2), label="Δp''")
 plt.xlabel('Time base points')
 plt.ylabel("Z Value norm")
 plt.xlim(interval[0], interval[1])

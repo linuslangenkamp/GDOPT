@@ -13,13 +13,13 @@
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_batchReactor());
+    auto problem = std::make_shared<const Problem>(createProblem_hypersensitive());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
-    Mesh mesh = Mesh::createEquidistantMesh(50, 1);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps7);
+    Mesh mesh = Mesh::createEquidistantMesh(200, 10000);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
-    int meshIterations = 10;
+    int meshIterations = 15;
 
     Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 
