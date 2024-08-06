@@ -61,11 +61,12 @@ public:
     void setl2BoundaryNorm();
     void setBasicStrategy();
 
-    // parameters
+    // basicStrategy parameters
     double basicStrategySigma = 2.5;
 
+    // L2 norm / boundary parameters
     double L2Level = 0;
-
+    double L2CLevel = 0;
 };
 
 #endif //IPOPT_DO_SOLVER_H

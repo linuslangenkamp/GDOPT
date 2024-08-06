@@ -87,7 +87,7 @@ void Solver::setRefinementParameters() {
 std::vector<int> Solver::l2BoundaryNorm() const {
     const double cDiff = 1;
     const double cDiff2 = cDiff / 2;
-    std::vector<int> markedIntervals = {};
+    std::set<int> markerSet;
 
     // init last derivatives u^(d)_{i-1,m} as 0
     std::vector<std::vector<double>> lastDiffs;
@@ -166,43 +166,31 @@ std::vector<int> Solver::l2BoundaryNorm() const {
             double L2Diff2 = std::sqrt(gdop->rk.integrate(sq_p_uDiff2));
 
             // difference in derivatives from polynomial of adjacent intervals must not exceed some eps
-            double absErrDiff = std::abs(p_uDiff[0]  - lastDiffs[u][0]);
-            double absErrDiff2 = std::abs(p_uDiff2[0] - lastDiffs[u][1]);
-            double maxDiff = std::max({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])});
-            double maxDiff2 = std::max({std::abs(p_uDiff2[0]), std::abs(lastDiffs[u][1])});
-            double relErrDiff = absErrDiff / maxDiff;
-            double relErrDiff2 = absErrDiff2 / maxDiff2;
-            double bound, bound2;
-            if (maxDiff > 1) {
-                bound = 0.1;
-            }
-            else {
-                bound = pow(10, -1 - std::log10(maxDiff));
-            }
+            // using p1 (+1) error; basically isclose(.) in numpy bib
+            double p1ErrorDiff = std::abs(p_uDiff[0]  - lastDiffs[u][0]) / (1 + std::max({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])}));
+            double p1ErrorDiff2 = std::abs(p_uDiff2[0] - lastDiffs[u][1]) / (1 + std::max({std::abs(p_uDiff2[0]), std::abs(lastDiffs[u][1])}));
 
-            if (maxDiff2 > 1) {
-                bound2 = 0.1;
-            }
-            else {
-                bound2 = pow(10, -1 - std::log10(maxDiff2));
-            }
-
-            if (i > 0 && (relErrDiff  > bound || relErrDiff2 > bound2)) {
-                if (sz(markedIntervals) == 0 || markedIntervals[sz(markedIntervals) - 1] != i - 1) {
-                    markedIntervals.push_back(i - 1);
-                    intervalInserted = true;
-                }
+            if (p1ErrorDiff  > (5 - L2CLevel) / 100 || p1ErrorDiff2 > (5 - L2CLevel) / 100) {
+                intervalInserted = true;
             }
             lastDiffs[u] = {p_uDiff[sz(gdop->rk.c)], p_uDiff2[sz(gdop->rk.c)]};
 
             // detection if "i" has to be inserted
             if (intervalInserted || L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u]) {
-                markedIntervals.push_back(i);
+                if (i >= 2)
+                    markerSet.insert(i - 2);
+                if (i >= 1)
+                    markerSet.insert(i - 1);
+                markerSet.insert(i);
+                if (i <= gdop->mesh.intervals - 2)
+                    markerSet.insert(i + 1);
+                if (i <= gdop->mesh.intervals - 1)
+                    markerSet.insert(i + 2);
                 break;
             }
         }
     }
-    return markedIntervals;
+    return {markerSet.begin(), markerSet.end()};
 }
 
 std::vector<int> Solver::basicStrategy(const double sigma) const {
@@ -393,6 +381,8 @@ void Solver::setSolverFlags(SmartPtr<IpoptApplication> app) const {
 void Solver::setl2BoundaryNorm() {
     if(meshParameters.count("level") > 0)
         L2Level = meshParameters["level"];
+    if(meshParameters.count("clevel") > 0)
+        L2CLevel = meshParameters["clevel"];
 }
 
 void Solver::setBasicStrategy() {

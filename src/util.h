@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cmath>
 #include <iomanip>
+#include <set>
 
 template<typename T>
 inline int sz(const std::vector<T>& vec) {
