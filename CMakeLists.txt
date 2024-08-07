@@ -23,7 +23,7 @@ ExternalProject_Add(ipopt-ext
 
 file(GLOB SRC_FILES "src/*.cpp")
 
-set(EXAMPLE_FILES "examples/hypersensitive.cpp"
+set(EXAMPLE_FILES
         examples/hypersensitive.h
         examples/parameterSweep.h
         examples/parameterSweep.cpp
@@ -32,7 +32,9 @@ set(EXAMPLE_FILES "examples/hypersensitive.cpp"
         examples/rocketTrajectory.cpp
         examples/rocketTrajectory.h
         examples/trivialBangBang.cpp
-        examples/trivialBangBang.h)
+        examples/trivialBangBang.h
+        examples/analyticHypersensitive.cpp
+        examples/analyticHypersensitive.h)
 
 include_directories(src examples)
 

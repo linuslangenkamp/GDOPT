@@ -170,22 +170,18 @@ std::vector<int> Solver::l2BoundaryNorm() const {
             double p1ErrorDiff = std::abs(p_uDiff[0]  - lastDiffs[u][0]) / (1 + std::max({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])}));
             double p1ErrorDiff2 = std::abs(p_uDiff2[0] - lastDiffs[u][1]) / (1 + std::max({std::abs(p_uDiff2[0]), std::abs(lastDiffs[u][1])}));
 
-            if (p1ErrorDiff  > (5 - L2CLevel) / 100 || p1ErrorDiff2 > (5 - L2CLevel) / 100) {
+            if (p1ErrorDiff > L2CornerTol || p1ErrorDiff2 > L2CornerTol) {
                 intervalInserted = true;
             }
             lastDiffs[u] = {p_uDiff[sz(gdop->rk.c)], p_uDiff2[sz(gdop->rk.c)]};
 
             // detection if "i" has to be inserted
             if (intervalInserted || L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u]) {
-                if (i >= 2)
-                    markerSet.insert(i - 2);
                 if (i >= 1)
                     markerSet.insert(i - 1);
                 markerSet.insert(i);
                 if (i <= gdop->mesh.intervals - 2)
                     markerSet.insert(i + 1);
-                if (i <= gdop->mesh.intervals - 1)
-                    markerSet.insert(i + 2);
                 break;
             }
         }
@@ -301,8 +297,8 @@ void Solver::refine(std::vector<int> &markedIntervals) {
     }
 }
 
-void Solver::setTolerance(double d) {
-    tolerance = d;
+void Solver::setTolerance(double tol) {
+    tolerance = tol;
 }
 
 void Solver::setExportOptimumPath(const std::string& exportPath) {
@@ -344,6 +340,7 @@ void Solver::finalizeOptimization() {
         printObjectiveHistory();
     }
     auto timeTaken = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - solveStartTime).count();
+    std::cout << "\n----------------------------------------------------------------" << std::endl;
     std::cout << "\nSolving took: " << timeTaken << " seconds" << std::endl;
 }
 
@@ -381,8 +378,8 @@ void Solver::setSolverFlags(SmartPtr<IpoptApplication> app) const {
 void Solver::setl2BoundaryNorm() {
     if(meshParameters.count("level") > 0)
         L2Level = meshParameters["level"];
-    if(meshParameters.count("clevel") > 0)
-        L2CLevel = meshParameters["clevel"];
+    if(meshParameters.count("ctol") > 0)
+        L2CornerTol = meshParameters["ctol"];
 }
 
 void Solver::setBasicStrategy() {

@@ -2,10 +2,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData"
-model = "BatchReactor"
-it = 5
+model = "analyticHypersensitive"
+it = 14
 specifCol = 'u0'
-interval = [0, 1]
+interval = [9985, 10000]
 
 df = pd.read_csv(path + "/" + model + str(it) + ".csv" , sep=",")
 print(df.head())

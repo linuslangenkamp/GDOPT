@@ -66,7 +66,7 @@ public:
 
     // L2 norm / boundary parameters
     double L2Level = 0;
-    double L2CLevel = 0;
+    double L2CornerTol = 0.2;
 };
 
 #endif //IPOPT_DO_SOLVER_H
