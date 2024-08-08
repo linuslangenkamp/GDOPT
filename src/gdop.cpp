@@ -414,27 +414,19 @@ bool GDOP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g) {
 
             // dynamic constraints
             // 0 = sum_k ~a_{jk} * (x_{ik} - x_{i-1,m)) - del t_i * f(x_{ij}, u_{ij}, p, t_{ij}), i=0 -> x_{i-1,m) = x0
-            if (i == 0){
-                for (int d = 0; d < problem->F.size(); d++) {
-                    double rkLinearComb = 0;
-                    for (int k = 0; k < rk.steps; k++) {
-                        const int xik = i * offXUBlock + k * offXU;  // first index (dim=0) of x_{ik}
+            for (int d = 0; d < problem->F.size(); d++) {
+                double rkLinearComb = 0;
+                for (int k = 0; k < rk.steps; k++) {
+                    const int xik = i * offXUBlock + k * offXU;  // first index (dim=0) of x_{ik}
+                    if (i == 0) {
                         rkLinearComb += rk.Ainv[j][k] * (x[xik + d] - problem->x0[d]);
                     }
-                    g[eq] = rkLinearComb - mesh.deltaT[i] * problem->F[d]->eval(&x[xij], &x[uij], &x[offXUTotal], tij);
-                    eq++;
-                }
-            }
-            else {
-                for (int d = 0; d < problem->F.size(); d++) {
-                    double rkLinearComb = 0;
-                    for (int k = 0; k < rk.steps; k++) {
-                        const int xik = i * offXUBlock + k * offXU;  // first index (dim=0) of x_{ik}
+                    else {
                         rkLinearComb += rk.Ainv[j][k] * (x[xik + d] - x[xi1_m + d]);
                     }
-                    g[eq] = rkLinearComb - mesh.deltaT[i] * problem->F[d]->eval(&x[xij], &x[uij], &x[offXUTotal], tij);
-                    eq++;
                 }
+                g[eq] = rkLinearComb - mesh.deltaT[i] * problem->F[d]->eval(&x[xij], &x[uij], &x[offXUTotal], tij);
+                eq++;
             }
 
             // path constraints: LB_g <= g(x_{ij}, u_{ij}, p, t_{ij}) <= UB_g
@@ -604,8 +596,9 @@ void GDOP::get_jac_values(const Number *x, Number *values) {
                 // sum_k ~a_{jk} * (x_{i,k})
                 for (int k = 0; k < rk.steps; k++) {
                     values[it] = rk.Ainv[j][k];
-                    if (k == j)
+                    if (k == j) {
                         containedIdx = it;
+                    }
                     it++;
                 }
 
@@ -620,7 +613,7 @@ void GDOP::get_jac_values(const Number *x, Number *values) {
                         it++;
                     }
                     else {
-                        values[containedIdx] += -mesh.deltaT[i] * diffF[0][v];
+                        values[containedIdx] -= mesh.deltaT[i] * diffF[0][v];
                     }
                 }
 

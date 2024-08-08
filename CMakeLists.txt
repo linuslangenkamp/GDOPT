@@ -34,7 +34,11 @@ set(EXAMPLE_FILES
         examples/trivialBangBang.cpp
         examples/trivialBangBang.h
         examples/analyticHypersensitive.cpp
-        examples/analyticHypersensitive.h)
+        examples/analyticHypersensitive.h
+        examples/satellite.cpp
+        examples/satellite.h
+        examples/hypersensitive.cpp
+        examples/hypersensitive.h)
 
 include_directories(src examples)
 

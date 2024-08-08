@@ -8,22 +8,23 @@
 #include "rocketTrajectory.h"
 #include "analyticHypersensitive.h"
 #include "trivialBangBang.h"
+#include "satellite.h"
 #include "batchReactor.h"
 #include "solver.h"
 
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_analyticHypersensitive());
+    auto problem = std::make_shared<const Problem>(createProblem_satellite());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
-    Mesh mesh = Mesh::createEquidistantMesh(500, 10000);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps7);
+    Mesh mesh = Mesh::createEquidistantMesh(10000, 100);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
-    int meshIterations = 15;
+    int meshIterations = 0;
     std::unordered_map<std::string, double> meshParameters;
-    meshParameters.emplace("level", 0);
-    meshParameters.emplace("ctol", 0.2);
+    // meshParameters.emplace("level", 0);
+    // meshParameters.emplace("ctol", 0.1);
 
     Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm, meshParameters);
 
