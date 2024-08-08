@@ -3,15 +3,13 @@ import matplotlib.pyplot as plt
 
 path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData"
 model = "satellite"
-it = 0
-specifCol = "u1"
-interval = [0, 100]
-
+it = 1
 df = pd.read_csv(path + "/" + model + str(it) + ".csv", sep=",")
 print(df.head())
+specifCols = [col for col in df.columns if col.startswith('u')] 
+interval = [0, 100]
 
 plt.rcParams.update({
-    'font.family': 'serif',
     'font.serif': ['Times New Roman'],
     'axes.labelsize': 14,
     'axes.titlesize': 16,
@@ -28,36 +26,27 @@ plt.rcParams.update({
     'axes.labelpad': 10
 })
 
-if specifCol is None:
-    num_plots = len(df.columns) - 1
-    fig, axs = plt.subplots(num_plots, 1, figsize=(12, 8 * num_plots), sharex=True)
-
-    if num_plots == 1:
-        axs = [axs]
-
-    for idx, column in enumerate(df.columns[1:]):
-        ax = axs[idx]
-        ax.plot(df['time'], df[column], label=column, linewidth=2, linestyle='-', color='steelblue')
-        ax.scatter(df['time'], df[column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
-        ax.set_xlabel('Time')
-        ax.set_ylabel(column)
-        ax.set_xlim(interval[0], interval[1])
-        ax.legend(frameon=True, loc='best')
-        ax.grid(True)
-        ax.title.set_fontsize(16)
-
-    plt.tight_layout()
-    plt.show()
-
+if specifCols is None:
+    columns_to_plot = df.columns[1:]
 else:
-    plt.figure(figsize=(12, 8))
-    plt.plot(df['time'], df[specifCol], label=specifCol, linewidth=2, linestyle='-', color='cornflowerblue')
-    plt.scatter(df['time'], df[specifCol], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
-    plt.xlabel('Time')
-    plt.ylabel(specifCol)
-    plt.title(f'{specifCol} over Time', fontsize=16)
-    plt.xlim(interval[0], interval[1])
-    plt.legend(frameon=True, loc='best')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+    columns_to_plot = specifCols
+
+num_plots = len(columns_to_plot)
+fig, axs = plt.subplots(num_plots, 1, figsize=(12, 8 * num_plots), sharex=True)
+
+if num_plots == 1:
+    axs = [axs]
+
+for idx, column in enumerate(columns_to_plot):
+    ax = axs[idx]
+    ax.plot(df['time'], df[column], label=column, linewidth=2, linestyle='-', color='steelblue')
+    ax.scatter(df['time'], df[column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+    ax.set_xlabel('time')
+    ax.set_ylabel(column)
+    ax.set_xlim(interval[0], interval[1])
+    ax.legend(frameon=True, loc='best')
+    ax.grid(True)
+    ax.title.set_fontsize(16)
+
+plt.tight_layout()
+plt.show()

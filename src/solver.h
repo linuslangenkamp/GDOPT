@@ -22,8 +22,7 @@ enum class MeshAlgorithm {
 
 class Solver {
 public:
-    Solver(const SmartPtr<GDOP>& gdop, int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm,
-           std::unordered_map<std::string, double> meshParameters);
+    Solver(const SmartPtr<GDOP>& gdop, int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm);
 
     SmartPtr<GDOP> gdop;
     LinearSolver linearSolver;
@@ -60,6 +59,7 @@ public:
     void setRefinementParameters();
     void setl2BoundaryNorm();
     void setBasicStrategy();
+    void setMeshParameter(const std::string& field, double value);
 
     // basicStrategy parameters
     double basicStrategySigma = 2.5;

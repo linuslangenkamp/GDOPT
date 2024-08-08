@@ -358,7 +358,7 @@ Problem createProblem_satellite() {
             {0, 0, 0, 1, 0.01, 0.005, 0.001},
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},
             {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},
-            {0, 0, 0}, {1, 1, 1},
+            {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY}, {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},
             {}, {},
             MayerSat::create(),
             LagrangeSat::create(),

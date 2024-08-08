@@ -3,10 +3,8 @@
 #include "solver.h"
 #include "IpIpoptApplication.hpp"
 
-Solver::Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm,
-               std::unordered_map<std::string, double> meshParameters) :
-               gdop(gdop), maxMeshIterations(maxMeshIterations), linearSolver(linearSolver), meshAlgorithm(meshAlgorithm),
-               meshParameters(std::move(meshParameters)){}
+Solver::Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm) :
+               gdop(gdop), maxMeshIterations(maxMeshIterations), linearSolver(linearSolver), meshAlgorithm(meshAlgorithm) {}
 
 std::string getLinearSolverName(LinearSolver solver) {
     switch (solver) {
@@ -364,6 +362,7 @@ void Solver::setSolverFlags(SmartPtr<IpoptApplication> app) const {
     app->Options()->SetNumericValue("tol", tolerance);
     app->Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
     app->Options()->SetStringValue("mu_strategy", "adaptive");
+    // app->Options()->SetStringValue("nlp_scaling_method", "nlp_scaling_max_gradient");
     app->Options()->SetIntegerValue("max_iter", 100000);
 
     app->Options()->SetIntegerValue("print_level", 5);
@@ -373,6 +372,10 @@ void Solver::setSolverFlags(SmartPtr<IpoptApplication> app) const {
     app->Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
 
     app->Options()->SetStringValue("output_file", "ipopt.out");
+}
+
+void Solver::setMeshParameter(const std::string& field, double value) {
+    meshParameters.emplace(field, value);
 }
 
 void Solver::setl2BoundaryNorm() {

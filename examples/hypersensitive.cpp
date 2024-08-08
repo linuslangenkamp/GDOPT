@@ -4,9 +4,9 @@
 #include "problem.h"
 #include "constants.h"
 
-class Lagrange : public Expression {
+class LagrangeHyp : public Expression {
 public:
-    static std::unique_ptr<Lagrange> create() {
+    static std::unique_ptr<LagrangeHyp> create() {
         Adjacency adj{
                 {0},
                 {0},
@@ -20,7 +20,7 @@ public:
                         {},
                         {}
         };
-        return std::unique_ptr<Lagrange>(new Lagrange(std::move(adj), std::move(adjDiff)));
+        return std::unique_ptr<LagrangeHyp>(new LagrangeHyp(std::move(adj), std::move(adjDiff)));
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
@@ -35,13 +35,13 @@ public:
         return {std::vector<double>{1}, {}, {1}, {}, {}, {}};
     }
 private:
-    Lagrange(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {
+    LagrangeHyp(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {
     }
 };
 
-class F0 : public Expression {
+class F0Hyp : public Expression {
 public:
-    static std::unique_ptr<F0> create() {
+    static std::unique_ptr<F0Hyp> create() {
         Adjacency adj{
                 {0},
                 {0},
@@ -55,7 +55,7 @@ public:
                             {},
                             {}
         };
-        return std::unique_ptr<F0>(new F0(std::move(adj), std::move(adjDiff)));
+        return std::unique_ptr<F0Hyp>(new F0Hyp(std::move(adj), std::move(adjDiff)));
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
@@ -71,13 +71,13 @@ public:
     }
 
 private:
-    F0(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {
+    F0Hyp(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {
     }
 };
 
-class R0 : public Constraint {
+class R0Hyp : public Constraint {
 public:
-    static std::unique_ptr<R0> create() {
+    static std::unique_ptr<R0Hyp> create() {
         Adjacency adj{
                 {0},
                 {},
@@ -91,7 +91,7 @@ public:
                                 {},
                                 {}
         };
-        return std::unique_ptr<R0>(new R0(std::move(adj), std::move(adjDiff), 0, 0));
+        return std::unique_ptr<R0Hyp>(new R0Hyp(std::move(adj), std::move(adjDiff), 0, 0));
     }
 
     double eval(const double *x, const double *u, const double *p, double t) override {
@@ -106,17 +106,17 @@ public:
         return {std::vector<double>{}, {}, {}, {}, {}, {}};
     }
 private:
-    R0(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {
+    R0Hyp(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {
     }
 };
 
 Problem createProblem_hypersensitive() {
 
     std::vector<std::unique_ptr<Expression>> F;
-    F.push_back(F0::create());
+    F.push_back(F0Hyp::create());
 
     std::vector<std::unique_ptr<Constraint>> R;
-    R.push_back(R0::create());
+    R.push_back(R0Hyp::create());
 
     Problem problem(
             1, 1, 0,
@@ -125,7 +125,7 @@ Problem createProblem_hypersensitive() {
             {MINUS_INFINITY}, {PLUS_INFINITY},
             {}, {},
             {},
-            Lagrange::create(),
+            LagrangeHyp::create(),
             std::move(F),
             {},
             std::move(R),
