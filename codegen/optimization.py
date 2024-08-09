@@ -1,14 +1,20 @@
-from sympy import Symbol, diff, sin, ccode
+from sympy import *
+import time
 from enum import Enum
+
+# TODO: only diff w.r.t. to vars that are contained in a given expr
+
 
 class InvalidModel(Exception):
     pass
+
 
 class Objective(Enum):
     MINIMIZE = 1
     MAXIMIZE = 2
     MAX = MAXIMIZE
     MIN = MINIMIZE
+
 
 class Constant(Symbol):
     id_counter = 0
@@ -22,6 +28,7 @@ class Constant(Symbol):
         cls.id_counter += 1
         return obj
 
+
 class Variable(Symbol):
     id_counter = 0
     
@@ -30,6 +37,7 @@ class Variable(Symbol):
         obj.lb = lb
         obj.ub = ub
         return obj
+
 
 class State(Variable):
     id_counter = 0
@@ -44,6 +52,7 @@ class State(Variable):
         cls.id_counter += 1
         return obj
 
+
 class Input(Variable):
     id_counter = 0
 
@@ -56,6 +65,7 @@ class Input(Variable):
         cls.id_counter += 1
         return obj
 
+
 class Parameter(Variable):
     id_counter = 0
 
@@ -67,6 +77,7 @@ class Parameter(Variable):
         obj.symbol = f'p[{obj.id}]'
         cls.id_counter += 1
         return obj
+
 
 class Expression:
     def __init__(self, expr):
@@ -175,11 +186,13 @@ class Expression:
         out += "};\n\n\n"
         return out
 
+
 class DynExpression(Expression):
     
     def __init__(self, diffVar, expr):
         super().__init__(expr)
         self.diffVar = diffVar
+
 
 class Constraint(Expression):
     
@@ -295,6 +308,7 @@ class Constraint(Expression):
         out += "};\n\n\n"
         return out
 
+
 class ParametricConstraint(Expression):
     
     def __init__(self, expr, lb=-float("inf"), ub=float("inf")):
@@ -360,10 +374,12 @@ class ParametricConstraint(Expression):
         out += f"\t{name}(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {{}}\n"
         out += "};\n\n\n"
         return out
-        
+
+
 class Model:
     
     def __init__(self, name):
+        self.creationTime = time.process_time()
         self.xVars = []
         self.uVars = []
         self.pVars = []
@@ -436,7 +452,6 @@ class Model:
         self.F.sort(key=lambda eq: eq.diffVar.id, reverse=False)
         allVars = self.xVars + self.uVars + self.pVars
         
-        
         # codegen
         
         HEADEROUTPUT = f"""
@@ -453,6 +468,7 @@ Problem createProblem_{self.name}();
         
         OUTPUT = f'''
 // CODEGEN FOR MODEL "{self.name}"\n
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <string>
 #include "{self.name}.h"
@@ -525,14 +541,33 @@ Problem createProblem_{self.name}();
         with open(f'{filename}.cpp', 'w') as file:
             file.write(OUTPUT)
         
-        print("CODEGEN SUCCESSFUL.")
+        print(f"Generated model to {filename}.h and {filename}.cpp")
+        print(f"Model creation, derivative calculations, and code generation took {round(time.process_time() - self.creationTime, 4)} seconds.")
         return 0
         
         
-### GLOBAL VAR DEFINITIONS
+### GLOBAL VAR DEFINITIONS AND GLOBAL ALIAS
+
+# variables
 Continous = Input
 Control = Input
+Model.addC = Model.addConst
+Model.addV = Model.addVar
+
+# objective
+Model.addM = Model.addMayer
+Model.addL = Model.addLagrange
+
+# constraints
+Model.addOde = Model.addDynamic
+Model.addF = Model.addDynamic
+Model.addG = Model.addPath
+Model.addR = Model.addFinal
+Model.addA = Model.addParametric
+
+# time symbol
 t = Symbol("t")
+
 ###
 
 """
