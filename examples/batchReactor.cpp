@@ -1,7 +1,6 @@
 #include <string>
 #include "batchReactor.h"
 #include "expression.h"
-#include "problem.h"
 
 /**
  * Batch Reactor from Parallel Multiple-Shooting and Collocation Optimization with OpenModelica,

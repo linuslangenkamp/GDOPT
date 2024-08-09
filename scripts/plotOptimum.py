@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData"
 model = "satellite"
-it = 1
+it = 0
 df = pd.read_csv(path + "/" + model + str(it) + ".csv", sep=",")
 print(df.head())
 specifCols = [col for col in df.columns if col.startswith('u')] 

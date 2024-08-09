@@ -18,16 +18,16 @@ int main() {
     auto problem = std::make_shared<const Problem>(createProblem_satellite());
     InitVars initVars = InitVars::CONST;
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps7);
-    Mesh mesh = Mesh::createEquidistantMesh(1, 100);
+    Mesh mesh = Mesh::createEquidistantMesh(100, 100);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
-    int meshIterations = 5;
+    int meshIterations = 0;
 
     Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 
     // set solver flags
     solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData");
-    solver.setTolerance(1e-14);
+    solver.setTolerance(1e-13);
 
     // set solver mesh parameters
     solver.setMeshParameter("level", 0);

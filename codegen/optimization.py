@@ -1,15 +1,32 @@
 from sympy import Symbol, diff, sin, ccode
 from enum import Enum
 
+class InvalidModel(Exception):
+    pass
+
+class Objective(Enum):
+    MINIMIZE = 1
+    MAXIMIZE = 2
+    MAX = MAXIMIZE
+    MIN = MINIMIZE
+
+class Constant(Symbol):
+    
+    def __new__(cls, symbol, value):
+        obj = super().__new__(cls, symbol)
+        obj.symbol = symbol
+        obj.value = value
+        return obj
+
 class Variable(Symbol):
     id_counter = 0
-
+    
     def __new__(cls, symbol, lb=-float("inf"), ub=float("inf")):
         obj = super().__new__(cls, symbol)
         obj.lb = lb
         obj.ub = ub
         return obj
-        
+
 class State(Variable):
     id_counter = 0
 
@@ -127,27 +144,25 @@ class Expression:
         out += "\t}\n\n"
         
         out += f"\tstd::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {{\n"
-        out += "\t\treturn {{"
+        out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff[0]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff[1]))
         out += "{{{}}}".format(", ".join(cEvalDiff[2]))
-        out += "}};\n\t}\n\n"
+        out += "};\n\t}\n\n"
         
         out += f"\tstd::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {{\n"
-        out += "\t\treturn {{"
+        out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[0]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[1]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[2]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[3]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[4]))
         out += "{{{}}}".format(", ".join(cEvalDiff2[5]))
-        out += "}};\n\t}\n"
+        out += "};\n\t}\n"
         
         out += "private:\n"
         out += f"\t{name}(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {{}}\n"
-        out += "};\n"
-        return out
-        out += "};\n"
+        out += "};\n\n\n"
         return out
 
 class DynExpression(Expression):
@@ -249,25 +264,25 @@ class Constraint(Expression):
         out += "\t}\n\n"
         
         out += f"\tstd::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {{\n"
-        out += "\t\treturn {{"
+        out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff[0]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff[1]))
         out += "{{{}}}".format(", ".join(cEvalDiff[2]))
-        out += "}};\n\t}\n\n"
+        out += "};\n\t}\n\n"
         
         out += f"\tstd::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {{\n"
-        out += "\t\treturn {{"
+        out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[0]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[1]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[2]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[3]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[4]))
         out += "{{{}}}".format(", ".join(cEvalDiff2[5]))
-        out += "}};\n\t}\n"
+        out += "};\n\t}\n"
         
         out += "private:\n"
         out += f"\t{name}(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {{}}\n"
-        out += "};\n"
+        out += "};\n\n\n"
         return out
 
 class ParametricConstraint(Expression):
@@ -322,18 +337,18 @@ class ParametricConstraint(Expression):
         out += "\t}\n\n"
         
         out += f"\tstd::vector<double> evalDiff(const double* p) override {{\n"
-        out += "\t\treturn "
+        out += "\t\treturn std::vector<double>"
         out += f"{{{', '.join(cEvalDiff)}}}"
         out += ";\n\t}\n\n"
         
         out += f"\tstd::vector<double> evalDiff2(const double* p) override {{\n"
-        out += "\t\treturn "
+        out += "\t\treturn std::vector<double>"
         out += "{{{}}}".format(", ".join(cEvalDiff2))
         out += ";\n\t}\n"
         
         out += "private:\n"
         out += f"\t{name}(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {{}}\n"
-        out += "};\n"
+        out += "};\n\n\n"
         return out
         
 class Model:
@@ -342,6 +357,7 @@ class Model:
         self.xVars = []
         self.uVars = []
         self.pVars = []
+        self.constants = []
         self.M = None
         self.L = None
         self.F = []
@@ -358,14 +374,34 @@ class Model:
         elif type(variable) == Parameter:
             self.pVars.append(variable)
         return variable
-            
-    def addMayer(self, expr):
-        self.M = Expression(expr)
-
-    def addLagrange(self, expr):
-        self.L = Expression(expr)
+    
+    def addConst(self, constant):
+        self.constants.append(constant)
+        return constant
+    
+    def addMayer(self, expr, obj=Objective.MINIMIZE):
+        if self.M:
+            raise InvalidModel("Mayer term already set")
+        else:
+            if obj == Objective.MAXIMIZE:
+                self.M = Expression(-1 * expr)
+            else:
+                self.M = Expression(expr)
+                
+    def addLagrange(self, expr, obj=Objective.MINIMIZE):
+        if self.L:
+            raise InvalidModel("Lagrange term already set")
+        else:
+            if obj == Objective.MAXIMIZE:
+                self.L = Expression(-1 * expr)
+            else:
+                self.L = Expression(expr)
     
     def addDynamic(self, diffVar, expr):
+        for f in self.F:
+            if diffVar == f.diffVar:
+                fail = f"Equation for diff({diffVar}) has been added already"
+                raise InvalidModel(fail)
         self.F.append(DynExpression(diffVar, expr))
     
     def addPath(self, expr, lb=-float("inf"), ub=float("inf")):
@@ -378,46 +414,118 @@ class Model:
         if set(self.pVars).issuperset(expr.free_symbols):
             self.A.append(ParametricConstraint(expr, lb=lb, ub=ub))
         else:
-            raise("Parametric constraints only allow parametric variables")
+            raise InvalidModel("Parametric constraints only allow parametric variables")
     
-    def generate(self):
-        print(self.xVars)
+    def generate(self, filename):
         if len(self.F) != len(self.xVars):
-            raise ValueError("#states != #differential equations") 
+            raise InvalidModel("#states != #differential equations") 
+        
+        # preparations
+        
         self.F.sort(key=lambda eq: eq.diffVar.id, reverse=False)
         allVars = self.xVars + self.uVars + self.pVars
-        print(allVars)
+        
+        
+        # codegen
+        
+        HEADEROUTPUT = f"""
+// CODEGEN FOR MODEL "{self.name}"\n
+#ifndef IPOPT_DO_{self.name.upper()}_H
+#define IPOPT_DO_{self.name.upper()}_H
 
+#include <problem.h>
+
+Problem createProblem_{self.name}();
+
+#endif //IPOPT_DO_{self.name.upper()}_H
+
+"""
+        
+        OUTPUT = f'''
+// CODEGEN FOR MODEL "{self.name}"\n
+#include <cmath>
+#include <string>
+#include "{self.name}.h"
+#include "constants.h"\n\n\n'''
+        
+        for constant in self.constants:
+            OUTPUT += f"const double {constant.symbol} = {constant.value};\n"
+        else:
+            OUTPUT += "\n\n"
+        
+        if self.M:
+            OUTPUT += self.M.codegen("Mayer" + self.name, allVars)
+            
+        if self.L:
+            OUTPUT += self.L.codegen("Lagrange" + self.name, allVars)
+        
+        for n, f in enumerate(self.F):
+            OUTPUT += f.codegen("F" + str(n) + self.name, allVars)
+        
+        for n, g in enumerate(self.G):
+            OUTPUT += g.codegen("G" + str(n) + self.name, allVars)
+        
+        for n, r in enumerate(self.R):
+            OUTPUT += r.codegen("R" + str(n) + self.name, allVars)
+        
+        for n, a in enumerate(self.A):
+            OUTPUT += a.codegen("A" + str(n) + self.name, allVars)
+        
+        pushF = "\n    ".join("F.push_back(" + "F" + str(n) + self.name + "::create());" for n in range(len(self.F)))
+        pushG = "\n    ".join("G.push_back(" + "G" + str(n) + self.name + "::create());" for n in range(len(self.G)))
+        pushR = "\n    ".join("R.push_back(" + "R" + str(n) + self.name + "::create());" for n in range(len(self.R)))
+        pushA = "\n    ".join("A.push_back(" + "A" + str(n) + self.name + "::create());" for n in range(len(self.A)))
+        
+        OUTPUT += f"""Problem createProblem_{self.name}() {{
+
+    std::vector<std::unique_ptr<Expression>> F;
+    {pushF}
+    
+    std::vector<std::unique_ptr<Constraint>> G;
+    {pushG}
+    
+    std::vector<std::unique_ptr<Constraint>> R;
+    {pushR}
+    
+    std::vector<std::unique_ptr<ParamConstraint>> A;
+    {pushA}
+
+    Problem problem(
+            {len(self.xVars)}, {len(self.uVars)}, {len(self.pVars)},  // #vars
+            {{{', '.join(str(x.start) for x in self.xVars)}}},  // x0
+            {{{', '.join(str(x.lb if x.lb != -float('inf') else "MINUS_INFINITY") for x in self.xVars)}}},  // lb x
+            {{{', '.join(str(x.ub if x.ub != float('inf') else "PLUS_INFINITY") for x in self.xVars)}}},  // ub x
+            {{{', '.join(str(u.lb if u.lb != -float('inf') else "MINUS_INFINITY") for u in self.uVars)}}},  // lb u
+            {{{', '.join(str(u.ub if u.ub != float('inf') else "PLUS_INFINITY") for u in self.uVars)}}},  // ub u
+            {{{', '.join(str(p.lb if p.lb != -float('inf') else "MINUS_INFINITY") for p in self.pVars)}}},  // lb p
+            {{{', '.join(str(p.ub if p.ub != float('inf') else "PLUS_INFINITY") for p in self.pVars)}}},  // ub p
+            {"Mayer" + self.name + "::create()" if self.M else "{}"},
+            {"Lagrange" + self.name + "::create()" if self.L else "{}"},
+            std::move(F),
+            std::move(G),
+            std::move(R),
+            std::move(A),
+            "{self.name}");
+    return problem;
+}};\n"""
+        
+        with open(f'{filename}.h', 'w') as file:
+            file.write(HEADEROUTPUT)
+        
+        with open(f'{filename}.cpp', 'w') as file:
+            file.write(OUTPUT)
+        
+        print("CODEGEN SUCCESSFUL.")
+        return 0
+        
+        
 ### GLOBAL VAR DEFINITIONS
 Continous = Input
 Control = Input
 t = Symbol("t")
 ###
 
-
-model = Model("Test")
-
-x1 = model.addVar(State('x1', start=0.0))
-x2 = model.addVar(State('x2', start=0.0))
-u1 = model.addVar(Control('u1'))
-p1 = model.addVar(Parameter('p1'))
-p2 = model.addVar(Parameter('p2'))
-
-variables = model.xVars + model.uVars + model.pVars
-
-model.addDynamic(x2, x1 + x2*u1 + sin(p1)*x1 + p2**2)
-model.addDynamic(x1, x2 + x1**2  + t )
-model.addPath(x1**2 + x2**2, lb=2)
-model.addLagrange(x1 + x2*u1)
-model.addParametric(p1**2 + p2**2, lb=0, ub=1)
-cpp_code = model.G[0].codegen("G", variables)
-
-cpp_code = model.A[0].codegen("AAAA", variables)
-
-print(cpp_code)
-
-print(model.F)
-model.generate()
-print(model.F)
-model.L.codegen("test", variables)
-
+"""
+SET THIS AS GEANY EXECUTE
+export PYTHONPATH=/home/linus/masterarbeit/ipopt_do/codegen && python3 -u "%f"
+"""
