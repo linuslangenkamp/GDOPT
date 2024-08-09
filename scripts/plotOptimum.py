@@ -2,12 +2,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData"
-model = "satellite"
+model = "dieselMotor"
 it = 0
 df = pd.read_csv(path + "/" + model + str(it) + ".csv", sep=",")
 print(df.head())
-specifCols = [col for col in df.columns if col.startswith('u')] 
-interval = [0, 100]
+specifCols = None # [col for col in df.columns if col.startswith('u')] 
+interval = [0, 0.5]
 
 plt.rcParams.update({
     'font.serif': ['Times New Roman'],

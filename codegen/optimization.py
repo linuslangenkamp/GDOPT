@@ -3,7 +3,7 @@ import time
 from enum import Enum
 
 # TODO: only diff w.r.t. to vars that are contained in a given expr
-
+# check adj -> only diff then -> simplify -> check adj -> diff again -> simplify
 
 class InvalidModel(Exception):
     pass
@@ -81,7 +81,7 @@ class Parameter(Variable):
 
 class Expression:
     def __init__(self, expr):
-        self.expr = expr
+        self.expr = simplify(expr)
     
     def codegen(self, name, variables):
         cEval = ccode(self.expr)
@@ -378,8 +378,9 @@ class ParametricConstraint(Expression):
 
 class Model:
     
-    def __init__(self, name):
+    def __init__(self, name, constants=False):
         self.creationTime = time.process_time()
+        self.useConstants = constants
         self.xVars = []
         self.uVars = []
         self.pVars = []
@@ -402,9 +403,12 @@ class Model:
         return variable
     
     def addConst(self, constant, symbol=None):
-        c = Constant(constant, symbol)
-        self.constants.append(c)
-        return c
+        if self.useConstants:
+            c = Constant(constant, symbol)
+            self.constants.append(c)
+            return c
+        else:
+            return constant
     
     def addMayer(self, expr, obj=Objective.MINIMIZE):
         if self.M:

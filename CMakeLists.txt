@@ -38,7 +38,9 @@ set(EXAMPLE_FILES
         examples/satellite.cpp
         examples/satellite.h
         examples/hypersensitive.cpp
-        examples/hypersensitive.h)
+        examples/hypersensitive.h
+        examples/dieselMotor.cpp
+        examples/dieselMotor.h)
 
 include_directories(src examples)
 

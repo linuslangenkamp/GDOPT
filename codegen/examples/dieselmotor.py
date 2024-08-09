@@ -1,0 +1,116 @@
+from optimization import *
+
+
+model = Model("dieselMotor")
+
+pi = model.addConst(3.141592653589793)
+p_amb = model.addConst(1.0111134146341463e+005)
+T_amb = model.addConst(2.9846362195121958e+002)
+gamma_a = model.addConst(1.3964088397790055e+000)
+R_a = model.addConst(2.8700000000000000e+002)
+cp_a = model.addConst(1.0110000000000000e+003)
+cv_a = model.addConst(7.2400000000000000e+002)
+p_es = model.addConst(1.0111134146341463e+005)
+gamma_e = model.addConst(1.2734225621414914e+000)
+R_e = model.addConst(2.8600000000000000e+002)
+cp_e = model.addConst(1.3320000000000000e+003)
+Hlhv = model.addConst(4.2900000000000000e+007)
+AFs = model.addConst(1.4570000000000000e+001)
+gamma_cyl = model.addConst(1.3500000000000001e+000)
+T_im = model.addConst(3.0061857317073162e+002)
+x_r0 = model.addConst(0)
+T_10 = model.addConst(3.0064178823529403e+002)
+n_cyl = model.addConst(6)
+V_D = model.addConst(1.2699999999999999e-002)
+r_c = model.addConst(1.7300000000000001e+001)
+A_wg_eff = model.addConst(8.8357293382212933e-004)
+J_genset = model.addConst(3.5000000000000000e+000)
+d_pipe = model.addConst(0.1)
+n_pipe = model.addConst(2)
+l_pipe = model.addConst(1)
+R_c = model.addConst(4.0000000000000001e-002)
+V_is = model.addConst(2.1302555405064521e-002)
+V_em = model.addConst(2.0024706650635410e-002)
+R_t = model.addConst(4.0000000000000001e-002)
+J_tc = model.addConst(1.9777955929704147e-004)
+state_norm1 = model.addConst(2.2000000000000000e+002)
+state_norm2 = model.addConst(2.0000000000000000e+005)
+state_norm3 = model.addConst(3.0000000000000000e+005)
+state_norm4 = model.addConst(1.0000000000000000e+004)
+control_norm1 = model.addConst(2.5000000000000000e+002)
+control_norm2 = model.addConst(1)
+control_norm3 = model.addConst(2.5400000000000000e+005)
+Psi_max = model.addConst(1.4374756793329366e+000)
+dot_m_c_corr_max = model.addConst(5.2690636559024850e-001)
+eta_igch = model.addConst(6.8768988621327665e-001)
+c_fr1 = model.addConst(7.1957840228405290e-001)
+c_fr2 = model.addConst(-1.4144357053459333e-001)
+c_fr3 = model.addConst(3.5904197283929118e-001)
+eta_sc = model.addConst(1.0515746242284574e+000)
+x_cv = model.addConst(5.7966369236798054e-001)
+A_t_eff = model.addConst(9.9877716035454514e-004)
+eta_c = model.addConst(5.2227332577901808e-001)
+eta_t = model.addConst(6.8522930965034778e-001)
+eta_vol = model.addConst(8.9059680994120261e-001)
+w_fric = model.addConst(2.4723010996875069e-005)
+
+w_ice = model.addVar(State(start=2.4989941562646081e-01, lb=4/state_norm1, ub=220/state_norm1))
+p_im = model.addVar(State(start=5.0614999999999999e-01, lb=0.8*p_amb/state_norm2, ub=2*p_amb/state_norm2))
+p_em = model.addVar(State(start=3.3926666666666666e-01, lb=p_amb/state_norm3, ub=3*p_amb/state_norm3))
+w_tc = model.addVar(State(start=6.8099999999999994e-02, lb=300/state_norm4, ub=10000/state_norm4))
+
+u_f = model.addVar(Control(lb=0, ub=250/control_norm1))
+u_wg = model.addVar(Control(lb=0, ub=1))
+
+W_ICE = state_norm1*w_ice
+P_IM = state_norm2*p_im
+P_EM = state_norm3*p_em
+W_TC = state_norm4*w_tc
+U_F = control_norm1*u_f
+
+Pi_c = P_IM/p_amb;
+w_tc_corr = state_norm4*w_tc/sqrt(T_amb/T_amb);
+Pi_c_max = (((((w_tc_corr**2)*(R_c**2)*Psi_max)/((2*cp_a*T_amb)))+1)**(gamma_a/(gamma_a-1)));
+Cm_temp = 1-((Pi_c/Pi_c_max)**2);
+dot_m_c = (dot_m_c_corr_max*sqrt(Cm_temp))*(p_amb/p_amb)/sqrt(T_amb/T_amb);
+P_c = dot_m_c*cp_a*T_amb*((Pi_c**((gamma_a-1)/gamma_a))-1)/eta_c;
+
+dot_m_ci = eta_vol*P_IM*W_ICE*V_D/(4*pi*R_a*T_im);
+
+dot_m_f = U_F*W_ICE*n_cyl*(1e-6)/(4*pi);
+
+eta_ig = eta_igch*(1-(1/(r_c**(gamma_cyl-1))));
+T_pump = V_D*(P_EM-P_IM);
+T_ig = n_cyl*Hlhv*eta_ig*u_f*control_norm1*(1e-6);
+T_fric = V_D*(10**5)*(c_fr1*((W_ICE*60/(2*pi*1000))**2)+c_fr2*(W_ICE*60/(2*pi*1000))+c_fr3);
+T_ice = (T_ig-T_fric-T_pump)/(4*pi);
+
+Pi_e = P_EM/P_IM;
+q_in = dot_m_f*Hlhv/(dot_m_f+dot_m_ci);
+x_p = 1+q_in*x_cv/(cv_a*T_im*(r_c**(gamma_a-1)));
+T_eo = eta_sc*(Pi_e**(1-1/gamma_a))*(r_c**(1-gamma_a))*(x_p**(1/gamma_a-1))*(q_in*((1-x_cv)/cp_a+x_cv/cv_a)+T_im*(r_c**(gamma_a-1)));
+
+Pi_t = p_es/P_EM;
+Pi_ts_low = ((2/(gamma_e+1))**(gamma_e/(gamma_e-1)));
+Pi_ts = sqrt(Pi_t);
+Psi_t = sqrt((2*gamma_e/(gamma_e-1))*((Pi_ts**(2/gamma_e))-(Pi_ts**((gamma_e+1)/gamma_e))));
+dot_m_t = P_EM*Psi_t*A_t_eff/(sqrt(T_eo*R_e));
+
+P_t = dot_m_t*cp_e*T_eo*eta_t*(1-(Pi_t**((gamma_e-1)/gamma_e)));
+
+Pi_wg = p_amb/P_EM;
+Pi_wgs = Pi_wg;
+Psi_wg = sqrt(2*gamma_e/(gamma_e-1)*((Pi_wgs**(2/gamma_e))-(Pi_wgs**((gamma_e+1)/gamma_e))));
+dot_m_wg = P_EM*Psi_wg*A_wg_eff*u_wg/(sqrt(T_eo*R_e));
+
+P_ICE = T_ice*W_ICE/control_norm3;
+
+model.addDynamic(w_ice, 0.0012987012987013*T_ice);
+model.addDynamic(p_im, 20.2505119361145*((0.526906365590249*sqrt(Cm_temp))-dot_m_ci));
+model.addDynamic(p_em, 0.0476078551344513*(T_eo*(dot_m_ci+dot_m_f-dot_m_t-dot_m_wg)));
+model.addDynamic(w_tc, 0.0001*((P_t-P_c)/(0.000197779559297041*W_TC)-2.47230109968751E-005*W_TC*W_TC));
+
+model.addMayer((w_ice - 0.515309170685596)**2 + (p_im - 0.547055854225991)**2 + (p_em - 0.381048005791294)**2 + (w_tc - 0.271443000537680)**2)
+model.addLagrange(dot_m_f)
+
+model.generate("dieselMotor")
