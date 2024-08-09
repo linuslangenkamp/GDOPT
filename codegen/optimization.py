@@ -11,11 +11,15 @@ class Objective(Enum):
     MIN = MINIMIZE
 
 class Constant(Symbol):
+    id_counter = 0
     
-    def __new__(cls, symbol, value):
+    def __new__(cls, value, symbol=None):
+        if symbol == None:
+            symbol = f"c{cls.id_counter}"
         obj = super().__new__(cls, symbol)
         obj.symbol = symbol
         obj.value = value
+        cls.id_counter += 1
         return obj
 
 class Variable(Symbol):
@@ -30,7 +34,9 @@ class Variable(Symbol):
 class State(Variable):
     id_counter = 0
 
-    def __new__(cls, symbol, start, lb=-float("inf"), ub=float("inf")):
+    def __new__(cls, start, symbol=None, lb=-float("inf"), ub=float("inf")):
+        if symbol == None:
+            symbol = f'x[{cls.id_counter}]'
         obj = super().__new__(cls, symbol, lb, ub)
         obj.id = cls.id_counter
         obj.symbol = f'x[{obj.id}]'
@@ -41,17 +47,21 @@ class State(Variable):
 class Input(Variable):
     id_counter = 0
 
-    def __new__(cls, symbol, lb=-float("inf"), ub=float("inf")):
+    def __new__(cls, symbol=None, lb=-float("inf"), ub=float("inf")):
+        if symbol == None:
+            symbol = f'u[{cls.id_counter}]'
         obj = super().__new__(cls, symbol, lb, ub)
         obj.id = cls.id_counter
-        obj.symbol = f'u[{obj.id}]'
+        obj.symbol = symbol
         cls.id_counter += 1
         return obj
 
 class Parameter(Variable):
     id_counter = 0
 
-    def __new__(cls, symbol, lb=-float("inf"), ub=float("inf")):
+    def __new__(cls, symbol=None, lb=-float("inf"), ub=float("inf")):
+        if symbol == None:
+            symbol = f'p[{cls.id_counter}]'
         obj = super().__new__(cls, symbol, lb, ub)
         obj.id = cls.id_counter
         obj.symbol = f'p[{obj.id}]'
@@ -375,9 +385,10 @@ class Model:
             self.pVars.append(variable)
         return variable
     
-    def addConst(self, constant):
-        self.constants.append(constant)
-        return constant
+    def addConst(self, constant, symbol=None):
+        c = Constant(constant, symbol)
+        self.constants.append(c)
+        return c
     
     def addMayer(self, expr, obj=Objective.MINIMIZE):
         if self.M:
@@ -438,7 +449,6 @@ class Model:
 Problem createProblem_{self.name}();
 
 #endif //IPOPT_DO_{self.name.upper()}_H
-
 """
         
         OUTPUT = f'''

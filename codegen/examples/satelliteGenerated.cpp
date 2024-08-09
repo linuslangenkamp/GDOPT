@@ -7,12 +7,16 @@
 #include "constants.h"
 
 
-const double I1 = 1000000;
-const double I2 = 833333;
-const double I3 = 916667;
-const double T1S = 550;
-const double T2S = 50;
-const double T3S = 550;
+const double c0 = 1000000;
+const double c1 = 833333;
+const double c2 = 916667;
+const double c3 = 550;
+const double c4 = 50;
+const double c5 = 550;
+const double c6 = 0.70106;
+const double c7 = 0.0923;
+const double c8 = 0.56098;
+const double c9 = 0.43047;
 
 
 class Mayersatellite : public Expression {
@@ -24,11 +28,11 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return pow(x[4], 2) + pow(x[5], 2) + pow(x[6], 2) + pow(x[0] - 0.70106000000000002, 2) + pow(x[1] - 0.092299999999999993, 2) + pow(x[2] - 0.56098000000000003, 2) + pow(x[3] - 0.43047000000000002, 2);
+		return pow(x[4], 2) + pow(x[5], 2) + pow(x[6], 2) + pow(-c6 + x[0], 2) + pow(-c7 + x[1], 2) + pow(-c8 + x[2], 2) + pow(-c9 + x[3], 2);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{2*x[0] - 1.40212, 2*x[1] - 0.18459999999999999, 2*x[2] - 1.1219600000000001, 2*x[3] - 0.86094000000000004, 2*x[4], 2*x[5], 2*x[6]}, {}, {}};
+		return {std::vector<double>{-2*c6 + 2*x[0], -2*c7 + 2*x[1], -2*c8 + 2*x[2], -2*c9 + 2*x[3], 2*x[4], 2*x[5], 2*x[6]}, {}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
@@ -168,15 +172,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return (T1S*u[0] + x[5]*x[6]*(I2 - I3))/I1;
+		return (c3*u[0] + x[5]*x[6]*(c1 - c2))/c0;
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{x[6]*(I2 - I3)/I1, x[5]*(I2 - I3)/I1}, {T1S/I1}, {}};
+		return {std::vector<double>{x[6]*(c1 - c2)/c0, x[5]*(c1 - c2)/c0}, {c3/c0}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{(I2 - I3)/I1}, {}, {}, {}, {}, {}};
+		return {std::vector<double>{(c1 - c2)/c0}, {}, {}, {}, {}, {}};
 	}
 private:
 	F4satellite(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -192,15 +196,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return (T2S*u[1] + x[4]*x[6]*(-I1 + I3))/I2;
+		return (c4*u[1] + x[4]*x[6]*(-c0 + c2))/c1;
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{x[6]*(-I1 + I3)/I2, x[4]*(-I1 + I3)/I2}, {T2S/I2}, {}};
+		return {std::vector<double>{x[6]*(-c0 + c2)/c1, x[4]*(-c0 + c2)/c1}, {c4/c1}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-(I1 - I3)/I2}, {}, {}, {}, {}, {}};
+		return {std::vector<double>{-(c0 - c2)/c1}, {}, {}, {}, {}, {}};
 	}
 private:
 	F5satellite(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -216,15 +220,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return (T3S*u[2] + x[4]*x[5]*(I1 - I2))/I3;
+		return (c5*u[2] + x[4]*x[5]*(c0 - c1))/c2;
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{x[5]*(I1 - I2)/I3, x[4]*(I1 - I2)/I3}, {T3S/I3}, {}};
+		return {std::vector<double>{x[5]*(c0 - c1)/c2, x[4]*(c0 - c1)/c2}, {c5/c2}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{(I1 - I2)/I3}, {}, {}, {}, {}, {}};
+		return {std::vector<double>{(c0 - c1)/c2}, {}, {}, {}, {}, {}};
 	}
 private:
 	F6satellite(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}

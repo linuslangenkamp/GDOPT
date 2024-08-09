@@ -9,4 +9,3 @@
 Problem createProblem_satellite();
 
 #endif //IPOPT_DO_SATELLITE_H
-
