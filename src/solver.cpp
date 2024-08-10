@@ -329,11 +329,11 @@ void Solver::printObjectiveHistory() {
     }
 }
 void Solver::finalizeOptimization() {
+    std::cout << "\n----------------------------------------------------------------" << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << "\nOutput for optimization of model: " << gdop->problem->name << std::endl;
     if (maxMeshIterations > 0) {
-        std::cout << "\n----------------------------------------------------------------" << std::endl;
-        std::cout << "----------------------------------------------------------------" << std::endl;
-        std::cout << "----------------------------------------------------------------" << std::endl;
-        std::cout << "\nOutput for optimization of model: " << gdop->problem->name << std::endl;
         printMeshStats();
         printObjectiveHistory();
     }

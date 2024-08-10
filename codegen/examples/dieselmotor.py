@@ -113,4 +113,4 @@ model.addDynamic(w_tc, 0.0001*((P_t-P_c)/(0.000197779559297041*W_TC)-2.472301099
 model.addMayer((w_ice - 0.515309170685596)**2 + (p_im - 0.547055854225991)**2 + (p_em - 0.381048005791294)**2 + (w_tc - 0.271443000537680)**2)
 model.addLagrange(dot_m_f)
 
-model.generate("dieselMotor")
+model.generate()

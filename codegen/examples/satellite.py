@@ -53,4 +53,4 @@ model.addMayer((x1 - M1)**2 + (x2 - M2)**2 + (x3 - M3)**2 +
 model.addLagrange(0.5 * (u1**2 + u2**2 + u3**2), Objective.MINIMIZE)
 
 
-model.generate("satelliteGenerated")
+model.generate()

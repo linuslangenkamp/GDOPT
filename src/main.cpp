@@ -3,23 +3,24 @@
 #include "integrator.h"
 #include "mesh.h"
 #include "gdop.h"
-#include "hypersensitive.h"
-#include "parameterSweep.h"
-#include "rocketTrajectory.h"
-#include "analyticHypersensitive.h"
-#include "trivialBangBang.h"
-#include "satellite.h"
-#include "dieselMotor.h"
-#include "batchReactor.h"
 #include "solver.h"
+#include "../examples/hypersensitive.h"
+#include "../examples/rocketTrajectory.h"
+#include "../examples/analyticHypersensitive.h"
+#include "../examples/trivialBangBang.h"
+#include "../examples/satellite.h"
+#include "../examples/dieselMotor.h"
+#include "../codegen/examples/simpleParameterGenerated.h"
+#include "../examples/batchReactor.h"
+
 
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_dieselMotor());
+    auto problem = std::make_shared<const Problem>(createProblem_simpleParameter());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps7);
-    Mesh mesh = Mesh::createEquidistantMesh(1000, 1);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps2);
+    Mesh mesh = Mesh::createEquidistantMesh(1, 1);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 0;

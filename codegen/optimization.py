@@ -1,9 +1,12 @@
 from sympy import *
-import time
+import time as timer
 from enum import Enum
 
 # TODO: only diff w.r.t. to vars that are contained in a given expr
 # check adj -> only diff then -> simplify -> check adj -> diff again -> simplify
+# add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
+# or with colored jacobian
+
 
 class InvalidModel(Exception):
     pass
@@ -142,13 +145,13 @@ class Expression:
 
         for v, expr in enumerate(substExpr):
             var = diffVars[v]
-            if isinstance(var, State):
+            if type(var) == State:
                 adj_indices[0].append(var.id)
                 cEvalDiff[0].append(ccode(expr))
-            elif isinstance(var, Input):
+            elif type(var) == Input:
                 adj_indices[1].append(var.id)
                 cEvalDiff[1].append(ccode(expr))
-            elif isinstance(var, Parameter):
+            elif type(var) == Parameter:
                 adj_indices[2].append(var.id)
                 cEvalDiff[2].append(ccode(expr))
         
@@ -285,13 +288,13 @@ class Constraint(Expression):
 
         for v, expr in enumerate(substExpr):
             var = diffVars[v]
-            if isinstance(var, State):
+            if type(var) == State:
                 adj_indices[0].append(var.id)
                 cEvalDiff[0].append(ccode(expr))
-            elif isinstance(var, Input):
+            elif type(var) == Input:
                 adj_indices[1].append(var.id)
                 cEvalDiff[1].append(ccode(expr))
-            elif isinstance(var, Parameter):
+            elif type(var) == Parameter:
                 adj_indices[2].append(var.id)
                 cEvalDiff[2].append(ccode(expr))
         
@@ -317,7 +320,7 @@ class Constraint(Expression):
         out += f"\tstatic std::unique_ptr<{name}> create() {{\n"
         out += f"\t\tAdjacency adj{adj};\n"
         out += f"\t\tAdjacencyDiff adjDiff{adjDiff};\n"
-        out += f"\t\treturn std::unique_ptr<{name}>(new {name}(std::move(adj), std::move(adjDiff), , {lb}, {ub}));\n"
+        out += f"\t\treturn std::unique_ptr<{name}>(new {name}(std::move(adj), std::move(adjDiff), {lb}, {ub}));\n"
         out += "\t}\n\n"
         
         out += "\tdouble eval(const double *x, const double *u, const double *p, double t) override {\n"
@@ -456,7 +459,7 @@ class ParametricConstraint(Expression):
 class Model:
     
     def __init__(self, name, constants=False):
-        self.creationTime = time.process_time()
+        self.creationTime = timer.process_time()
         self.useConstants = constants
         self.xVars = []
         self.uVars = []
@@ -477,6 +480,21 @@ class Model:
             self.uVars.append(variable)
         elif type(variable) == Parameter:
             self.pVars.append(variable)
+        return variable
+    
+    def addState(self, start, symbol=None, lb=-float("inf"), ub=float("inf")):
+        variable = State(start, symbol=symbol, lb=lb, ub=ub)
+        self.xVars.append(variable)
+        return variable
+    
+    def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf")):
+        variable = Input(symbol=symbol, lb=lb, ub=ub)
+        self.uVars.append(variable)
+        return variable
+        
+    def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf")):
+        variable = Parameter(symbol=symbol, lb=lb, ub=ub)
+        self.pVars.append(variable)
         return variable
     
     def addConst(self, constant, symbol=None):
@@ -523,17 +541,27 @@ class Model:
             self.A.append(ParametricConstraint(expr, lb=lb, ub=ub))
         else:
             raise InvalidModel("Parametric constraints only allow parametric variables")
-    
-    def generate(self, filename):
+            
+    def _addDummy(self):
+        x = self.addState(start=0)
+        self.addF(x, 0)
+        
+    def generate(self):
         if len(self.F) != len(self.xVars):
             raise InvalidModel("#states != #differential equations") 
-        
+        elif len(self.xVars) == 0:
+            # adding a dummy var: x(0)=0, x'=0 for purely parametric models
+            self._addDummy()
+            
         # preparations
         
         self.F.sort(key=lambda eq: eq.diffVar.id, reverse=False)
         allVars = self.xVars + self.uVars + self.pVars
         
         # codegen
+        filename = self.name + "Generated"
+        
+        print("Starting .h codegen ...\n")
         
         HEADEROUTPUT = f"""
 // CODEGEN FOR MODEL "{self.name}"\n
@@ -547,13 +575,16 @@ Problem createProblem_{self.name}();
 #endif //IPOPT_DO_{self.name.upper()}_H
 """
         
+        print(".h: codegen done.\n")
+        print("Starting .cpp codegen ...\n")
+        
         OUTPUT = f'''
 // CODEGEN FOR MODEL "{self.name}"\n
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <string>
-#include "{self.name}.h"
-#include "constants.h"\n\n\n'''
+#include "{filename}.h"
+#include "constants.h"\n'''
         
         for constant in self.constants:
             OUTPUT += f"const double {constant.symbol} = {constant.value};\n"
@@ -562,22 +593,28 @@ Problem createProblem_{self.name}();
         
         if self.M:
             OUTPUT += self.M.codegen("Mayer" + self.name, allVars)
+            print("Mayer: codegen done.\n")
             
         if self.L:
             OUTPUT += self.L.codegen("Lagrange" + self.name, allVars)
-        
+            print("Lagrange: codegen done.\n")
+            
         for n, f in enumerate(self.F):
             OUTPUT += f.codegen("F" + str(n) + self.name, allVars)
+            print(f"Dynamic constraint {n}: codegen done.\n")
         
         for n, g in enumerate(self.G):
             OUTPUT += g.codegen("G" + str(n) + self.name, allVars)
-        
+            print(f"Path constraint {n}: codegen done.\n")
+            
         for n, r in enumerate(self.R):
             OUTPUT += r.codegen("R" + str(n) + self.name, allVars)
-        
+            print(f"Final constraint {n}: codegen done.\n")
+            
         for n, a in enumerate(self.A):
             OUTPUT += a.codegen("A" + str(n) + self.name, allVars)
-        
+            print(f"Parametric constraints {n}: codegen done.\n")
+            
         pushF = "\n    ".join("F.push_back(" + "F" + str(n) + self.name + "::create());" for n in range(len(self.F)))
         pushG = "\n    ".join("G.push_back(" + "G" + str(n) + self.name + "::create());" for n in range(len(self.G)))
         pushR = "\n    ".join("R.push_back(" + "R" + str(n) + self.name + "::create());" for n in range(len(self.R)))
@@ -615,6 +652,8 @@ Problem createProblem_{self.name}();
             "{self.name}");
     return problem;
 }};\n"""
+
+        print(".cpp: codegen done.\n")
         
         with open(f'{filename}.h', 'w') as file:
             file.write(HEADEROUTPUT)
@@ -622,8 +661,8 @@ Problem createProblem_{self.name}();
         with open(f'{filename}.cpp', 'w') as file:
             file.write(OUTPUT)
         
-        print(f"Generated model to {filename}.h and {filename}.cpp")
-        print(f"Model creation, derivative calculations, and code generation took {round(time.process_time() - self.creationTime, 4)} seconds.")
+        print(f"Generated model to {filename}Generated.h and {filename}Generated.cpp\n")
+        print(f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.")
         return 0
         
         
@@ -632,6 +671,12 @@ Problem createProblem_{self.name}();
 # variables
 Continous = Input
 Control = Input
+Model.addControl = Model.addInput
+Model.addContinous = Model.addInput
+Model.addX = Model.addState
+Model.addU = Model.addInput
+Model.addP = Model.addParameter
+
 Model.addC = Model.addConst
 Model.addV = Model.addVar
 
@@ -648,7 +693,7 @@ Model.addA = Model.addParametric
 
 # time symbol
 t = Symbol("t")
-
+time = t
 ###
 
 """
