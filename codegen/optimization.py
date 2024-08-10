@@ -85,59 +85,75 @@ class Expression:
     
     def codegen(self, name, variables):
         cEval = ccode(self.expr)
-
+        
+        partialExpression = numbered_symbols(prefix='s')
+        
         # Generate second-order derivatives only for lower triangular part
         cEvalDiff2 = [[], [], [], [], [], []]
         adjDiff_indices = [[], [], [], [], [], []]  # indXX, indUX, indUU, indPX, indPU, indPP
-
+        allDiffs2 = []
+        diffVars2 = []
+        
         for i, var1 in enumerate(variables):
             for j, var2 in enumerate(variables):
-                if type(var1) == State and type(var2) == State and i >= j:
+                if not ((type(var1) == State and type(var2) == State and i < j) or (type(var1) == Input and type(var2) == Input and i < j) or (type(var1) == Parameter and type(var2) == Parameter and i < j)):
                     der = diff(self.expr, var1, var2)
                     if der != 0:
-                        cEvalDiff2[0].append(ccode(der))
-                        adjDiff_indices[0].append((var1.id, var2.id))  # indXX
-                elif type(var1) == Input and type(var2) == State:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        cEvalDiff2[1].append(ccode(der))
-                        adjDiff_indices[1].append((var1.id, var2.id))  # indUX
-                elif type(var1) == Input and type(var2) == Input and i >= j:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        cEvalDiff2[2].append(ccode(der))
-                        adjDiff_indices[2].append((var1.id, var2.id))  # indUU
-                elif type(var1) == Parameter and type(var2) == State:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        cEvalDiff2[3].append(ccode(der))
-                        adjDiff_indices[3].append((var1.id, var2.id))  # indPX
-                elif type(var1) == Parameter and type(var2) == Input:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        cEvalDiff2[4].append(ccode(der))
-                        adjDiff_indices[4].append((var1.id, var2.id))  # indPU
-                elif type(var1) == Parameter and type(var2) == Parameter and i >= j:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        cEvalDiff2[5].append(ccode(der))
-                        adjDiff_indices[5].append((var1.id, var2.id))  # indPP
+                        allDiffs2.append(der)
+                        diffVars2.append((var1, var2))
+                
+        subst2, substExpr2 = cse(allDiffs2, symbols=partialExpression)
+
+        substDiff2 = [(ccode(lhs), ccode(rhs)) for lhs, rhs in subst2]
+
+        for i, expr in enumerate(substExpr2):
+            var1, var2 = diffVars2[i]
+            if type(var1) == State and type(var2) == State:
+                cEvalDiff2[0].append(ccode(expr))
+                adjDiff_indices[0].append((var1.id, var2.id))  # indXX
+            elif type(var1) == Input and type(var2) == State:
+                cEvalDiff2[1].append(ccode(expr))
+                adjDiff_indices[1].append((var1.id, var2.id))  # indUX
+            elif type(var1) == Input and type(var2) == Input:
+                cEvalDiff2[2].append(ccode(expr))
+                adjDiff_indices[2].append((var1.id, var2.id))  # indUU
+            elif type(var1) == Parameter and type(var2) == State:
+                cEvalDiff2[3].append(ccode(expr))
+                adjDiff_indices[3].append((var1.id, var2.id))  # indPX
+            elif type(var1) == Parameter and type(var2) == Input:
+                cEvalDiff2[4].append(ccode(expr))
+                adjDiff_indices[4].append((var1.id, var2.id))  # indPU
+            elif type(var1) == Parameter and type(var2) == Parameter:
+                cEvalDiff2[5].append(ccode(expr))
+                adjDiff_indices[5].append((var1.id, var2.id))  # indPP
 
         adj_indices = [[], [], []]  # indX, indU, indP
         cEvalDiff = [[], [], []]
+        allDiffs = []
+        diffVars = []
+        
         for i, var in enumerate(variables):
             der = diff(self.expr, var)
             if der != 0:
-                if type(var) == State:
-                    adj_indices[0].append(var.id)
-                    cEvalDiff[0].append(ccode(der))
-                elif type(var) == Input:
-                    adj_indices[1].append(var.id)
-                    cEvalDiff[1].append(ccode(der))
-                elif type(var) == Parameter:
-                    adj_indices[2].append(var.id)
-                    cEvalDiff[2].append(ccode(der))
-                    
+                allDiffs.append(der)
+                diffVars.append(var)
+                
+        subst, substExpr = cse(allDiffs, symbols=partialExpression)
+
+        substDiff = [(ccode(lhs), ccode(rhs)) for lhs, rhs in subst]
+
+        for v, expr in enumerate(substExpr):
+            var = diffVars[v]
+            if isinstance(var, State):
+                adj_indices[0].append(var.id)
+                cEvalDiff[0].append(ccode(expr))
+            elif isinstance(var, Input):
+                adj_indices[1].append(var.id)
+                cEvalDiff[1].append(ccode(expr))
+            elif isinstance(var, Parameter):
+                adj_indices[2].append(var.id)
+                cEvalDiff[2].append(ccode(expr))
+        
         adj = "{{{}, {}, {}}}".format(
             "{{{}}}".format(", ".join(map(str, adj_indices[0]))),
             "{{{}}}".format(", ".join(map(str, adj_indices[1]))),
@@ -165,6 +181,10 @@ class Expression:
         out += "\t}\n\n"
         
         out += f"\tstd::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {{\n"
+        
+        for s in subst:
+            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            
         out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff[0]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff[1]))
@@ -172,6 +192,9 @@ class Expression:
         out += "};\n\t}\n\n"
         
         out += f"\tstd::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {{\n"
+        for s in subst2:
+            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            
         out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[0]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[1]))
@@ -204,59 +227,74 @@ class Constraint(Expression):
     def codegen(self, name, variables):
         cEval = ccode(self.expr)
 
+        partialExpression = numbered_symbols(prefix='s')
+        
         # Generate second-order derivatives only for lower triangular part
         cEvalDiff2 = [[], [], [], [], [], []]
         adjDiff_indices = [[], [], [], [], [], []]  # indXX, indUX, indUU, indPX, indPU, indPP
-
+        allDiffs2 = []
+        diffVars2 = []
+        
         for i, var1 in enumerate(variables):
             for j, var2 in enumerate(variables):
-                if type(var1) == State and type(var2) == State and i >= j:
+                if not ((type(var1) == State and type(var2) == State and i >= j) or (type(var1) == Input and type(var2) == Input and i >= j) or (type(var1) == Parameter and type(var2) == Parameter and i >= j)):
                     der = diff(self.expr, var1, var2)
                     if der != 0:
-                        cEvalDiff2[0].append(ccode(der))
-                        adjDiff_indices[0].append((var1.id, var2.id))  # indXX
-                elif type(var1) == Input and type(var2) == State:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        cEvalDiff2[1].append(ccode(der))
-                        adjDiff_indices[1].append((var1.id, var2.id))  # indUX
-                elif type(var1) == Input and type(var2) == Input and i >= j:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        cEvalDiff2[2].append(ccode(der))
-                        adjDiff_indices[2].append((var1.id, var2.id))  # indUU
-                elif type(var1) == Parameter and type(var2) == State:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        cEvalDiff2[3].append(ccode(der))
-                        adjDiff_indices[3].append((var1.id, var2.id))  # indPX
-                elif type(var1) == Parameter and type(var2) == Input:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        cEvalDiff2[4].append(ccode(der))
-                        adjDiff_indices[4].append((var1.id, var2.id))  # indPU
-                elif type(var1) == Parameter and type(var2) == Parameter and i >= j:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        cEvalDiff2[5].append(ccode(der))
-                        adjDiff_indices[5].append((var1.id, var2.id))  # indPP
+                        allDiffs2.append(der)
+                        diffVars2.append((var1, var2))
+                
+        subst2, substExpr2 = cse(allDiffs2, symbols=partialExpression)
 
+        substDiff2 = [(ccode(lhs), ccode(rhs)) for lhs, rhs in subst2]
+
+        for i, expr in enumerate(substExpr2):
+            var1, var2 = diffVars2[i]
+            if type(var1) == State and type(var2) == State:
+                cEvalDiff2[0].append(ccode(expr))
+                adjDiff_indices[0].append((var1.id, var2.id))  # indXX
+            elif type(var1) == Input and type(var2) == State:
+                cEvalDiff2[1].append(ccode(expr))
+                adjDiff_indices[1].append((var1.id, var2.id))  # indUX
+            elif type(var1) == Input and type(var2) == Input:
+                cEvalDiff2[2].append(ccode(expr))
+                adjDiff_indices[2].append((var1.id, var2.id))  # indUU
+            elif type(var1) == Parameter and type(var2) == State:
+                cEvalDiff2[3].append(ccode(expr))
+                adjDiff_indices[3].append((var1.id, var2.id))  # indPX
+            elif type(var1) == Parameter and type(var2) == Input:
+                cEvalDiff2[4].append(ccode(expr))
+                adjDiff_indices[4].append((var1.id, var2.id))  # indPU
+            elif type(var1) == Parameter and type(var2) == Parameter:
+                cEvalDiff2[5].append(ccode(expr))
+                adjDiff_indices[5].append((var1.id, var2.id))  # indPP
 
         adj_indices = [[], [], []]  # indX, indU, indP
         cEvalDiff = [[], [], []]
+        allDiffs = []
+        diffVars = []
+        
         for i, var in enumerate(variables):
             der = diff(self.expr, var)
             if der != 0:
-                if type(var) == State:
-                    adj_indices[0].append(var.id)
-                    cEvalDiff[0].append(ccode(der))
-                elif type(var) == Input:
-                    adj_indices[1].append(var.id)
-                    cEvalDiff[1].append(ccode(der))
-                elif type(var) == Parameter:
-                    adj_indices[2].append(var.id)
-                    cEvalDiff[2].append(ccode(der))
+                allDiffs.append(der)
+                diffVars.append(var)
+                
+        subst, substExpr = cse(allDiffs, symbols=partialExpression)
 
+        substDiff = [(ccode(lhs), ccode(rhs)) for lhs, rhs in subst]
+
+        for v, expr in enumerate(substExpr):
+            var = diffVars[v]
+            if isinstance(var, State):
+                adj_indices[0].append(var.id)
+                cEvalDiff[0].append(ccode(expr))
+            elif isinstance(var, Input):
+                adj_indices[1].append(var.id)
+                cEvalDiff[1].append(ccode(expr))
+            elif isinstance(var, Parameter):
+                adj_indices[2].append(var.id)
+                cEvalDiff[2].append(ccode(expr))
+        
         adj = "{{{}, {}, {}}}".format(
             "{{{}}}".format(", ".join(map(str, adj_indices[0]))),
             "{{{}}}".format(", ".join(map(str, adj_indices[1]))),
@@ -271,15 +309,12 @@ class Constraint(Expression):
             "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[5]))
         )
         
-        lb = self.lb if self.lb != -float('inf') else "MINUS_INFINITY"
-        ub = self.ub if self.ub != float('inf') else "PLUS_INFINITY"
-        
-        out = f"class {name} : public Constraint {{\n"
+        out = f"class {name} : public Expression {{\n"
         out += "public:\n"
         out += f"\tstatic std::unique_ptr<{name}> create() {{\n"
         out += f"\t\tAdjacency adj{adj};\n"
         out += f"\t\tAdjacencyDiff adjDiff{adjDiff};\n"
-        out += f"\t\treturn std::unique_ptr<{name}>(new {name}(std::move(adj), std::move(adjDiff), {lb}, {ub}));\n"
+        out += f"\t\treturn std::unique_ptr<{name}>(new {name}(std::move(adj), std::move(adjDiff)));\n"
         out += "\t}\n\n"
         
         out += "\tdouble eval(const double *x, const double *u, const double *p, double t) override {\n"
@@ -287,6 +322,10 @@ class Constraint(Expression):
         out += "\t}\n\n"
         
         out += f"\tstd::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {{\n"
+        
+        for s in subst:
+            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            
         out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff[0]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff[1]))
@@ -294,6 +333,9 @@ class Constraint(Expression):
         out += "};\n\t}\n\n"
         
         out += f"\tstd::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {{\n"
+        for s in subst2:
+            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            
         out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[0]))
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[1]))

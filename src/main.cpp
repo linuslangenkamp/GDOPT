@@ -19,7 +19,7 @@ int main() {
     auto problem = std::make_shared<const Problem>(createProblem_dieselMotor());
     InitVars initVars = InitVars::CONST;
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps7);
-    Mesh mesh = Mesh::createEquidistantMesh(1000, 0.5);
+    Mesh mesh = Mesh::createEquidistantMesh(500, 0.5);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 0;
