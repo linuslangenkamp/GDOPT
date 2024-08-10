@@ -7,6 +7,7 @@ from enum import Enum
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
 
+# TODO: make this stuff more readable!
 
 class InvalidModel(Exception):
     pass
@@ -666,7 +667,7 @@ Problem createProblem_{self.name}();
         return 0
         
         
-### GLOBAL VAR DEFINITIONS AND GLOBAL ALIAS
+### GLOBAL ALIAS AND GLOBAL VAR DEFINITIONS 
 
 # variables
 Continous = Input

@@ -35,27 +35,27 @@ public:
 
     // important methods
     int solve();
-    std::vector<int> detect();
-    void refine(std::vector<int>&);
+    std::vector<int> detect() const;
+    void refine(std::vector<int>& markedIntervals);
     void finalizeOptimization();
 
     // detection methods
-    std::vector<int> basicStrategy(double) const;
+    std::vector<int> basicStrategy() const;
     std::vector<int> l2BoundaryNorm() const;
 
     // additional / optional flags, printouts, ...
     std::vector<double> objectiveHistory;
     std::string exportOptimumPath;
-    int initialIntervals;
+    int initialIntervals = -1;
     std::chrono::_V2::system_clock::time_point solveStartTime;
     void postOptimization();
     bool exportOptimum = false;
     void printObjectiveHistory();
-    void printMeshStats();
-    void setExportOptimumPath(const std::string&);
+    void printMeshStats() const;
+    void setExportOptimumPath(const std::string& filepath);
     void initSolvingProcess();
-    void setTolerance(double);
-    void setSolverFlags(SmartPtr<IpoptApplication>) const;
+    void setTolerance(double tol);
+    void setSolverFlags(const SmartPtr<IpoptApplication>& app) const;
     void setRefinementParameters();
     void setl2BoundaryNorm();
     void setBasicStrategy();

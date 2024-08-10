@@ -1,5 +1,4 @@
 #include <chrono>
-#include <utility>
 #include "solver.h"
 #include "IpIpoptApplication.hpp"
 
@@ -64,10 +63,10 @@ int Solver::solve() {
     return status;
 }
 
-std::vector<int> Solver::detect() {
+std::vector<int> Solver::detect() const {
     switch (meshAlgorithm) {
         case MeshAlgorithm::NONE: return {};
-        case MeshAlgorithm::BASIC: return basicStrategy(2.5);
+        case MeshAlgorithm::BASIC: return basicStrategy();
         case MeshAlgorithm::L2_BOUNDARY_NORM: return l2BoundaryNorm();
         default: return {};
     }
@@ -187,7 +186,7 @@ std::vector<int> Solver::l2BoundaryNorm() const {
     return {markerSet.begin(), markerSet.end()};
 }
 
-std::vector<int> Solver::basicStrategy(const double sigma) const {
+std::vector<int> Solver::basicStrategy() const {
     std::vector<int> markedIntervals = {};
     std::vector<std::vector<double>> absIntSum = {};
     std::vector<double> means;
@@ -222,7 +221,7 @@ std::vector<int> Solver::basicStrategy(const double sigma) const {
     for (int i = 0; i < gdop->mesh.intervals; i++) {
         bool containsInterval = false;
         for (int u = 0; u < gdop->problem->sizeU; u++) {
-            if (absIntSum[u][i] > means[u] + sigma * stds[u] || containsInterval) {
+            if (absIntSum[u][i] > means[u] + basicStrategySigma * stds[u] || containsInterval) {
                 markedIntervals.push_back(i);
                 containsInterval = true;
             }
@@ -231,7 +230,7 @@ std::vector<int> Solver::basicStrategy(const double sigma) const {
     return markedIntervals;
 }
 
-void Solver::refine(std::vector<int> &markedIntervals) {
+void Solver::refine(std::vector<int>& markedIntervals) {
     const int oldIntervalLen = gdop->mesh.intervals;
     gdop->mesh.update(markedIntervals); // create newMesh here
     int newOffXUTotal = (gdop->problem->sizeX + gdop->problem->sizeU) * gdop->rk.steps * gdop->mesh.intervals;
@@ -337,12 +336,13 @@ void Solver::finalizeOptimization() {
         printMeshStats();
         printObjectiveHistory();
     }
+    // TODO: make a chrono excluding io's
     auto timeTaken = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - solveStartTime).count();
     std::cout << "\n----------------------------------------------------------------" << std::endl;
-    std::cout << "\nSolving took: " << timeTaken << " seconds" << std::endl;
+    std::cout << "\nSolving took: " << timeTaken << " seconds (including writing of solution to file)" << std::endl;
 }
 
-void Solver::printMeshStats() {
+void Solver::printMeshStats() const {
     std::cout << "\n----------------------------------------------------------------" << std::endl;
     std::cout << "\nNumber of intervals\n" << std::endl;
     std::cout << "Initial:" << std::setw(7) << initialIntervals << std::endl;
@@ -350,7 +350,7 @@ void Solver::printMeshStats() {
     std::cout << "Final:" << std::setw(9) << gdop->mesh.intervals << std::endl;
 }
 
-void Solver::setSolverFlags(SmartPtr<IpoptApplication> app) const {
+void Solver::setSolverFlags(const SmartPtr<IpoptApplication>& app) const {
 
     // numeric jacobian and hessian
     // app->Options()->SetStringValue("hessian_approximation", "limited-memory");
