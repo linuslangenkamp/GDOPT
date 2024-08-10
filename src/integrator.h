@@ -10,7 +10,18 @@ enum class IntegratorSteps {
     Steps4,
     Steps5,
     Steps6,
-    Steps7
+    Steps7,
+    Steps8,
+    Steps9,
+    Steps10,
+    Steps11,
+    Steps12,
+    Steps13,
+    Steps14,
+    Steps15,
+    Steps16,
+    Steps17,
+    Steps18
 };
 
 class Integrator {
