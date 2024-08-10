@@ -48,6 +48,7 @@ public:
     std::string exportOptimumPath;
     int initialIntervals = -1;
     std::chrono::_V2::system_clock::time_point solveStartTime;
+    std::chrono::duration<double> timedeltaIO{0}; // time in IO operations
     void postOptimization();
     bool exportOptimum = false;
     void printObjectiveHistory();

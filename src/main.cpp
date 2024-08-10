@@ -19,8 +19,8 @@ using namespace Ipopt;
 int main() {
     auto problem = std::make_shared<const Problem>(createProblem_simpleParameter());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps5);
-    Mesh mesh = Mesh::createEquidistantMesh(100, 1);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps7);
+    Mesh mesh = Mesh::createEquidistantMesh(10000, 1);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 0;

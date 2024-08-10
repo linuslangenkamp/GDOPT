@@ -310,11 +310,13 @@ void Solver::initSolvingProcess() {
 }
 
 void Solver::postOptimization() {
+    auto io_start = std::chrono::high_resolution_clock::now();
     objectiveHistory.push_back(gdop->objective);
     if (exportOptimum) {
         gdop->exportOptimum(exportOptimumPath + "/" + gdop->problem->name + std::to_string(meshIteration) + ".csv");
     }
     meshIteration++;
+    timedeltaIO += std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - io_start);
 }
 
 void Solver::printObjectiveHistory() {
@@ -336,10 +338,14 @@ void Solver::finalizeOptimization() {
         printMeshStats();
         printObjectiveHistory();
     }
-    // TODO: make a chrono excluding io's
     auto timeTaken = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - solveStartTime).count();
+    auto actualTime = timeTaken - timedeltaIO.count();
+    std::cout << std::fixed << std::setprecision(5);
     std::cout << "\n----------------------------------------------------------------" << std::endl;
-    std::cout << "\nSolving took: " << timeTaken << " seconds (including writing of solution to file)" << std::endl;
+    std::cout << "\nTotal time in Solver (w/o I/O): " << std::setw(8) << actualTime << " seconds" << std::endl;
+    std::cout << "Total time in I/O: " << std::setw(21) << timedeltaIO.count() << " seconds" << std::endl;
+    std::cout << "Total time in Solver: " << std::setw(18) << timeTaken << " seconds" << std::endl;
+    std::cout << std::defaultfloat;
 }
 
 void Solver::printMeshStats() const {
