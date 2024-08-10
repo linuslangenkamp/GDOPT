@@ -84,9 +84,10 @@ class Expression:
         self.expr = simplify(expr)
     
     def codegen(self, name, variables):
-        cEval = ccode(self.expr)
-        
         partialExpression = numbered_symbols(prefix='s')
+        
+        subst0, exprEval = cse(self.expr, partialExpression)
+        cEval = ccode(exprEval[0])
         
         # Generate second-order derivatives only for lower triangular part
         cEvalDiff2 = [[], [], [], [], [], []]
@@ -104,7 +105,6 @@ class Expression:
                 
         subst2, substExpr2 = cse(allDiffs2, symbols=partialExpression)
 
-        substDiff2 = [(ccode(lhs), ccode(rhs)) for lhs, rhs in subst2]
 
         for i, expr in enumerate(substExpr2):
             var1, var2 = diffVars2[i]
@@ -138,9 +138,7 @@ class Expression:
                 allDiffs.append(der)
                 diffVars.append(var)
                 
-        subst, substExpr = cse(allDiffs, symbols=partialExpression)
-
-        substDiff = [(ccode(lhs), ccode(rhs)) for lhs, rhs in subst]
+        subst1, substExpr = cse(allDiffs, symbols=partialExpression)
 
         for v, expr in enumerate(substExpr):
             var = diffVars[v]
@@ -177,12 +175,16 @@ class Expression:
         out += "\t}\n\n"
         
         out += "\tdouble eval(const double *x, const double *u, const double *p, double t) override {\n"
+        
+        for s in subst0:
+            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            
         out += f"\t\treturn {cEval};\n"
         out += "\t}\n\n"
         
         out += f"\tstd::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {{\n"
         
-        for s in subst:
+        for s in subst1:
             out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
             
         out += "\t\treturn {std::vector<double>"
@@ -225,9 +227,10 @@ class Constraint(Expression):
         self.ub = ub
 
     def codegen(self, name, variables):
-        cEval = ccode(self.expr)
-
         partialExpression = numbered_symbols(prefix='s')
+        
+        subst0, exprEval = cse(self.expr, partialExpression)
+        cEval = ccode(exprEval[0])
         
         # Generate second-order derivatives only for lower triangular part
         cEvalDiff2 = [[], [], [], [], [], []]
@@ -237,7 +240,7 @@ class Constraint(Expression):
         
         for i, var1 in enumerate(variables):
             for j, var2 in enumerate(variables):
-                if not ((type(var1) == State and type(var2) == State and i >= j) or (type(var1) == Input and type(var2) == Input and i >= j) or (type(var1) == Parameter and type(var2) == Parameter and i >= j)):
+                if not ((type(var1) == State and type(var2) == State and i < j) or (type(var1) == Input and type(var2) == Input and i < j) or (type(var1) == Parameter and type(var2) == Parameter and i < j)):
                     der = diff(self.expr, var1, var2)
                     if der != 0:
                         allDiffs2.append(der)
@@ -245,7 +248,6 @@ class Constraint(Expression):
                 
         subst2, substExpr2 = cse(allDiffs2, symbols=partialExpression)
 
-        substDiff2 = [(ccode(lhs), ccode(rhs)) for lhs, rhs in subst2]
 
         for i, expr in enumerate(substExpr2):
             var1, var2 = diffVars2[i]
@@ -279,9 +281,7 @@ class Constraint(Expression):
                 allDiffs.append(der)
                 diffVars.append(var)
                 
-        subst, substExpr = cse(allDiffs, symbols=partialExpression)
-
-        substDiff = [(ccode(lhs), ccode(rhs)) for lhs, rhs in subst]
+        subst1, substExpr = cse(allDiffs, symbols=partialExpression)
 
         for v, expr in enumerate(substExpr):
             var = diffVars[v]
@@ -309,21 +309,28 @@ class Constraint(Expression):
             "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[5]))
         )
         
-        out = f"class {name} : public Expression {{\n"
+        lb = self.lb if self.lb != -float('inf') else "MINUS_INFINITY"
+        ub = self.ub if self.ub != float('inf') else "PLUS_INFINITY"
+        
+        out = f"class {name} : public Constraint {{\n"
         out += "public:\n"
         out += f"\tstatic std::unique_ptr<{name}> create() {{\n"
         out += f"\t\tAdjacency adj{adj};\n"
         out += f"\t\tAdjacencyDiff adjDiff{adjDiff};\n"
-        out += f"\t\treturn std::unique_ptr<{name}>(new {name}(std::move(adj), std::move(adjDiff)));\n"
+        out += f"\t\treturn std::unique_ptr<{name}>(new {name}(std::move(adj), std::move(adjDiff), , {lb}, {ub}));\n"
         out += "\t}\n\n"
         
         out += "\tdouble eval(const double *x, const double *u, const double *p, double t) override {\n"
+        
+        for s in subst0:
+            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            
         out += f"\t\treturn {cEval};\n"
         out += "\t}\n\n"
         
         out += f"\tstd::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {{\n"
         
-        for s in subst:
+        for s in subst1:
             out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
             
         out += "\t\treturn {std::vector<double>"
@@ -351,6 +358,7 @@ class Constraint(Expression):
         return out
 
 
+
 class ParametricConstraint(Expression):
     
     def __init__(self, expr, lb=-float("inf"), ub=float("inf")):
@@ -359,30 +367,45 @@ class ParametricConstraint(Expression):
         self.ub = ub
         
     def codegen(self, name, variables):
-        cEval = ccode(self.expr)
-
+        partialExpression = numbered_symbols(prefix='s')
+        
+        subst0, substExpr = cse(self.expr, partialExpression)
+        cEval = ccode(substExpr[0])
+        
         # Generate second-order derivatives only for lower triangular part
         cEvalDiff2 = []
         adjDiff_indices = []  # indPP
-
+        allDiffs2 = []
+        
         for i, var1 in enumerate(variables):
             for j, var2 in enumerate(variables):
                 if type(var1) == Parameter and type(var2) == Parameter and i >= j:
                     der = diff(self.expr, var1, var2)
                     if der != 0:
-                        cEvalDiff2.append(ccode(der))
+                        allDiffs2.append(der)
                         adjDiff_indices.append((var1.id, var2.id))  # indPP
-
-
+                        
+        subst2, substExpr2 = cse(allDiffs2, partialExpression)
+        
+        for expr in substExpr2:
+            cEvalDiff2.append(ccode(expr))
+        
         adj_indices = []  # indX, indU, indP
         cEvalDiff = []
+        allDiffs = []
+        
         for i, var in enumerate(variables):
-            der = diff(self.expr, var)
-            if der != 0:
-                if type(var) == Parameter:
+            if type(var) == Parameter:
+                der = diff(self.expr, var)
+                if der != 0:
                     adj_indices.append(var.id)
-                    cEvalDiff.append(ccode(der))
-                    
+                    allDiffs.append(der)
+        
+        subst1, substExpr = cse(allDiffs, partialExpression)
+        
+        for expr in substExpr:
+            cEvalDiff.append(ccode(expr))
+        
         adj = f"{{{', '.join(map(str, adj_indices))}}}"
         adjDiff = "{{{}}}".format(", ".join("{{{}}}".format(", ".join(map(str, tpl))) for tpl in adjDiff_indices))
         
@@ -399,15 +422,27 @@ class ParametricConstraint(Expression):
         out += "\t}\n\n"
         
         out += "\tdouble eval(const double* p) override {\n"
+        
+        for s in subst0:
+            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+                
         out += f"\t\treturn {cEval};\n"
         out += "\t}\n\n"
         
         out += f"\tstd::vector<double> evalDiff(const double* p) override {{\n"
+        
+        for s in subst1:
+            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            
         out += "\t\treturn std::vector<double>"
         out += f"{{{', '.join(cEvalDiff)}}}"
         out += ";\n\t}\n\n"
         
         out += f"\tstd::vector<double> evalDiff2(const double* p) override {{\n"
+        
+        for s in subst2:
+            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            
         out += "\t\treturn std::vector<double>"
         out += "{{{}}}".format(", ".join(cEvalDiff2))
         out += ";\n\t}\n"

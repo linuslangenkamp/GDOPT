@@ -37,7 +37,7 @@ private:
 class Lagrangesatellite : public Expression {
 public:
 	static std::unique_ptr<Lagrangesatellite> create() {
-		Adjacency adj{{0, 1, 2}, {}, {}};
+		Adjacency adj{{}, {0, 1, 2}, {}};
 		AdjacencyDiff adjDiff{{}, {}, {{0, 0}, {1, 1}, {2, 2}}, {}, {}, {}};
 		return std::unique_ptr<Lagrangesatellite>(new Lagrangesatellite(std::move(adj), std::move(adjDiff)));
 	}
@@ -47,7 +47,7 @@ public:
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{1.0*u[0], 1.0*u[1], 1.0*u[2]}, {}, {}};
+		return {std::vector<double>{}, {1.0*u[0], 1.0*u[1], 1.0*u[2]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
@@ -61,7 +61,7 @@ private:
 class F0satellite : public Expression {
 public:
 	static std::unique_ptr<F0satellite> create() {
-		Adjacency adj{{0, 1, 2, 3, 4, 5}, {}, {}};
+		Adjacency adj{{1, 2, 3, 4, 5, 6}, {}, {}};
 		AdjacencyDiff adjDiff{{{4, 3}, {5, 2}, {6, 1}}, {}, {}, {}, {}, {}};
 		return std::unique_ptr<F0satellite>(new F0satellite(std::move(adj), std::move(adjDiff)));
 	}
@@ -85,7 +85,7 @@ private:
 class F1satellite : public Expression {
 public:
 	static std::unique_ptr<F1satellite> create() {
-		Adjacency adj{{0, 1, 2, 3, 4, 5}, {}, {}};
+		Adjacency adj{{0, 2, 3, 4, 5, 6}, {}, {}};
 		AdjacencyDiff adjDiff{{{4, 2}, {5, 3}, {6, 0}}, {}, {}, {}, {}, {}};
 		return std::unique_ptr<F1satellite>(new F1satellite(std::move(adj), std::move(adjDiff)));
 	}
@@ -109,7 +109,7 @@ private:
 class F2satellite : public Expression {
 public:
 	static std::unique_ptr<F2satellite> create() {
-		Adjacency adj{{0, 1, 2, 3, 4, 5}, {}, {}};
+		Adjacency adj{{0, 1, 3, 4, 5, 6}, {}, {}};
 		AdjacencyDiff adjDiff{{{4, 1}, {5, 0}, {6, 3}}, {}, {}, {}, {}, {}};
 		return std::unique_ptr<F2satellite>(new F2satellite(std::move(adj), std::move(adjDiff)));
 	}
@@ -133,7 +133,7 @@ private:
 class F3satellite : public Expression {
 public:
 	static std::unique_ptr<F3satellite> create() {
-		Adjacency adj{{0, 1, 2, 3, 4, 5}, {}, {}};
+		Adjacency adj{{0, 1, 2, 4, 5, 6}, {}, {}};
 		AdjacencyDiff adjDiff{{{4, 0}, {5, 1}, {6, 2}}, {}, {}, {}, {}, {}};
 		return std::unique_ptr<F3satellite>(new F3satellite(std::move(adj), std::move(adjDiff)));
 	}
@@ -157,7 +157,7 @@ private:
 class F4satellite : public Expression {
 public:
 	static std::unique_ptr<F4satellite> create() {
-		Adjacency adj{{0, 1, 2}, {}, {}};
+		Adjacency adj{{5, 6}, {0}, {}};
 		AdjacencyDiff adjDiff{{{6, 5}}, {}, {}, {}, {}, {}};
 		return std::unique_ptr<F4satellite>(new F4satellite(std::move(adj), std::move(adjDiff)));
 	}
@@ -167,7 +167,7 @@ public:
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-41667.0/500000.0*x[6], -41667.0/500000.0*x[5], 11.0/20000.0}, {}, {}};
+		return {std::vector<double>{-41667.0/500000.0*x[6], -41667.0/500000.0*x[5]}, {11.0/20000.0}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
@@ -181,7 +181,7 @@ private:
 class F5satellite : public Expression {
 public:
 	static std::unique_ptr<F5satellite> create() {
-		Adjacency adj{{0, 1, 2}, {}, {}};
+		Adjacency adj{{4, 6}, {1}, {}};
 		AdjacencyDiff adjDiff{{{6, 4}}, {}, {}, {}, {}, {}};
 		return std::unique_ptr<F5satellite>(new F5satellite(std::move(adj), std::move(adjDiff)));
 	}
@@ -191,7 +191,7 @@ public:
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-83333.0/833333.0*x[6], -83333.0/833333.0*x[4], 50.0/833333.0}, {}, {}};
+		return {std::vector<double>{-83333.0/833333.0*x[6], -83333.0/833333.0*x[4]}, {50.0/833333.0}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
@@ -205,7 +205,7 @@ private:
 class F6satellite : public Expression {
 public:
 	static std::unique_ptr<F6satellite> create() {
-		Adjacency adj{{0, 1, 2}, {}, {}};
+		Adjacency adj{{4, 5}, {2}, {}};
 		AdjacencyDiff adjDiff{{{5, 4}}, {}, {}, {}, {}, {}};
 		return std::unique_ptr<F6satellite>(new F6satellite(std::move(adj), std::move(adjDiff)));
 	}
@@ -215,7 +215,7 @@ public:
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{(166667.0/916667.0)*x[5], (166667.0/916667.0)*x[4], 550.0/916667.0}, {}, {}};
+		return {std::vector<double>{(166667.0/916667.0)*x[5], (166667.0/916667.0)*x[4]}, {550.0/916667.0}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
