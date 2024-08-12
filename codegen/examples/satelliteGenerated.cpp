@@ -4,7 +4,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <string>
-#include "satellite.h"
+#include "satelliteGenerated.h"
 #include "constants.h"
 
 

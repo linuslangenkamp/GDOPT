@@ -24,7 +24,6 @@ ExternalProject_Add(ipopt-ext
 file(GLOB SRC_FILES "src/*.cpp")
 
 set(EXAMPLE_FILES
-        examples/hypersensitive.h
         examples/batchReactor.cpp
         examples/batchReactor.h
         examples/rocketTrajectory.cpp
@@ -33,12 +32,12 @@ set(EXAMPLE_FILES
         examples/trivialBangBang.h
         examples/analyticHypersensitive.cpp
         examples/analyticHypersensitive.h
-        examples/satellite.cpp
-        examples/satellite.h
         examples/hypersensitive.cpp
         examples/hypersensitive.h
-        examples/dieselMotor.cpp
-        examples/dieselMotor.h
+        codegen/examples/dieselMotorGenerated.cpp
+        codegen/examples/dieselMotorGenerated.h
+        codegen/examples/satelliteGenerated.cpp
+        codegen/examples/satelliteGenerated.h
         codegen/examples/simpleParameterGenerated.h
         codegen/examples/simpleParameterGenerated.cpp
         codegen/examples/pureParameterGenerated.cpp

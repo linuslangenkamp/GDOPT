@@ -4,7 +4,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <string>
-#include "dieselMotor.h"
+#include "dieselMotorGenerated.h"
 #include "constants.h"
 
 

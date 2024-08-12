@@ -8,8 +8,8 @@
 #include "../examples/rocketTrajectory.h"
 #include "../examples/analyticHypersensitive.h"
 #include "../examples/trivialBangBang.h"
-#include "../examples/satellite.h"
-#include "../examples/dieselMotor.h"
+#include "../codegen/examples/satelliteGenerated.h"
+#include "../codegen/examples/dieselMotorGenerated.h"
 #include "../codegen/examples/simpleParameterGenerated.h"
 #include "../codegen/examples/pureParameterGenerated.h"
 #include "../examples/batchReactor.h"
@@ -18,10 +18,10 @@
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_pureParameter());
+    auto problem = std::make_shared<const Problem>(createProblem_satellite());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
-    Mesh mesh = Mesh::createEquidistantMesh(1, 1);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps36);
+    Mesh mesh = Mesh::createEquidistantMesh(100, 100);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 0;

@@ -1,6 +1,6 @@
 /*
-Implementation of Radau IIA collocation schemes. Contains schemes for s = 1,2,...,18 steps
-with corresponding orders 2s-1. The coefficients are calculated to 53 exact decimal places via
+Implementation of Radau IIA collocation schemes. Contains schemes for s = 1, 2, ..., 36 steps
+with corresponding orders p = 2s - 1. The coefficients are calculated to 53 exact decimal places via
 https://github.com/linuslangenkamp/ConstructionRadauIIA. The theoretical values
 a_{s,s} = 1/s^2 and ainv_{s,s} = 1/2 (1 + s^2) hold.
 */
