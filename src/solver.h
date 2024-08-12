@@ -45,15 +45,21 @@ public:
 
     // additional / optional flags, printouts, ...
     std::vector<double> objectiveHistory;
-    std::string exportOptimumPath;
     int initialIntervals = -1;
     std::chrono::_V2::system_clock::time_point solveStartTime;
     std::chrono::duration<double> timedeltaIO{0}; // time in IO operations
     void postOptimization();
+    std::string exportOptimumPath;
     bool exportOptimum = false;
+    std::string exportHessianPath;
+    bool exportHessian = false;
+    std::string exportJacobianPath;
+    bool exportJacobian = false;
     void printObjectiveHistory();
     void printMeshStats() const;
-    void setExportOptimumPath(const std::string& filepath);
+    void setExportOptimumPath(const std::string& exportPath);
+    void setExportJacobianPath(const std::string& exportPath);
+    void setExportHessianPath(const std::string& exportPath);
     void initSolvingProcess();
     void setTolerance(double tol);
     void setSolverFlags(const SmartPtr<IpoptApplication>& app) const;

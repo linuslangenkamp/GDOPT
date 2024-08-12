@@ -420,8 +420,8 @@ class ParametricConstraint(Expression):
         out = f"class {name} : public ParamConstraint {{\n"
         out += "public:\n"
         out += f"\tstatic std::unique_ptr<{name}> create() {{\n"
-        out += f"\t\tParamAdjacency adj{adj};\n"
-        out += f"\t\tParamAdjacencyDiff adjDiff{adjDiff};\n"
+        out += f"\t\tParamAdjacency adj{{{adj}}};\n"
+        out += f"\t\tParamAdjacencyDiff adjDiff{{{adjDiff}}};\n"
         out += f"\t\treturn std::unique_ptr<{name}>(new {name}(std::move(adj), std::move(adjDiff), {lb}, {ub}));\n"
         out += "\t}\n\n"
         

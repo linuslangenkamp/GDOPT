@@ -11,16 +11,17 @@
 #include "../examples/satellite.h"
 #include "../examples/dieselMotor.h"
 #include "../codegen/examples/simpleParameterGenerated.h"
+#include "../codegen/examples/pureParameterGenerated.h"
 #include "../examples/batchReactor.h"
 
 
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_hypersensitive());
+    auto problem = std::make_shared<const Problem>(createProblem_pureParameter());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps36);
-    Mesh mesh = Mesh::createEquidistantMesh(3, 10000);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
+    Mesh mesh = Mesh::createEquidistantMesh(1, 1);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 0;
@@ -29,6 +30,8 @@ int main() {
 
     // set solver flags
     solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData");
+    //solver.setExportHessianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/hessianSparsity.csv");
+    //solver.setExportJacobianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/jacobianSparsity.csv");
     solver.setTolerance(1e-13);
 
     // set solver mesh parameters

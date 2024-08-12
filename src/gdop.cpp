@@ -6,6 +6,8 @@
 // TODO: Check entire indices! - LGTM
 // TODO: Check derivatives (again :))
 // TODO: Insert if #p > 0, to save some checks
+// TODO: remember hessian local sparsity for later solver iterations
+
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
     // #vars
     n = numberVars;
@@ -702,6 +704,9 @@ bool GDOP::eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_
     assert(m == sz(problem->A) + sz(problem->R) + (sz(problem->F) + sz(problem->G)) * rk.steps * mesh.intervals);
     if (values == nullptr) {
         int eq = init_jac_sparsity(iRow, jCol);
+        if (exportJacobian) {
+            exportSparsity(iRow, jCol, nele_jac, {m, n}, exportJacobianPath);
+        }
         assert(eq == m);
     }
     else
@@ -969,6 +974,9 @@ bool GDOP::eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index
                   bool new_lambda, Index nele_hess, Index *iRow, Index *jCol, Number *values) {
     if (values == nullptr) {
         init_h_sparsity(iRow, jCol);
+        if (exportHessian) {
+            exportSparsity(iRow, jCol, nele_hess, {n, n}, exportHessianPath);
+        }
     }
     else
     {
@@ -984,8 +992,6 @@ void GDOP::finalize_solution(SolverReturn status, Index n, const Number *x, cons
                              IpoptCalculatedQuantities *ip_cq) {
     optimum.assign(x, x + n);
     objective = obj_value;
-    if (exportSolution)
-        exportOptimum(exportPath);
 }
 
 void GDOP::exportOptimum(const std::string& filename) const {

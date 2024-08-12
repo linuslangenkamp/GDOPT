@@ -40,7 +40,9 @@ set(EXAMPLE_FILES
         examples/dieselMotor.cpp
         examples/dieselMotor.h
         codegen/examples/simpleParameterGenerated.h
-        codegen/examples/simpleParameterGenerated.cpp)
+        codegen/examples/simpleParameterGenerated.cpp
+        codegen/examples/pureParameterGenerated.cpp
+        codegen/examples/pureParameterGenerated.h)
 
 include_directories(src examples)
 

@@ -303,10 +303,28 @@ void Solver::setExportOptimumPath(const std::string& exportPath) {
     exportOptimum = true;
 }
 
+void Solver::setExportHessianPath(const std::string &exportPath) {
+    exportHessianPath = exportPath;
+    exportHessian = true;
+}
+
+void Solver::setExportJacobianPath(const std::string& exportPath) {
+    exportJacobianPath = exportPath;
+    exportJacobian = true;
+}
+
 void Solver::initSolvingProcess() {
     setRefinementParameters();
     solveStartTime = std::chrono::high_resolution_clock::now();
     initialIntervals = gdop->mesh.intervals;
+    if (exportHessian) {
+        gdop->exportHessianPath = exportHessianPath;
+        gdop->exportHessian = true;
+    }
+    if (exportJacobian) {
+        gdop->exportJacobianPath = exportJacobianPath;
+        gdop->exportJacobian = true;
+    }
 }
 
 void Solver::postOptimization() {

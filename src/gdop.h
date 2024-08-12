@@ -29,6 +29,10 @@ public:
 
     bool exportSolution = false;
     std::string exportPath;
+    std::string exportHessianPath;
+    bool exportHessian = false;
+    std::string exportJacobianPath;
+    bool exportJacobian = false;
 
     const int offX = problem->sizeX;
     const int offU = problem->sizeU;
