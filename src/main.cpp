@@ -12,16 +12,17 @@
 #include "../codegen/examples/dieselMotorGenerated.h"
 #include "../codegen/examples/simpleParameterGenerated.h"
 #include "../codegen/examples/pureParameterGenerated.h"
+#include "../codegen/examples/invertedPendulumGenerated.h"
 #include "../examples/batchReactor.h"
 
 
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_satellite());
+    auto problem = std::make_shared<const Problem>(createProblem_invertedPendulum());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps36);
-    Mesh mesh = Mesh::createEquidistantMesh(100, 100);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
+    Mesh mesh = Mesh::createEquidistantMesh(10000, 6);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 0;

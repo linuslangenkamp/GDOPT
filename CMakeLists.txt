@@ -41,7 +41,10 @@ set(EXAMPLE_FILES
         codegen/examples/simpleParameterGenerated.h
         codegen/examples/simpleParameterGenerated.cpp
         codegen/examples/pureParameterGenerated.cpp
-        codegen/examples/pureParameterGenerated.h)
+        codegen/examples/pureParameterGenerated.h
+        codegen/examples/invertedPendulumGenerated.cpp
+        codegen/examples/invertedPendulumGenerated.h
+)
 
 include_directories(src examples)
 

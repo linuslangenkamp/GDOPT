@@ -1,7 +1,7 @@
 from sympy import *
 import time as timer
 from enum import Enum
-
+# TODO: add eq argument for Constraints -> lb=ub
 # TODO: only diff w.r.t. to vars that are contained in a given expr
 # check adj -> only diff then -> simplify -> check adj -> diff again -> simplify
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
