@@ -17,10 +17,10 @@
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_satellite());
+    auto problem = std::make_shared<const Problem>(createProblem_hypersensitive());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps12);
-    Mesh mesh = Mesh::createEquidistantMesh(3, 100);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps36);
+    Mesh mesh = Mesh::createEquidistantMesh(3, 10000);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 0;
