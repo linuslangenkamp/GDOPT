@@ -24,10 +24,10 @@ model.addDynamic(theta, q)
 model.addDynamic(q, theta - u)
 
 # stationary final state
-model.addFinal(y, lb=0, ub=0)
-model.addFinal(v, lb=0, ub=0)
-model.addFinal(theta, lb=0, ub=0)
-model.addFinal(q, lb=0, ub=0)
+model.addFinal(y, eq=0)
+model.addFinal(v, eq=0)
+model.addFinal(theta, eq=0)
+model.addFinal(q, eq=0)
 
 # minimize action u**2 or angle theta**2
 model.addLagrange(theta**2, Objective.MINIMIZE)

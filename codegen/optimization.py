@@ -1,7 +1,7 @@
 from sympy import *
 import time as timer
 from enum import Enum
-# TODO: add eq argument for Constraints -> lb=ub
+
 # TODO: only diff w.r.t. to vars that are contained in a given expr
 # check adj -> only diff then -> simplify -> check adj -> diff again -> simplify
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
@@ -225,10 +225,14 @@ class DynExpression(Expression):
 
 class Constraint(Expression):
     
-    def __init__(self, expr, lb=-float("inf"), ub=float("inf")):
+    def __init__(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
         super().__init__(expr)
-        self.lb = lb
-        self.ub = ub
+        if eq != None:
+            self.lb = eq
+            self.ub = eq
+        else:
+            self.lb = lb
+            self.ub = ub
 
     def codegen(self, name, variables):
         partialExpression = numbered_symbols(prefix='s')
@@ -365,10 +369,15 @@ class Constraint(Expression):
 
 class ParametricConstraint(Expression):
     
-    def __init__(self, expr, lb=-float("inf"), ub=float("inf")):
+    def __init__(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
         super().__init__(expr)
-        self.lb = lb
-        self.ub = ub
+        if eq != None:
+            self.lb = eq
+            self.ub = eq
+        else:
+            self.lb = lb
+            self.ub = ub
+
         
     def codegen(self, name, variables):
         partialExpression = numbered_symbols(prefix='s')
@@ -531,15 +540,19 @@ class Model:
                 raise InvalidModel(fail)
         self.F.append(DynExpression(diffVar, expr))
     
-    def addPath(self, expr, lb=-float("inf"), ub=float("inf")):
-        self.G.append(Constraint(expr, lb=lb, ub=ub))
+    def addPath(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
+        if eq != None and (lb != -float("inf") or ub != float("inf")):
+            raise InvalidModel("Can't set eq and lb or ub.")
+        self.G.append(Constraint(expr, lb=lb, ub=ub, eq=eq))
     
-    def addFinal(self, expr, lb=-float("inf"), ub=float("inf")):
-        self.R.append(Constraint(expr, lb=lb, ub=ub))
+    def addFinal(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
+        if eq != None and (lb != -float("inf") or ub != float("inf")):
+            raise InvalidModel("Can't set eq and lb or ub.")
+        self.R.append(Constraint(expr, lb=lb, ub=ub, eq=eq))
         
-    def addParametric(self, expr, lb=-float("inf"), ub=float("inf")):
+    def addParametric(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
         if set(self.pVars).issuperset(expr.free_symbols):
-            self.A.append(ParametricConstraint(expr, lb=lb, ub=ub))
+            self.A.append(ParametricConstraint(expr, lb=lb, ub=ub, eq=eq))
         else:
             raise InvalidModel("Parametric constraints only allow parametric variables")
             

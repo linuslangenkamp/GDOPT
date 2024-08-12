@@ -65,11 +65,11 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return u[0] - 0.0099009900990099011*x[2];
+		return u[0] - 0.090909090909090912*x[2];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-0.0099009900990099011}, {1}, {}};
+		return {std::vector<double>{-0.090909090909090912}, {1}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
