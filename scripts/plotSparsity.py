@@ -10,15 +10,19 @@ def plotSparsity(m, ax, file_path):
     for (x, y, data) in zip(m.col, m.row, m.data):
         ax.add_patch(Rectangle(
             xy=(x, y), width=1, height=1, edgecolor='black', facecolor='blue', alpha=0.6))
+        """
+        if 'hessian' in os.path.basename(file_path).lower() and x != y:
+            ax.add_patch(Rectangle(
+            xy=(y, x), width=1, height=1, edgecolor='black', facecolor='blue', alpha=0.6)) """
     ax.set_xlim(0, m.shape[1])
     ax.set_ylim(0, m.shape[0])
     ax.invert_yaxis()
     
-    if 'jac' in os.path.basename(file_path).lower():
+    if 'jacobian' in os.path.basename(file_path).lower():
         ax.set_xlabel('Variables')
         ax.set_ylabel('Equations')
         ax.set_title('Jacobian Sparsity')
-    elif 'hes' in os.path.basename(file_path).lower():
+    elif 'hessian' in os.path.basename(file_path).lower():
         ax.set_xlabel('Variables')
         ax.set_ylabel('Variables')
         ax.set_title('Hessian Sparsity')

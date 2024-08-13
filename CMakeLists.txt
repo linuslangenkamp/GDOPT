@@ -26,8 +26,6 @@ file(GLOB SRC_FILES "src/*.cpp")
 set(EXAMPLE_FILES
         examples/batchReactor.cpp
         examples/batchReactor.h
-        examples/rocketTrajectory.cpp
-        examples/rocketTrajectory.h
         examples/trivialBangBang.cpp
         examples/trivialBangBang.h
         examples/analyticHypersensitive.cpp

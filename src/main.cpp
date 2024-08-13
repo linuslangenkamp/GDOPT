@@ -5,7 +5,6 @@
 #include "gdop.h"
 #include "solver.h"
 #include "../examples/hypersensitive.h"
-#include "../examples/rocketTrajectory.h"
 #include "../examples/analyticHypersensitive.h"
 #include "../examples/trivialBangBang.h"
 #include "../codegen/examples/satelliteGenerated.h"
@@ -18,10 +17,10 @@
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_invertedPendulum());
+    auto problem = std::make_shared<const Problem>(createProblem_dieselMotor());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
-    Mesh mesh = Mesh::createEquidistantMesh(1000, 5);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps2);
+    Mesh mesh = Mesh::createEquidistantMesh(5, 0.5);
     LinearSolver linearSolver = LinearSolver::MUMPS;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 0;
@@ -30,8 +29,8 @@ int main() {
 
     // set solver flags
     solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData");
-    //solver.setExportHessianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/hessianSparsity.csv");
-    //solver.setExportJacobianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/jacobianSparsity.csv");
+    // solver.setExportHessianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/hessianSparsity.csv");
+    // solver.setExportJacobianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/jacobianSparsity.csv");
     solver.setTolerance(1e-13);
 
     // set solver mesh parameters
