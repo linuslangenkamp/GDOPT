@@ -17,18 +17,18 @@
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_dieselMotor());
+    auto problem = std::make_shared<const Problem>(createProblem_invertedPendulum());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps2);
-    Mesh mesh = Mesh::createEquidistantMesh(5, 0.5);
-    LinearSolver linearSolver = LinearSolver::MUMPS;
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
+            Mesh mesh = Mesh::createEquidistantMesh(1000, 25);
+    LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 0;
 
     Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 
     // set solver flags
-    solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData");
+    solver.setExportOptimumPath("/home/linus/Documents/outputsGDOP");
     // solver.setExportHessianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/hessianSparsity.csv");
     // solver.setExportJacobianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/jacobianSparsity.csv");
     solver.setTolerance(1e-13);

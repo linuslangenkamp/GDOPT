@@ -1,13 +1,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData"
+path = "/home/linus/Documents/outputsGDOP"
 model = "invertedPendulum"
 it = 0
 df = pd.read_csv(path + "/" + model + str(it) + ".csv", sep=",")
 print(df.head())
 specifCols = None # [col for col in df.columns if col.startswith('u')] 
-interval = [0, 5]
+interval = [0, 25]
 addDots = False
 
 plt.rcParams.update({
