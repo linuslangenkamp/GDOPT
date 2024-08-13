@@ -2,12 +2,11 @@ from sympy import *
 import time as timer
 from enum import Enum
 
-# TODO: only diff w.r.t. to vars that are contained in a given expr
 # check adj -> only diff then -> simplify -> check adj -> diff again -> simplify
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
 # TODO: add runtime parameters, tf, ...
-# TODO: make this stuff more readable!
+
 
 class InvalidModel(Exception):
     pass
@@ -82,12 +81,22 @@ class Parameter(Variable):
         cls.id_counter += 1
         return obj
 
+# sorting of elements for adjacency structures
+class_order = {
+    'State': 0,
+    'Input': 1,
+    'Parameter': 2
+}
+
+def sort_vars(elem):
+    return (class_order[elem.__class__.__name__], elem.id)
 
 class Expression:
     def __init__(self, expr):
         self.expr = simplify(expr)
+        self.adj = sorted(expr.free_symbols, key=sort_vars)
     
-    def codegen(self, name, variables):
+    def codegen(self, name):
         partialExpression = numbered_symbols(prefix='s')
         
         subst0, exprEval = cse(self.expr, partialExpression)
@@ -99,8 +108,8 @@ class Expression:
         allDiffs2 = []
         diffVars2 = []
         
-        for i, var1 in enumerate(variables):
-            for j, var2 in enumerate(variables):
+        for i, var1 in enumerate(self.adj):
+            for j, var2 in enumerate(self.adj):
                 if not ((type(var1) == State and type(var2) == State and i < j) or (type(var1) == Input and type(var2) == Input and i < j) or (type(var1) == Parameter and type(var2) == Parameter and i < j)):
                     der = diff(self.expr, var1, var2)
                     if der != 0:
@@ -136,7 +145,7 @@ class Expression:
         allDiffs = []
         diffVars = []
         
-        for i, var in enumerate(variables):
+        for i, var in enumerate(self.adj):
             der = diff(self.expr, var)
             if der != 0:
                 allDiffs.append(der)
@@ -234,7 +243,7 @@ class Constraint(Expression):
             self.lb = lb
             self.ub = ub
 
-    def codegen(self, name, variables):
+    def codegen(self, name):
         partialExpression = numbered_symbols(prefix='s')
         
         subst0, exprEval = cse(self.expr, partialExpression)
@@ -246,8 +255,8 @@ class Constraint(Expression):
         allDiffs2 = []
         diffVars2 = []
         
-        for i, var1 in enumerate(variables):
-            for j, var2 in enumerate(variables):
+        for i, var1 in enumerate(self.adj):
+            for j, var2 in enumerate(self.adj):
                 if not ((type(var1) == State and type(var2) == State and i < j) or (type(var1) == Input and type(var2) == Input and i < j) or (type(var1) == Parameter and type(var2) == Parameter and i < j)):
                     der = diff(self.expr, var1, var2)
                     if der != 0:
@@ -283,7 +292,7 @@ class Constraint(Expression):
         allDiffs = []
         diffVars = []
         
-        for i, var in enumerate(variables):
+        for i, var in enumerate(self.adj):
             der = diff(self.expr, var)
             if der != 0:
                 allDiffs.append(der)
@@ -379,7 +388,7 @@ class ParametricConstraint(Expression):
             self.ub = ub
 
         
-    def codegen(self, name, variables):
+    def codegen(self, name):
         partialExpression = numbered_symbols(prefix='s')
         
         subst0, substExpr = cse(self.expr, partialExpression)
@@ -390,8 +399,8 @@ class ParametricConstraint(Expression):
         adjDiff_indices = []  # indPP
         allDiffs2 = []
         
-        for i, var1 in enumerate(variables):
-            for j, var2 in enumerate(variables):
+        for i, var1 in enumerate(self.adj):
+            for j, var2 in enumerate(self.adj):
                 if type(var1) == Parameter and type(var2) == Parameter and i >= j:
                     der = diff(self.expr, var1, var2)
                     if der != 0:
@@ -407,7 +416,7 @@ class ParametricConstraint(Expression):
         cEvalDiff = []
         allDiffs = []
         
-        for i, var in enumerate(variables):
+        for i, var in enumerate(self.adj):
             if type(var) == Parameter:
                 der = diff(self.expr, var)
                 if der != 0:
@@ -606,27 +615,27 @@ Problem createProblem_{self.name}();
             OUTPUT += "\n\n"
         
         if self.M:
-            OUTPUT += self.M.codegen("Mayer" + self.name, allVars)
+            OUTPUT += self.M.codegen("Mayer" + self.name)
             print("Mayer: codegen done.\n")
             
         if self.L:
-            OUTPUT += self.L.codegen("Lagrange" + self.name, allVars)
+            OUTPUT += self.L.codegen("Lagrange" + self.name)
             print("Lagrange: codegen done.\n")
             
         for n, f in enumerate(self.F):
-            OUTPUT += f.codegen("F" + str(n) + self.name, allVars)
+            OUTPUT += f.codegen("F" + str(n) + self.name)
             print(f"Dynamic constraint {n}: codegen done.\n")
         
         for n, g in enumerate(self.G):
-            OUTPUT += g.codegen("G" + str(n) + self.name, allVars)
+            OUTPUT += g.codegen("G" + str(n) + self.name)
             print(f"Path constraint {n}: codegen done.\n")
             
         for n, r in enumerate(self.R):
-            OUTPUT += r.codegen("R" + str(n) + self.name, allVars)
+            OUTPUT += r.codegen("R" + str(n) + self.name)
             print(f"Final constraint {n}: codegen done.\n")
             
         for n, a in enumerate(self.A):
-            OUTPUT += a.codegen("A" + str(n) + self.name, allVars)
+            OUTPUT += a.codegen("A" + str(n) + self.name)
             print(f"Parametric constraints {n}: codegen done.\n")
             
         pushF = "\n    ".join("F.push_back(" + "F" + str(n) + self.name + "::create());" for n in range(len(self.F)))

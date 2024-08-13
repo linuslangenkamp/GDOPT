@@ -351,10 +351,10 @@ void Solver::finalizeOptimization() {
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << "\nOutput for optimization of model: " << gdop->problem->name << std::endl;
-    if (maxMeshIterations > 0) {
-        printMeshStats();
-        printObjectiveHistory();
-    }
+
+    printMeshStats();
+    printObjectiveHistory();
+
     auto timeTaken = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - solveStartTime).count();
     auto actualTime = timeTaken - timedeltaIO.count();
     std::cout << std::fixed << std::setprecision(5);

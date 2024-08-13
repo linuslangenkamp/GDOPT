@@ -18,13 +18,13 @@
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_batchReactor());
+    auto problem = std::make_shared<const Problem>(createProblem_invertedPendulum());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
-    Mesh mesh = Mesh::createEquidistantMesh(1000, 1);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
+    Mesh mesh = Mesh::createEquidistantMesh(1000, 5);
     LinearSolver linearSolver = LinearSolver::MUMPS;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
-    int meshIterations = 5;
+    int meshIterations = 0;
 
     Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 

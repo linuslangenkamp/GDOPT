@@ -4,6 +4,7 @@ from optimization import *
 # choose implicit Euler, since its the most stable, ideal tf>=5s
 
 model = Model("invertedPendulum")
+
 Ms = model.addConst(10)
 Mp = model.addConst(1)
 R = model.addConst(0.5)
