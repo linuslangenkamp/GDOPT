@@ -719,6 +719,16 @@ t = Symbol("t")
 time = t
 ###
 
+# add const  : constant = model.addConst(constValue, optional<symbol in code>)
+# add var    : variable = model.addVar(Vartyp<State, Input, Parameter>, optional<symbol for debug>, start if state, Optional: lb, Optional: ub)
+# Alias: Input = Control = Continous
+
+# add dynamic constr: model.addDynamic(x', f) for ODE: x' = f
+# add path constr   : model.addPath(g, Optional: lb, Optional: ub) 
+# add final constr  : model.addFinal(r, Optional: lb, Optional: ub) 
+# add param constr  : model.addParametric(a, Optional: lb, Optional: ub) 
+# Alias: addDynamic = addOde = addF
+
 """
 SET THIS AS GEANY EXECUTE
 export PYTHONPATH=/home/linus/masterarbeit/ipopt_do/codegen && python3 -u "%f"

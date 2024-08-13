@@ -45,7 +45,7 @@ enum class IntegratorSteps {
 class Integrator {
 public:
     static Integrator radauIIA(IntegratorSteps steps);
-
+    static Integrator testIntegrator(const double a);
     const std::vector<double> c;
     const std::vector<double> c0; // c including 0 point, i.e. [0, c1, c2, ..., cm]
     const std::vector<std::vector<double>> A;

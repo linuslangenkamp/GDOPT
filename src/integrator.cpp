@@ -228,6 +228,18 @@ std::vector<double> Integrator::interpolate(std::vector<double>& values) {
     return vals;
 }
 
+Integrator Integrator::testIntegrator(const double a) {
+    // A-stable for a >= 1/4: R(z) = 1 + z * (1 - z + 2*a*z -a**2 * z) / (1 - a*z)**2
+    // for a = 1/2 -> 2 step implicit Euler
+    // 1st order, 2 step testIntegrator
+    // 2nd order for a = 1 +- sqrt(2) / 2 -> L-stable
+    return {{a, 1.},
+            {{a, 0.}, {1. - a, a}},
+            {{1/a, 0.}, {(a - 1) / (a*a), 1./a}},
+            {1/a, (2*a - 1) / (a*a)},
+             2};
+}
+
 Integrator Integrator::radauIIA(IntegratorSteps steps) {
 
     switch (steps) {
