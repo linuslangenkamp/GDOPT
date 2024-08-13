@@ -184,30 +184,6 @@ private:
 };
 
 
-class G0invertedPendulum : public Constraint {
-public:
-	static std::unique_ptr<G0invertedPendulum> create() {
-		Adjacency adj{{0}, {}, {}};
-		AdjacencyDiff adjDiff{{}, {}, {}, {}, {}, {}};
-		return std::unique_ptr<G0invertedPendulum>(new G0invertedPendulum(std::move(adj), std::move(adjDiff), 0, 5));
-	}
-
-	double eval(const double *x, const double *u, const double *p, double t) override {
-		return x[0];
-	}
-
-	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{1}, {}, {}};
-	}
-
-	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {}, {}, {}, {}, {}};
-	}
-private:
-	G0invertedPendulum(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {}
-};
-
-
 class R0invertedPendulum : public Constraint {
 public:
 	static std::unique_ptr<R0invertedPendulum> create() {
@@ -313,7 +289,7 @@ Problem createProblem_invertedPendulum() {
     F.push_back(F3invertedPendulum::create());
     
     std::vector<std::unique_ptr<Constraint>> G;
-    G.push_back(G0invertedPendulum::create());
+    
     
     std::vector<std::unique_ptr<Constraint>> R;
     R.push_back(R0invertedPendulum::create());
@@ -327,8 +303,8 @@ Problem createProblem_invertedPendulum() {
     Problem problem(
             4, 1, 0,  // #vars
             {0, 0, 1, 0},  // x0
-            {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
-            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
+            {0, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
+            {5, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
             {-0.5},  // lb u
             {0.5},  // ub u
             {},  // lb p

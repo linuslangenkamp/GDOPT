@@ -44,7 +44,7 @@ def redraw(screen, time, dt, score, precision, s, v, taus, phis):
   def tachometer(value):
     radius = scale*0.2
     center = pygame.Vector2(width/4, height*0.85)
-    max_val = 10
+    max_val = 1
 
     # outer ring
     pygame.draw.circle(screen, "black", center, radius, math.ceil(radius*0.02), draw_top_left=True, draw_top_right=True)
@@ -146,7 +146,7 @@ def redraw(screen, time, dt, score, precision, s, v, taus, phis):
 
   # FPS
   #display("FPS: {: .1f}".format(1/dt), (16,16), False)
-  display("Angle: phi(t)", (3*width/4, height*0.05))
+  display("Angle: φ(t)", (3*width/4, height*0.05))
   display("Control: a(t)", (3*width/4, height*0.55))
   display("Time: t = {: .1f}".format(time), (width/4, height*0.05))
 

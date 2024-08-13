@@ -20,7 +20,7 @@ int main() {
     auto problem = std::make_shared<const Problem>(createProblem_invertedPendulum());
     InitVars initVars = InitVars::CONST;
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
-            Mesh mesh = Mesh::createEquidistantMesh(1000, 25);
+            Mesh mesh = Mesh::createEquidistantMesh(50000, 25);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 0;
@@ -28,7 +28,8 @@ int main() {
     Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 
     // set solver flags
-    solver.setExportOptimumPath("/home/linus/Documents/outputsGDOP");
+    // "/home/linus/Documents/outputsGDOP"
+    solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData");
     // solver.setExportHessianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/hessianSparsity.csv");
     // solver.setExportJacobianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/jacobianSparsity.csv");
     solver.setTolerance(1e-13);

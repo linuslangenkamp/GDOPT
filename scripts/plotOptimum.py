@@ -1,7 +1,7 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-
-path = "/home/linus/Documents/outputsGDOP"
+import matplotlib.pyplot as plt 
+# "/home/linus/Documents/outputsGDOP"
+path ="/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData"
 model = "invertedPendulum"
 it = 0
 df = pd.read_csv(path + "/" + model + str(it) + ".csv", sep=",")

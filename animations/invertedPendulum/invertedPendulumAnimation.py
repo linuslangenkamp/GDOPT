@@ -1,6 +1,4 @@
-import os
 import pygame
-import math
 import csv
 
 import graphics
@@ -21,7 +19,7 @@ def load_data(file_path):
     return data
 
 def main(data):
-    T_F = 25
+    T_F = data[-1]["time"]
     INTERVALS = len(data)
     FPS = 60  # Frames Per Second
     SHIFT = INTERVALS / (T_F * FPS)
@@ -80,7 +78,8 @@ def main(data):
 
 
 if __name__ == "__main__":
-    path = "/home/linus/Documents/outputsGDOP"
+	# "/home/linus/Documents/outputsGDOP"
+    path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData"
     model = "invertedPendulum"
     it = 0
     file_path = path + "/" + model + str(it) + ".csv"
