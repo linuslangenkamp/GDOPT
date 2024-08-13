@@ -7,7 +7,8 @@ it = 0
 df = pd.read_csv(path + "/" + model + str(it) + ".csv", sep=",")
 print(df.head())
 specifCols = None # [col for col in df.columns if col.startswith('u')] 
-interval = [0, 6]
+interval = [0, 5]
+addDots = False
 
 plt.rcParams.update({
     'font.serif': ['Times New Roman'],
@@ -40,7 +41,8 @@ if num_plots == 1:
 for idx, column in enumerate(columns_to_plot):
     ax = axs[idx]
     ax.plot(df['time'], df[column], label=column, linewidth=2, linestyle='-', color='steelblue')
-    ax.scatter(df['time'], df[column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+    if addDots:
+        ax.scatter(df['time'], df[column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
     ax.set_xlabel('time')
     ax.set_ylabel(column)
     ax.set_xlim(interval[0], interval[1])

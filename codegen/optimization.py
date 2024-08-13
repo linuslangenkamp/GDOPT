@@ -6,7 +6,7 @@ from enum import Enum
 # check adj -> only diff then -> simplify -> check adj -> diff again -> simplify
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
-
+# TODO: add runtime parameters, tf, ...
 # TODO: make this stuff more readable!
 
 class InvalidModel(Exception):

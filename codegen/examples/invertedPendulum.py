@@ -1,35 +1,38 @@
 from optimization import *
 
-# variant of https://apmonitor.com/do/index.php/Main/ControlTypes
-# choose implicit Euler, since its the most stable
+# variant of https://rmc.dlr.de/rm/de/staff/extcms/images/rmc/users/zimm_di/lecture2022/Lecture12.pdf
+# choose implicit Euler, since its the most stable, ideal tf>=5s
 
 model = Model("invertedPendulum")
+Ms = model.addConst(10)
+Mp = model.addConst(1)
+R = model.addConst(0.5)
+G = model.addConst(-9.81)
 
-m1 = model.addConst(10)
-m2 = model.addConst(1)
-
-eps = model.addConst(m2 / (m1 + m2))
-
-y = model.addState(start=-1)
+s = model.addState(start=0)
 v = model.addState(start=0)
-theta = model.addState(start=0)
-q = model.addState(start=0)
+phi = model.addState(start=0)
+omega = model.addState(start=0)
 
-u = model.addControl(lb=-1, ub=1)
+u = model.addControl(lb=-0.2, ub=0.2)
 
-model.addDynamic(y, v)
-model.addDynamic(v, -eps*theta + u)
+dvdt = (sin(phi)*Mp*R*omega**2 - cos(phi)*sin(phi)*Mp*G) / (Ms + Mp * sin(phi)**2) + u
 
-model.addDynamic(theta, q)
-model.addDynamic(q, theta - u)
+model.addDynamic(s, v)
+model.addDynamic(v, dvdt)
+
+model.addDynamic(phi, omega)
+model.addDynamic(omega, (sin(phi)*G - cos(phi)*dvdt)/R)
 
 # stationary final state
-model.addFinal(y, eq=0)
+model.addFinal(s, eq=1)
 model.addFinal(v, eq=0)
-model.addFinal(theta, eq=0)
-model.addFinal(q, eq=0)
+model.addFinal(phi, eq=0)
+model.addFinal(omega, eq=0)
 
-# minimize action u**2 or angle theta**2
-model.addLagrange(theta**2, Objective.MINIMIZE)
+# minimize action u**2 or angle phi**2
+# Remark: integral phi**2 dt only changes by ~1% whether you choose
+# phi**2 or u**2 as the langrange term
+model.addLagrange(phi**2, Objective.MINIMIZE)
 
 model.generate()
