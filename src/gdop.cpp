@@ -3,10 +3,9 @@
 #include "gdop.h"
 #include "util.h"
 
-// TODO: Check entire indices! - LGTM
-// TODO: Check derivatives (again :))
+// TODO: Check entire indices! - LGTM, Check derivatives (again :))
 // TODO: Insert if #p > 0, to save some checks
-// TODO: remember hessian local sparsity for later solver iterations
+// TODO: remember hessian local sparsity for later solver iterations -> not trivial and also not that huge benefit
 
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
     // #vars
@@ -308,7 +307,7 @@ bool GDOP::get_bounds_info(Index n, Number *x_l, Number *x_u, Index m, Number *g
 
 bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Number *z_L, Number *z_U, Index m,
                               bool init_lambda, Number *lambda) {
-    // TODO: implement different strategies: SOLVE(), WARM_START
+    // TODO: implement different strategies: SOLVE()
     assert(n == numberVars);
     switch (initVars) {
         case InitVars::CONST:

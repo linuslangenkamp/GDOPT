@@ -22,8 +22,6 @@ Integrator::Integrator(const std::vector<double>& c,
           lagrangeBasisDiff(basisPolynomialDiff()), lagrangeBasisDiff2(basisPolynomialDiff2()){
 }
 
-//TODO: clean up integrator
-
 // First and second derivative of the Lagrange interpolating polynomial on the nominal interval [0, 1]
 // Will be used for detecting discontinuities, corners, sections that are steep or have a huge curvature
 // use this for every interval, but the 0-th control interval
@@ -34084,5 +34082,12 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                      14.53361459116465432898635062078329101882306028042239,
                      -36.0},
                     36};
+
+        default: // implicit Euler as fallback
+            return {{1.0},
+                    {{1.0}},
+                    {{1.0}},
+                    {1.0},
+                    1};
     }
 }

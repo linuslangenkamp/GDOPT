@@ -62,7 +62,7 @@ public:
     // interpolation stuff, lagrange basis at c_j/2, c_j/2 + 1/2 for j=0...m
     std::vector<std::vector<double>> interpolationFirstBasisPolynomial();       // inner basis poly, needed for 1st interval of u
     std::vector<std::vector<double>> interpolationBasisPolynomial();         // standard collocation polynomial
-    std::vector<double> interpolateFirstControl(std::vector<double> &uValues);
+    std::vector<double> interpolateFirstControl(std::vector<double>& uValues);
     std::vector<double> interpolate(std::vector<double>&);
     const std::vector<std::vector<double>> interpolationFirstLagrangeBasis;
     const std::vector<std::vector<double>> interpolationLagrangeBasis;

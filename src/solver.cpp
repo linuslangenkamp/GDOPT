@@ -7,7 +7,6 @@ Solver::Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations, LinearSo
 
 std::string getLinearSolverName(LinearSolver solver) {
     switch (solver) {
-        // TODO: add pardiso project sparse solver
         // TODO: add SPRAL solver (bsd licensed)
         case LinearSolver::MUMPS: return "MUMPS";
         case LinearSolver::MA27: return "MA27";
@@ -338,15 +337,15 @@ void Solver::postOptimization() {
 }
 
 void Solver::printObjectiveHistory() {
-    // TODO: Output with scientific notation
     std::cout << "\n----------------------------------------------------------------" << std::endl;
     std::cout << "\nMesh refinement history\n" << std::endl;
-    std::cout << std::setw(5) << "iteration" << std::setw(17) << "objective" << std::endl;
-    std::cout << "--------------------------------" << std::endl;
+    std::cout << std::setw(5) << "iteration" << std::setw(20) << "objective" << std::endl;
+    std::cout << "-----------------------------------" << std::endl;
     for (int iteration = 0; iteration < sz(objectiveHistory); iteration++) {
-        std::cout << std::setw(5) << iteration << std::setw(27) << double2Str(objectiveHistory[iteration]) << std::endl;
+        std::cout << std::setw(5) << iteration << std::setw(30) << double2Str(objectiveHistory[iteration]) << std::endl;
     }
 }
+
 void Solver::finalizeOptimization() {
     std::cout << "\n----------------------------------------------------------------" << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
