@@ -74,7 +74,7 @@ class RuntimeParameter(Variable):
     id_counter = 0
 
     def __new__(cls, default, symbol=None, lb=-float("inf"), ub=float("inf")):
-        if symbol in ["F", "G", "R", "A"]: # several others aswell but unlikely to crash
+        if symbol in ["F", "G", "R", "A", "t"]: # several others aswell but unlikely to crash
             raise InvalidModel(f"Invalid symbol name: {symbol}")
         if symbol == None:
             symbol = f'RuntimeParameter{cls.id_counter}'
@@ -503,35 +503,60 @@ class Model:
         self.name = name
         
     def addVar(self, variable):
+        
+        # adds any variable to the model, must be assigned previously
+        
         if type(variable) == State:
             self.xVars.append(variable)
         elif type(variable) == Input:
             self.uVars.append(variable)
         elif type(variable) == Parameter:
             self.pVars.append(variable)
+        elif type(variable) == RuntimeParameter:
+            self.rpVars.append(variable)
         return variable
     
     def addState(self, start, symbol=None, lb=-float("inf"), ub=float("inf")):
+        
+        # adds a state x for optimization, must a have starting value
+        # specify lb or ub if needed
+        
         variable = State(start, symbol=symbol, lb=lb, ub=ub)
         self.xVars.append(variable)
         return variable
     
     def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf")):
+        
+        # adds an input / control u for optimization
+        # specify lb or ub if needed
+        
         variable = Input(symbol=symbol, lb=lb, ub=ub)
         self.uVars.append(variable)
         return variable
         
     def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf")):
+        
+        # adds a parameter p for optimization
+        # specify lb or ub if needed
+        
         variable = Parameter(symbol=symbol, lb=lb, ub=ub)
         self.pVars.append(variable)
         return variable
     
     def addRuntimeParameter(self, default, symbol=None):
+        
+        # adds a runtime parameter: can be changed for optimization
+        # will be handled symbolically -> thus quite slow
+        # for actual constants simply write pythonic var = value
+        
         variable = RuntimeParameter(default, symbol=symbol)
         self.rpVars.append(variable)
         return variable
 
     def addMayer(self, expr, obj=Objective.MINIMIZE):
+        
+        # adds the mayer term: min/max expr(tf)
+        
         if self.M:
             raise InvalidModel("Mayer term already set")
         else:
@@ -541,6 +566,9 @@ class Model:
                 self.M = Expression(expr)
                 
     def addLagrange(self, expr, obj=Objective.MINIMIZE):
+        
+        # adds the lagrange term: min/max integral_0_tf expr dt
+        
         if self.L:
             raise InvalidModel("Lagrange term already set")
         else:
@@ -550,6 +578,9 @@ class Model:
                 self.L = Expression(expr)
     
     def addDynamic(self, diffVar, expr):
+        
+        # adds a dynamic constraint: diffVar' = expr
+        
         for f in self.F:
             if diffVar == f.diffVar:
                 fail = f"Equation for diff({diffVar}) has been added already"
@@ -557,26 +588,41 @@ class Model:
         self.F.append(DynExpression(diffVar, expr))
     
     def addPath(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
+        
+        # adds a path constraint: lb <= g(.(t)) <= ub or g(.(t)) == eq
+        
         if eq != None and (lb != -float("inf") or ub != float("inf")):
             raise InvalidModel("Can't set eq and lb or ub.")
         self.G.append(Constraint(expr, lb=lb, ub=ub, eq=eq))
     
     def addFinal(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
+        
+        # adds a final constraint: lb <= r(.(tf)) <= ub or r(.(tf)) == eq
+        
         if eq != None and (lb != -float("inf") or ub != float("inf")):
             raise InvalidModel("Can't set eq and lb or ub.")
         self.R.append(Constraint(expr, lb=lb, ub=ub, eq=eq))
         
     def addParametric(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
+        
+        # adds a parametric constraint: lb <= a(p) <= ub or a(p) == eq
+        
         if set(self.pVars).issuperset(expr.free_symbols):
             self.A.append(ParametricConstraint(expr, lb=lb, ub=ub, eq=eq))
         else:
             raise InvalidModel("Parametric constraints only allow parametric variables")
             
     def _addDummy(self):
+        
+        # adds a dummy state for purely parametric models
+        
         x = self.addState(start=0)
         self.addF(x, 0)
         
     def generate(self):
+        
+        # does the entire code generation of the model
+        
         if len(self.F) != len(self.xVars):
             raise InvalidModel("#states != #differential equations") 
         elif len(self.xVars) == 0:
@@ -705,9 +751,12 @@ Model.addContinous = Model.addInput
 Model.addX = Model.addState
 Model.addU = Model.addInput
 Model.addP = Model.addParameter
+Model.addRP = Model.addRuntimeParameter
+Model.addConstant = Model.addRuntimeParameter
+Model.addC = Model.addRuntimeParameter
 
 Model.addV = Model.addVar
-Model.addRP = Model.addRuntimeParameter
+
 # objective
 Model.addM = Model.addMayer
 Model.addL = Model.addLagrange
@@ -726,21 +775,6 @@ time = t
 # consts
 PI = 3.14159265358979323846
 pi = PI
-###
-
-# care with symbol names!
-
-# define global constants as: var = 1.234
-# define model parameters / runtime constants: var = model.addRuntimeParameter(default=defaultvalue, symbol=symbol)
-
-# add var    : variable = model.addVar(Vartyp<State, Input, Parameter>, optional<symbol for debug>, start if state, Optional: lb, Optional: ub)
-# Alias: Input = Control = Continous
-
-# add dynamic constr: model.addDynamic(x', f) for ODE: x' = f
-# add path constr   : model.addPath(g, Optional: lb, Optional: ub) 
-# add final constr  : model.addFinal(r, Optional: lb, Optional: ub) 
-# add param constr  : model.addParametric(a, Optional: lb, Optional: ub) 
-# Alias: addDynamic = addOde = addF
 
 """
 SET THIS AS GEANY EXECUTE
