@@ -33,7 +33,7 @@ public:
     MeshAlgorithm meshAlgorithm;
     int meshIteration = 0;
     const int maxMeshIterations;
-    double tolerance = 1e-14;
+    double tolerance = 1e-12;
     std::vector<double> cbValues;           // starting values after refinement
     std::unordered_map<std::string, double> meshParameters;
 

@@ -715,6 +715,7 @@ class Model:
 // CODEGEN FOR MODEL "{self.name}"\n
 // includes
 #define _USE_MATH_DEFINES
+#include "{filename}Params.h"
 #include <cmath>
 #include <string>
 #include "constants.h"
@@ -806,7 +807,49 @@ class Model:
             "{self.name}");
     return problem;
 }};\n"""
+        OUTPUT += f"""
+int main() {{
+    auto problem = std::make_shared<const Problem>(createProblem_{self.name}());
+    InitVars initVars = INIT_VARS;
+    Integrator rk = Integrator::radauIIA(RADAU_INTEGRATOR);
+    Mesh mesh = Mesh::createEquidistantMesh(INTERVALS, FINAL_TIME);
+    LinearSolver linearSolver = LINEAR_SOLVER;
+    MeshAlgorithm meshAlgorithm = MESH_ALGORITHM;
+    int meshIterations = MESH_ITERATIONS;
 
+    Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
+
+    // set solver flags
+    #ifdef EXPORT_OPTIMUM_PATH
+    solver.setExportOptimumPath(EXPORT_OPTIMUM_PATH);
+    #endif
+    
+    #ifdef EXPORT_HESSIAN_PATH
+    solver.setExportHessianPath(EXPORT_HESSIAN_PATH);
+    #endif
+    
+    #ifdef EXPORT_JACOBIAN_PATH
+    solver.setExportJacobianPath(EXPORT_JACOBIAN_PATH);
+    #endif
+    
+    #ifdef TOLERANCE
+    solver.setTolerance(TOLERANCE);
+    #endif
+    
+    // set solver mesh parameters
+    #ifdef LEVEL
+    solver.setMeshParameter("level", LEVEL);
+    #endif
+    
+    #ifdef C_TOL
+    solver.setMeshParameter("ctol", C_TOL);
+    #endif
+    
+    // optimize
+    int status = solver.solve();
+    return status;
+}}        
+        """
         print(".cpp: codegen done.\n")
 
         with open(f'{filename}.cpp', 'w') as file:
@@ -838,7 +881,7 @@ class Model:
             self.setExportHessianPath(flags["exportHessianPath"])
         if "exportJacobianPath" in flags:
             self.setExportJacobianPath(flags["exportJacobianPath"])
-        
+
         if "meshAlgorithm" in meshFlags:
             self.setMeshAlgorithm(meshFlags["meshAlgorithm"])
         if "meshIterations" in meshFlags:
@@ -852,39 +895,19 @@ class Model:
 
         ### main codegen
         filename = self.name + "Generated"
-        OUTPUT = f"""
-int main() {{
-    auto problem = std::make_shared<const Problem>(createProblem_{self.name}());
-    InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps{self.rksteps});
-    Mesh mesh = Mesh::createEquidistantMesh({self.steps}, {self.tf});
-    LinearSolver linearSolver = LinearSolver::MA57;
-    MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
-    int meshIterations = {self.meshIterations};
-
-    Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
-
-    // set solver flags
-    // "/home/linus/Documents/outputsGDOP"
-    // solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData");
-    // solver.setExportHessianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/hessianSparsity.csv");
-    // solver.setExportJacobianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/jacobianSparsity.csv");
-    // solver.setTolerance(1e-13);
-
-    // set solver mesh parameters
-    // solver.setMeshParameter("level", 0);
-    // solver.setMeshParameter("ctol", 0.1);
-
-    // optimize
-    int status = solver.solve();
-    return status;
-}}
-"""
-
-        with open(f'{filename}.cpp', 'a') as file:
+        OUTPUT = "//defines\n\n"
+        OUTPUT += "#define INIT_VARS InitVars::CONST\n"
+        OUTPUT += f"#define RADAU_INTEGRATOR IntegratorSteps::Steps{self.rksteps}\n"
+        OUTPUT += f"#define INTERVALS {self.steps}\n"
+        OUTPUT += f"#define FINAL_TIME {self.tf}\n"
+        OUTPUT += f"#define LINEAR_SOLVER LinearSolver::{self.linearSolver.name}\n"
+        OUTPUT += f"#define MESH_ALGORITHM MeshAlgorithm::{self.meshAlgorithm.name}\n"
+        OUTPUT += f"#define MESH_ITERATIONS {self.meshIterations}\n"
+        OUTPUT += f'#define EXPORT_OPTIMUM_PATH "{self.outputFilePath}"'
+        with open(f'{filename}Params.h', 'w') as file:
             file.write(OUTPUT)
 
-        os.system(f"g++ {filename}.cpp -O2 -I../../src/ -L ../../cmake-build-release/src/ -lipopt_do -o{self.name}")
+        os.system(f"g++ {filename}.cpp -O3 -I../../src/ -L ../../cmake-build-release/src/ -lipopt_do -o{self.name}")
 
         os.system(f"LD_LIBRARY_PATH=../../cmake-build-release/src/ ./{self.name}")
 

@@ -3,6 +3,7 @@
 
 // includes
 #define _USE_MATH_DEFINES
+#include "dieselMotorGeneratedParams.h"
 #include <cmath>
 #include <string>
 #include "constants.h"
@@ -579,27 +580,43 @@ Problem createProblem_dieselMotor() {
 
 int main() {
     auto problem = std::make_shared<const Problem>(createProblem_dieselMotor());
-    InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
-    Mesh mesh = Mesh::createEquidistantMesh(1000, 0.5);
-    LinearSolver linearSolver = LinearSolver::MA57;
-    MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
-    int meshIterations = 5;
+    InitVars initVars = INIT_VARS;
+    Integrator rk = Integrator::radauIIA(RADAU_INTEGRATOR);
+    Mesh mesh = Mesh::createEquidistantMesh(INTERVALS, FINAL_TIME);
+    LinearSolver linearSolver = LINEAR_SOLVER;
+    MeshAlgorithm meshAlgorithm = MESH_ALGORITHM;
+    int meshIterations = MESH_ITERATIONS;
 
     Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 
     // set solver flags
-    // "/home/linus/Documents/outputsGDOP"
-    // solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData");
-    // solver.setExportHessianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/hessianSparsity.csv");
-    // solver.setExportJacobianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/jacobianSparsity.csv");
-    // solver.setTolerance(1e-13);
-
+    #ifdef EXPORT_OPTIMUM_PATH
+    solver.setExportOptimumPath(EXPORT_OPTIMUM_PATH);
+    #endif
+    
+    #ifdef EXPORT_HESSIAN_PATH
+    solver.setExportHessianPath(EXPORT_HESSIAN_PATH);
+    #endif
+    
+    #ifdef EXPORT_JACOBIAN_PATH
+    solver.setExportJacobianPath(EXPORT_JACOBIAN_PATH);
+    #endif
+    
+    #ifdef TOLERANCE
+    solver.setTolerance(TOLERANCE);
+    #endif
+    
     // set solver mesh parameters
-    // solver.setMeshParameter("level", 0);
-    // solver.setMeshParameter("ctol", 0.1);
-
+    #ifdef LEVEL
+    solver.setMeshParameter("level", LEVEL);
+    #endif
+    
+    #ifdef C_TOL
+    solver.setMeshParameter("ctol", C_TOL);
+    #endif
+    
     // optimize
     int status = solver.solve();
     return status;
-}
+}        
+        
