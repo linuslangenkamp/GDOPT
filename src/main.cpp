@@ -17,13 +17,13 @@
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_satellite());
+    auto problem = std::make_shared<const Problem>(createProblem_invertedPendulum());
     InitVars initVars = InitVars::CONST;
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
-    Mesh mesh = Mesh::createEquidistantMesh(1000, 100);
+    Mesh mesh = Mesh::createEquidistantMesh(10000, 12);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
-    int meshIterations = 0;
+    int meshIterations = 5;
 
     Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 

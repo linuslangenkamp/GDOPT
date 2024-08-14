@@ -5,8 +5,8 @@ from enum import Enum
 # TODO: only diff if first diff != 0
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
-# TODO: integrate entire framework and make it more robust: exceptions more invalid symbol names...
-#
+# TODO: integrate entire framework and make it more robust
+# be careful to 
 
 
 class InvalidModel(Exception):
@@ -74,10 +74,10 @@ class RuntimeParameter(Variable):
     id_counter = 0
 
     def __new__(cls, default, symbol=None, lb=-float("inf"), ub=float("inf")):
-        if symbol in ["F", "G", "R", "A", "t"]: # several others aswell but unlikely to crash
-            raise InvalidModel(f"Invalid symbol name: {symbol}")
         if symbol == None:
-            symbol = f'RuntimeParameter{cls.id_counter}'
+            symbol = f'Parameter{cls.id_counter}'
+        else:
+            symbol = f'Parameter_{symbol}'
         obj = super().__new__(cls, symbol, lb, ub)
         obj.id = cls.id_counter
         obj.default = default
@@ -655,37 +655,54 @@ Problem createProblem_{self.name}();
         
         OUTPUT = f'''
 // CODEGEN FOR MODEL "{self.name}"\n
+// includes
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <string>
 #include "{filename}.h"
 #include "constants.h"\n\n'''
         
+        OUTPUT += "// runtime parameters\n"
         for rp in self.rpVars:
             OUTPUT += f"const double {rp.symbol} = {rp.default};\n"
         else:
             OUTPUT += "\n\n"
         
         if self.M:
+            OUTPUT += "// mayer term\n"
             OUTPUT += self.M.codegen("Mayer" + self.name)
             print("Mayer: codegen done.\n")
-            
+        
+        
         if self.L:
+            OUTPUT += "// lagrange term\n"
             OUTPUT += self.L.codegen("Lagrange" + self.name)
             print("Lagrange: codegen done.\n")
-            
+        
+        if self.F != []:
+            OUTPUT += "// dynamic constraints\n"
+        
         for n, f in enumerate(self.F):
             OUTPUT += f.codegen("F" + str(n) + self.name)
             print(f"Dynamic constraint {n}: codegen done.\n")
-        
+            
+        if self.G != []:
+            OUTPUT += "// path constraints\n"
+            
         for n, g in enumerate(self.G):
             OUTPUT += g.codegen("G" + str(n) + self.name)
             print(f"Path constraint {n}: codegen done.\n")
-            
+        
+        if self.R != []:
+            OUTPUT += "// final constraints\n"
+        
         for n, r in enumerate(self.R):
             OUTPUT += r.codegen("R" + str(n) + self.name)
             print(f"Final constraint {n}: codegen done.\n")
-            
+        
+        if self.A != []:
+            OUTPUT += "// parametric constraints\n"
+        
         for n, a in enumerate(self.A):
             OUTPUT += a.codegen("A" + str(n) + self.name)
             print(f"Parametric constraints {n}: codegen done.\n")
