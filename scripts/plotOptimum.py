@@ -7,7 +7,7 @@ it = 0
 df = pd.read_csv(path + "/" + model + str(it) + ".csv", sep=",")
 print(df.head())
 specifCols = None # [col for col in df.columns if col.startswith('u')] 
-interval = [0, 25]
+interval = [0, 8]
 addDots = False
 
 plt.rcParams.update({

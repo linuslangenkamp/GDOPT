@@ -6,7 +6,7 @@ from enum import Enum
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
 # TODO: add runtime parameters, tf, ...
-
+# TODO: const handling
 
 class InvalidModel(Exception):
     pass
@@ -717,6 +717,10 @@ Model.addA = Model.addParametric
 # time symbol
 t = Symbol("t")
 time = t
+
+# consts
+
+PI = 3.14159265358979323846
 ###
 
 # add const  : constant = model.addConst(constValue, optional<symbol in code>)

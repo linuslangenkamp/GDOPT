@@ -44,7 +44,7 @@ def redraw(screen, time, dt, score, precision, s, v, taus, phis):
   def tachometer(value):
     radius = scale*0.2
     center = pygame.Vector2(width/4, height*0.85)
-    max_val = 1
+    max_val = 5
 
     # outer ring
     pygame.draw.circle(screen, "black", center, radius, math.ceil(radius*0.02), draw_top_left=True, draw_top_right=True)
@@ -140,9 +140,9 @@ def redraw(screen, time, dt, score, precision, s, v, taus, phis):
 
   # do the actual drawing
   car(s, math.pi/2 + phis[-1])
-  plot(phis, pygame.Vector2(width*(0.5+0.01),height/4), blau, 0.65, precision)
+  plot(phis, pygame.Vector2(width*(0.5+0.01),height/4), blau, 0.1, precision)
   tachometer(v)
-  plot(taus, pygame.Vector2(width*(0.5+0.01),height*3/4), rot, 1)
+  plot(taus, pygame.Vector2(width*(0.5+0.01),height*3/4), rot, 0.1)
 
   # FPS
   #display("FPS: {: .1f}".format(1/dt), (16,16), False)

@@ -23,8 +23,8 @@ def main(data):
     INTERVALS = len(data)
     FPS = 60  # Frames Per Second
     SHIFT = INTERVALS / (T_F * FPS)
-    width = 800
-    height = 600
+    width = 1920
+    height = 1080
     
     phis = []
     taus = []
