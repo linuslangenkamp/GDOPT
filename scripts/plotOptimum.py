@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 # "/home/linus/Documents/outputsGDOP"
 path ="/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData"
 model = "invertedPendulum"
-it = 0
+it = 5
 df = pd.read_csv(path + "/" + model + str(it) + ".csv", sep=",")
 print(df.head())
 specifCols = None # [col for col in df.columns if col.startswith('u')] 
-interval = [0, 8]
-addDots = False
+interval = [0, 12]
+addDots = True
 
 plt.rcParams.update({
     'font.serif': ['Times New Roman'],

@@ -4,7 +4,6 @@
 #include "util.h"
 
 // TODO: Check entire indices! - LGTM, Check derivatives (again :))
-// TODO: Insert if #p > 0, to save some checks
 // TODO: remember hessian local sparsity for later solver iterations -> not trivial and also not that huge benefit
 
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {

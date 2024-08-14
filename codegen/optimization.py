@@ -2,11 +2,12 @@ from sympy import *
 import time as timer
 from enum import Enum
 
-# check adj -> only diff then -> simplify -> check adj -> diff again -> simplify
+# TODO: only diff if first diff != 0
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
-# TODO: add runtime parameters, tf, ...
-# TODO: const handling
+# TODO: integrate entire framework and make it more robust: exceptions more invalid symbol names...
+#
+
 
 class InvalidModel(Exception):
     pass
@@ -17,19 +18,6 @@ class Objective(Enum):
     MAXIMIZE = 2
     MAX = MAXIMIZE
     MIN = MINIMIZE
-
-
-class Constant(Symbol):
-    id_counter = 0
-    
-    def __new__(cls, value, symbol=None):
-        if symbol == None:
-            symbol = f"c{cls.id_counter}"
-        obj = super().__new__(cls, symbol)
-        obj.symbol = symbol
-        obj.value = value
-        cls.id_counter += 1
-        return obj
 
 
 class Variable(Symbol):
@@ -64,7 +52,7 @@ class Input(Variable):
             symbol = f'u[{cls.id_counter}]'
         obj = super().__new__(cls, symbol, lb, ub)
         obj.id = cls.id_counter
-        obj.symbol = symbol
+        obj.symbol = f'u[{obj.id}]'
         cls.id_counter += 1
         return obj
 
@@ -81,6 +69,22 @@ class Parameter(Variable):
         cls.id_counter += 1
         return obj
 
+
+class RuntimeParameter(Variable):
+    id_counter = 0
+
+    def __new__(cls, default, symbol=None, lb=-float("inf"), ub=float("inf")):
+        if symbol in ["F", "G", "R", "A"]: # several others aswell but unlikely to crash
+            raise InvalidModel(f"Invalid symbol name: {symbol}")
+        if symbol == None:
+            symbol = f'RuntimeParameter{cls.id_counter}'
+        obj = super().__new__(cls, symbol, lb, ub)
+        obj.id = cls.id_counter
+        obj.default = default
+        obj.symbol = symbol
+        cls.id_counter += 1
+        return obj
+        
 # sorting of elements for adjacency structures
 class_order = {
     'State': 0,
@@ -94,7 +98,14 @@ def sort_vars(elem):
 class Expression:
     def __init__(self, expr):
         self.expr = simplify(expr)
-        self.adj = sorted(expr.free_symbols, key=sort_vars)
+        self.adj = []
+        for sym in expr.free_symbols:
+            if type(sym) == State or type(sym) == Input or type(sym) == Parameter:
+                self.adj.append(sym)
+        try:
+            self.adj.sort(key=sort_vars)
+        except:
+            self.adj = []
     
     def codegen(self, name):
         partialExpression = numbered_symbols(prefix='s')
@@ -477,13 +488,12 @@ class ParametricConstraint(Expression):
 
 class Model:
     
-    def __init__(self, name, constants=False):
+    def __init__(self, name):
         self.creationTime = timer.process_time()
-        self.useConstants = constants
         self.xVars = []
         self.uVars = []
         self.pVars = []
-        self.constants = []
+        self.rpVars = []
         self.M = None
         self.L = None
         self.F = []
@@ -516,14 +526,11 @@ class Model:
         self.pVars.append(variable)
         return variable
     
-    def addConst(self, constant, symbol=None):
-        if self.useConstants:
-            c = Constant(constant, symbol)
-            self.constants.append(c)
-            return c
-        else:
-            return constant
-    
+    def addRuntimeParameter(self, default, symbol=None):
+        variable = RuntimeParameter(default, symbol=symbol)
+        self.rpVars.append(variable)
+        return variable
+
     def addMayer(self, expr, obj=Objective.MINIMIZE):
         if self.M:
             raise InvalidModel("Mayer term already set")
@@ -579,7 +586,6 @@ class Model:
         # preparations
         
         self.F.sort(key=lambda eq: eq.diffVar.id, reverse=False)
-        allVars = self.xVars + self.uVars + self.pVars
         
         # codegen
         filename = self.name + "Generated"
@@ -607,10 +613,10 @@ Problem createProblem_{self.name}();
 #include <cmath>
 #include <string>
 #include "{filename}.h"
-#include "constants.h"\n'''
+#include "constants.h"\n\n'''
         
-        for constant in self.constants:
-            OUTPUT += f"const double {constant.symbol} = {constant.value};\n"
+        for rp in self.rpVars:
+            OUTPUT += f"const double {rp.symbol} = {rp.default};\n"
         else:
             OUTPUT += "\n\n"
         
@@ -700,9 +706,8 @@ Model.addX = Model.addState
 Model.addU = Model.addInput
 Model.addP = Model.addParameter
 
-Model.addC = Model.addConst
 Model.addV = Model.addVar
-
+Model.addRP = Model.addRuntimeParameter
 # objective
 Model.addM = Model.addMayer
 Model.addL = Model.addLagrange
@@ -719,11 +724,15 @@ t = Symbol("t")
 time = t
 
 # consts
-
 PI = 3.14159265358979323846
+pi = PI
 ###
 
-# add const  : constant = model.addConst(constValue, optional<symbol in code>)
+# care with symbol names!
+
+# define global constants as: var = 1.234
+# define model parameters / runtime constants: var = model.addRuntimeParameter(default=defaultvalue, symbol=symbol)
+
 # add var    : variable = model.addVar(Vartyp<State, Input, Parameter>, optional<symbol for debug>, start if state, Optional: lb, Optional: ub)
 # Alias: Input = Control = Continous
 

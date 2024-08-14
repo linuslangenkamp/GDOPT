@@ -3,28 +3,19 @@ from optimization import *
 
 model = Model("satellite")
 
-# add const  : constant = model.addConst(constValue, optional<symbol in code>)
-# add var    : variable = model.addVar(Vartyp<State, Input, Parameter>, optional<symbol for debug>, start if state, Optional: lb, Optional: ub)
-# Alias: Input = Control = Continous
 
-# add dynamic constr: model.addDynamic(x', f) for ODE: x' = f
-# add path constr   : model.addPath(g, Optional: lb, Optional: ub) 
-# add final constr  : model.addFinal(r, Optional: lb, Optional: ub) 
-# add param constr  : model.addParametric(a, Optional: lb, Optional: ub) 
-# Alias: addDynamic = addOde = addF
+I1 = 1000000
+I2 = 833333
+I3 = 916667
 
-I1 = model.addConst(1000000)
-I2 = model.addConst(833333)
-I3 = model.addConst(916667)
+T1S = 550
+T2S = 50
+T3S = 550
 
-T1S = model.addConst(550)
-T2S = model.addConst(50)
-T3S = model.addConst(550)
-
-M1 = model.addConst(0.70106)
-M2 = model.addConst(0.0923)
-M3 = model.addConst(0.56098)
-M4 = model.addConst(0.43047)
+M1 = 0.70106
+M2 = 0.0923
+M3 = 0.56098
+M4 = 0.43047
 
 x1 = model.addVar(State(start=0))
 x2 = model.addVar(State(start=0))

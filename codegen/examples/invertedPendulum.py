@@ -1,16 +1,18 @@
 from optimization import *
 
-# choose implicit Euler, since its the most stable, tf > 7s
+# choose implicit Euler, since its the most stable
+# tf=20, 100000 steps ->  f(x*) = 6.6120314924757251
 
 model = Model("invertedPendulum")
 
-Ms = model.addConst(1)
-Mp = model.addConst(0.5)
-R = model.addConst(1)
-G = model.addConst(-9.81)
+Ms = model.addRP(default=1, symbol="Ms")
+Mp = model.addRP(default=0.5, symbol="Mp")
+R = model.addRP(default=1, symbol="r")
+G = -9.81
 
 s = model.addState(start=0)
 v = model.addState(start=0)
+
 phi = model.addState(start=PI-0.001)
 omega = model.addState(start=0)
 

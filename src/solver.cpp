@@ -2,6 +2,8 @@
 #include "solver.h"
 #include "IpIpoptApplication.hpp"
 
+// TODO: add more mesh refinement algorithms
+
 Solver::Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm) :
                gdop(gdop), maxMeshIterations(maxMeshIterations), linearSolver(linearSolver), meshAlgorithm(meshAlgorithm) {}
 
