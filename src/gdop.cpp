@@ -1,6 +1,7 @@
 #include <cassert>
 #include <algorithm>
 #include "gdop.h"
+#include "gdop_impl.h"
 #include "util.h"
 
 // TODO?: recheck derivatives, indices
@@ -1028,3 +1029,8 @@ void GDOP::exportOptimum(const std::string& filename) const {
 
 GDOP::GDOP(const std::shared_ptr<const Problem> & problem, Mesh &mesh, Integrator &rk, InitVars initVars) :
                 problem(problem), mesh(mesh), rk(rk), initVars(initVars) {}
+
+
+GDOP *create_gdop(const std::shared_ptr<const Problem> & problem, Mesh &mesh, Integrator &rk, InitVars initVars) {
+    return new GDOP(problem, mesh, rk, initVars);
+}

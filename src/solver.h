@@ -1,8 +1,10 @@
 #ifndef IPOPT_DO_SOLVER_H
 #define IPOPT_DO_SOLVER_H
 
+#include <chrono>
+#include <unordered_map>
+
 #include "gdop.h"
-#include "IpIpoptApplication.hpp"
 
 enum class LinearSolver {
     MUMPS,
@@ -20,11 +22,13 @@ enum class MeshAlgorithm {
     L2_BOUNDARY_NORM
 };
 
+struct SolverPrivate;
+
 class Solver {
 public:
-    Solver(const SmartPtr<GDOP>& gdop, int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm);
+    Solver(GDOP* gdop, int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm);
+    ~Solver();
 
-    SmartPtr<GDOP> gdop;
     LinearSolver linearSolver;
     MeshAlgorithm meshAlgorithm;
     int meshIteration = 0;
@@ -62,7 +66,6 @@ public:
     void setExportHessianPath(const std::string& exportPath);
     void initSolvingProcess();
     void setTolerance(double tol);
-    void setSolverFlags(const SmartPtr<IpoptApplication>& app) const;
     void setRefinementParameters();
     void setl2BoundaryNorm();
     void setBasicStrategy();
@@ -74,6 +77,8 @@ public:
     // L2 norm / boundary parameters
     double L2Level = 0;
     double L2CornerTol = 0.2;
+private:
+    std::unique_ptr<SolverPrivate> _priv;
 };
 
 #endif //IPOPT_DO_SOLVER_H

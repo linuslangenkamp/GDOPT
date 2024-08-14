@@ -1,3 +1,5 @@
+import os
+
 from sympy import *
 import time as timer
 from enum import Enum
@@ -684,7 +686,7 @@ class Model:
     def setMeshLevel(self, meshLevel):
         self.meshLevel = meshLevel
     
-    def setMeshCTol(self, cTol):
+    def setMeshCTol(self, meshCTol):
         self.meshCTol = meshCTol
     
     def setMeshSigma(self, meshSigma):
@@ -706,22 +708,7 @@ class Model:
         
         # codegen
         filename = self.name + "Generated"
-        
-        print("Starting .h codegen ...\n")
-        
-        HEADEROUTPUT = f"""
-// CODEGEN FOR MODEL "{self.name}"\n
-#ifndef IPOPT_DO_{self.name.upper()}_H
-#define IPOPT_DO_{self.name.upper()}_H
 
-#include <problem.h>
-
-Problem createProblem_{self.name}();
-
-#endif //IPOPT_DO_{self.name.upper()}_H
-"""
-        
-        print(".h: codegen done.\n")
         print("Starting .cpp codegen ...\n")
         
         OUTPUT = f'''
@@ -730,8 +717,13 @@ Problem createProblem_{self.name}();
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <string>
-#include "{filename}.h"
-#include "constants.h"\n\n'''
+#include "constants.h"
+#include <problem.h>
+#include "integrator.h"
+#include "mesh.h"
+#include "gdop.h"
+#include "solver.h"
+\n\n'''
         
         OUTPUT += "// runtime parameters\n"
         for rp in self.rpVars:
@@ -743,8 +735,7 @@ Problem createProblem_{self.name}();
             OUTPUT += "// mayer term\n"
             OUTPUT += self.M.codegen("Mayer" + self.name)
             print("Mayer: codegen done.\n")
-        
-        
+
         if self.L:
             OUTPUT += "// lagrange term\n"
             OUTPUT += self.L.codegen("Lagrange" + self.name)
@@ -817,13 +808,10 @@ Problem createProblem_{self.name}();
 }};\n"""
 
         print(".cpp: codegen done.\n")
-        
-        with open(f'{filename}.h', 'w') as file:
-            file.write(HEADEROUTPUT)
-        
+
         with open(f'{filename}.cpp', 'w') as file:
             file.write(OUTPUT)
-        
+
         print(f"Generated model to {filename}Generated.h and {filename}Generated.cpp\n")
         print(f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.")
         return 0
@@ -833,8 +821,7 @@ Problem createProblem_{self.name}();
         # generate corresponding main function with flags, mesh, refinement
         # set runtime parameter file from map
         # run the code
-        
-                
+
         # always with setter to ensure some security
         
         self.setFinalTime(tf)
@@ -862,7 +849,45 @@ Problem createProblem_{self.name}();
             self.setMeshCTol(meshFlags["meshCTol"])
         if "meshSigma" in meshFlags:
             self.setMeshSigma(meshFlags["meshSigma"])
-    
+
+        ### main codegen
+        filename = self.name + "Generated"
+        OUTPUT = f"""
+int main() {{
+    auto problem = std::make_shared<const Problem>(createProblem_{self.name}());
+    InitVars initVars = InitVars::CONST;
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps{self.rksteps});
+    Mesh mesh = Mesh::createEquidistantMesh({self.steps}, {self.tf});
+    LinearSolver linearSolver = LinearSolver::MA57;
+    MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
+    int meshIterations = {self.meshIterations};
+
+    Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
+
+    // set solver flags
+    // "/home/linus/Documents/outputsGDOP"
+    // solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData");
+    // solver.setExportHessianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/hessianSparsity.csv");
+    // solver.setExportJacobianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/jacobianSparsity.csv");
+    // solver.setTolerance(1e-13);
+
+    // set solver mesh parameters
+    // solver.setMeshParameter("level", 0);
+    // solver.setMeshParameter("ctol", 0.1);
+
+    // optimize
+    int status = solver.solve();
+    return status;
+}}
+"""
+
+        with open(f'{filename}.cpp', 'a') as file:
+            file.write(OUTPUT)
+
+        os.system(f"g++ {filename}.cpp -O2 -I../../src/ -L ../../cmake-build-release/src/ -lipopt_do -o{self.name}")
+
+        os.system(f"LD_LIBRARY_PATH=../../cmake-build-release/src/ ./{self.name}")
+
         return 0
     
     def plot(self, meshIteration=0, specifCols=None, dots=False):

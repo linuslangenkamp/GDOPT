@@ -1,6 +1,7 @@
 #ifndef IPOPT_DO_PROBLEM_H
 #define IPOPT_DO_PROBLEM_H
 
+#include <string>
 #include <vector>
 #include <memory>
 #include "expression.h"

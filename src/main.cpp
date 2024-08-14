@@ -1,4 +1,3 @@
-#include <IpIpoptApplication.hpp>
 #include <chrono>
 #include "integrator.h"
 #include "mesh.h"
@@ -14,7 +13,6 @@
 #include "../codegen/examples/invertedPendulumGenerated.h"
 #include "../examples/batchReactor.h"
 
-using namespace Ipopt;
 
 int main() {
     auto problem = std::make_shared<const Problem>(createProblem_dieselMotor());
@@ -25,7 +23,7 @@ int main() {
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 5;
 
-    Solver solver = Solver(new GDOP(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
+    Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 
     // set solver flags
     // "/home/linus/Documents/outputsGDOP"

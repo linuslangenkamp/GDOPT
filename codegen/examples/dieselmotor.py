@@ -1,6 +1,6 @@
 # %%
 
-from optimization import *
+from codegen.optimization import *
 
 
 model = Model("dieselMotor")
@@ -116,11 +116,11 @@ model.addLagrange(dot_m_f)
 
 model.generate()
 
-model.optimize(steps=1, rksteps=1, tf=0.5,
+model.optimize(steps=1000, rksteps=1, tf=0.5,
                flags={"outputPath": "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData",
                       "linearSolver": LinearSolver.MA57,
                       "tolerance": 1e-13},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 5})
 
-model.plot(meshIteration=5)
+#model.plot(meshIteration=5)
