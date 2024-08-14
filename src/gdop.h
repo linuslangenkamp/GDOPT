@@ -42,8 +42,6 @@ public:
     const int offXUTotal = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals;   // first parameter variable
     const int numberVars = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals + problem->sizeP;
 
-    // TODO: add tf as optional var?! -> use different, similar runtime?!
-
     // block hessians as sparse map: (i,j) -> it, it-th index in COO format, (i,j) var indices
     // note that S0, S0t, S2 only contain the lower triangle
 

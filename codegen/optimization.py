@@ -1,13 +1,13 @@
 from sympy import *
 import time as timer
 from enum import Enum
+import pandas as pd
+import matplotlib.pyplot as plt 
 
 # TODO: only diff if first diff != 0
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
 # TODO: integrate entire framework and make it more robust
-# be careful to 
-
 
 class InvalidModel(Exception):
     pass
@@ -18,6 +18,22 @@ class Objective(Enum):
     MAXIMIZE = 2
     MAX = MAXIMIZE
     MIN = MINIMIZE
+
+
+class LinearSolver(Enum):
+    MUMPS = 1
+    MA27 = 2
+    MA57 = 3
+    MA77 = 4
+    MA86 = 5
+    MA97 = 6
+    PARDISO = 7
+    
+    
+class MeshAlgorithm(Enum):
+    NONE = 1
+    BASIC = 2
+    L2_BOUNDARY_NORM = 3
 
 
 class Variable(Symbol):
@@ -99,10 +115,10 @@ class Expression:
     def __init__(self, expr):
         self.expr = simplify(expr)
         self.adj = []
-        for sym in expr.free_symbols:
-            if type(sym) == State or type(sym) == Input or type(sym) == Parameter:
-                self.adj.append(sym)
         try:
+            for sym in expr.free_symbols:
+                if type(sym) == State or type(sym) == Input or type(sym) == Parameter:
+                    self.adj.append(sym)
             self.adj.sort(key=sort_vars)
         except:
             self.adj = []
@@ -502,6 +518,22 @@ class Model:
         self.A = []
         self.name = name
         
+        # additional stuff for running the model
+        self.tf = None
+        self.steps = None
+        self.rksteps = None
+        self.outputFilePath = None
+        self.linearSolver = LinearSolver.MUMPS
+        self.meshAlgorithm = MeshAlgorithm.NONE
+        self.meshIterations = 0
+        self.tolerance = 1e-12
+        self.exportHessianPath = None
+        self.exportJacobianPath = None
+        self.meshLevel = None
+        self.meshCTol = None
+        self.meshSigma = None
+        
+        
     def addVar(self, variable):
         
         # adds any variable to the model, must be assigned previously
@@ -618,7 +650,46 @@ class Model:
         
         x = self.addState(start=0)
         self.addF(x, 0)
+    
+    def setFinalTime(self, tf):
+        self.tf = tf
+    
+    def setSteps(self, steps):
+        self.steps = steps
+    
+    def setRkSteps(self, rksteps):
+        self.rksteps = rksteps
+    
+    def setOutputPath(self, path):
+        self.outputFilePath = path
+    
+    def setLinearSolver(self, solver):
+        self.linearSolver = solver
+
+    def setTolerance(self, tolerance):
+        self.tolerance = tolerance
+    
+    def setExportHessianPath(self, path):
+        self.exportHessianPath = path
         
+    def setExportJacobianPath(self, path):
+        self.exportJacobianPath = path
+    
+    def setMeshAlgorithm(self, meshAlgorithm):
+        self.meshAlgorithm = meshAlgorithm
+    
+    def setMeshIterations(self, meshIterations):
+        self.meshIterations = meshIterations
+    
+    def setMeshLevel(self, meshLevel):
+        self.meshLevel = meshLevel
+    
+    def setMeshCTol(self, cTol):
+        self.meshCTol = meshCTol
+    
+    def setMeshSigma(self, meshSigma):
+        self.meshSigma = meshSigma
+    
     def generate(self):
         
         # does the entire code generation of the model
@@ -757,7 +828,89 @@ Problem createProblem_{self.name}();
         print(f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.")
         return 0
         
+    def optimize(self, tf=0, steps=1, rksteps=1, flags={}, meshFlags={}):
         
+        # generate corresponding main function with flags, mesh, refinement
+        # set runtime parameter file from map
+        # run the code
+        
+                
+        # always with setter to ensure some security
+        
+        self.setFinalTime(tf)
+        self.setSteps(steps)
+        self.setRkSteps(rksteps)
+
+        if "outputPath" in flags:
+            self.setOutputPath(flags["outputPath"])
+        if "linearSolver" in flags:
+            self.setLinearSolver(flags["linearSolver"])
+        if "tolerance" in flags:
+            self.setTolerance(flags["tolerance"])
+        if "exportHessianPath" in flags:
+            self.setExportHessianPath(flags["exportHessianPath"])
+        if "exportJacobianPath" in flags:
+            self.setExportJacobianPath(flags["exportJacobianPath"])
+        
+        if "meshAlgorithm" in meshFlags:
+            self.setMeshAlgorithm(meshFlags["meshAlgorithm"])
+        if "meshIterations" in meshFlags:
+            self.setMeshIterations(meshFlags["meshIterations"])
+        if "meshLevel" in meshFlags:
+            self.setMeshLevel(meshFlags["meshLevel"])
+        if "meshCTol" in meshFlags:
+            self.setMeshCTol(meshFlags["meshCTol"])
+        if "meshSigma" in meshFlags:
+            self.setMeshSigma(meshFlags["meshSigma"])
+    
+        return 0
+    
+    def plot(self, meshIteration=0, specifCols=None, dots=False):
+        interval = [0, self.tf]
+        df = pd.read_csv(self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", sep=",")
+        plt.rcParams.update({
+    'font.serif': ['Times New Roman'],
+    'axes.labelsize': 14,
+    'axes.titlesize': 16,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'legend.fontsize': 12,
+    'legend.frameon': True,
+    'legend.loc': 'best',
+    'grid.alpha': 0.3,
+    'grid.linestyle': '--',
+    'grid.linewidth': 0.5,
+    'figure.figsize': (12, 8),
+    'axes.titlepad': 20,
+    'axes.labelpad': 10
+        })
+
+        if specifCols is None:
+            columns_to_plot = df.columns[1:]
+        else:
+            columns_to_plot = specifCols
+
+        num_plots = len(columns_to_plot)
+        fig, axs = plt.subplots(num_plots, 1, figsize=(12, 8 * num_plots), sharex=True)
+
+        if num_plots == 1:
+            axs = [axs]
+
+        for idx, column in enumerate(columns_to_plot):
+            ax = axs[idx]
+            ax.plot(df['time'], df[column], label=column, linewidth=2, linestyle='-', color='steelblue')
+            if dots:
+                ax.scatter(df['time'], df[column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+            ax.set_xlabel('time')
+            ax.set_ylabel(column)
+            ax.set_xlim(interval[0], interval[1])
+            ax.legend(frameon=True, loc='best')
+            ax.grid(True)
+            ax.title.set_fontsize(16)
+
+        plt.tight_layout()
+        plt.show()
+    
 ### GLOBAL ALIAS AND GLOBAL VAR DEFINITIONS 
 
 # variables
@@ -769,8 +922,6 @@ Model.addX = Model.addState
 Model.addU = Model.addInput
 Model.addP = Model.addParameter
 Model.addRP = Model.addRuntimeParameter
-Model.addConstant = Model.addRuntimeParameter
-Model.addC = Model.addRuntimeParameter
 
 Model.addV = Model.addVar
 

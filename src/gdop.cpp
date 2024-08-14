@@ -3,8 +3,7 @@
 #include "gdop.h"
 #include "util.h"
 
-// TODO: Check entire indices! - LGTM, Check derivatives (again :))
-// TODO: remember hessian local sparsity for later solver iterations -> not trivial and also not that huge benefit
+// TODO?: recheck derivatives, indices
 
 bool GDOP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style) {
     // #vars
@@ -455,7 +454,6 @@ bool GDOP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g) {
 }
 
 int GDOP::init_jac_sparsity(Index *iRow, Index *jCol) {
-    // TODO: maybe use block structure of jacobian (might be slight speed up)
     // Just iterates over all blocks atm, no use of block struct
     int it = 0;
     int eq = 0;

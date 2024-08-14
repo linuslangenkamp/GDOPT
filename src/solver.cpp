@@ -2,7 +2,17 @@
 #include "solver.h"
 #include "IpIpoptApplication.hpp"
 
-// TODO: add more mesh refinement algorithms
+/* MILESTONE TODOS: TYPE | IMPORTANCE | EFFORT from 1 to 5
+ * TODO:
+    * add, test more mesh refinement algorithms                     4, 2
+    * tf as free variable                                           2, 4.5
+    * OpenModelica interface                                        4, 5
+    * Python interface                                              4, 2
+    * vectorized equation, derivatives with local substituitions    4, 5
+    * saving of local hessian and jacobian structures               1, 1
+    * creation of local jacobian structure                          0, 1
+    * better initial guess, e.g. solve(.), evolutionary algorithms  2, 2
+*/
 
 Solver::Solver(const SmartPtr<GDOP>& gdop, const int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm) :
                gdop(gdop), maxMeshIterations(maxMeshIterations), linearSolver(linearSolver), meshAlgorithm(meshAlgorithm) {}

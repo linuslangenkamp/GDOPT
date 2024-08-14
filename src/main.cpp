@@ -17,10 +17,10 @@
 using namespace Ipopt;
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_invertedPendulum());
+    auto problem = std::make_shared<const Problem>(createProblem_dieselMotor());
     InitVars initVars = InitVars::CONST;
-    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps1);
-    Mesh mesh = Mesh::createEquidistantMesh(10000, 12);
+    Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
+    Mesh mesh = Mesh::createEquidistantMesh(100, 0.5);
     LinearSolver linearSolver = LinearSolver::MA57;
     MeshAlgorithm meshAlgorithm = MeshAlgorithm::L2_BOUNDARY_NORM;
     int meshIterations = 5;

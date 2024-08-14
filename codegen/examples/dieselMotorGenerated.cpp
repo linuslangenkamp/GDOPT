@@ -1,14 +1,17 @@
 
 // CODEGEN FOR MODEL "dieselMotor"
 
+// includes
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <string>
 #include "dieselMotorGenerated.h"
 #include "constants.h"
 
+// runtime parameters
 
 
+// mayer term
 class MayerdieselMotor : public Expression {
 public:
 	static std::unique_ptr<MayerdieselMotor> create() {
@@ -33,6 +36,7 @@ private:
 };
 
 
+// lagrange term
 class LagrangedieselMotor : public Expression {
 public:
 	static std::unique_ptr<LagrangedieselMotor> create() {
@@ -57,6 +61,7 @@ private:
 };
 
 
+// dynamic constraints
 class F0dieselMotor : public Expression {
 public:
 	static std::unique_ptr<F0dieselMotor> create() {

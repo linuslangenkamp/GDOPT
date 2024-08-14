@@ -11,7 +11,7 @@
 // runtime parameters
 const double Parameter_Ms = 1;
 const double Parameter_Mp = 0.5;
-const double Parameter_r = 1;
+const double Parameter_R = 1;
 
 
 // lagrange term
@@ -77,7 +77,7 @@ public:
 	double eval(const double *x, const double *u, const double *p, double t) override {
         const double s0 = sin(x[2]);
         const double s1 = Parameter_Mp*pow(s0, 2) + Parameter_Ms;
-		return (u[0]*s1 - Parameter_Mp*Parameter_r*pow(x[3], 2)*s0 - 4.9050000000000002*Parameter_Mp*sin(2*x[2]))/s1;
+		return (u[0]*s1 - Parameter_Mp*Parameter_R*pow(x[3], 2)*s0 - 4.9050000000000002*Parameter_Mp*sin(2*x[2]))/s1;
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -87,9 +87,9 @@ public:
         const double s21 = 2*x[2];
         const double s22 = cos(x[2]);
         const double s23 = Parameter_Mp*s22;
-        const double s24 = Parameter_r*pow(x[3], 2);
+        const double s24 = Parameter_R*pow(x[3], 2);
         const double s25 = Parameter_Mp*s18;
-		return {std::vector<double>{-2*s18*s23*(u[0]*s19 - 4.9050000000000002*Parameter_Mp*sin(s21) - s24*s25)/pow(s19, 2) + s20*(2*u[0]*Parameter_Mp*s18*s22 - 9.8100000000000005*Parameter_Mp*cos(s21) - s23*s24), -2*Parameter_r*x[3]*s20*s25}, {1}, {}};
+		return {std::vector<double>{-2*s18*s23*(u[0]*s19 - 4.9050000000000002*Parameter_Mp*sin(s21) - s24*s25)/pow(s19, 2) + s20*(2*u[0]*Parameter_Mp*s18*s22 - 9.8100000000000005*Parameter_Mp*cos(s21) - s23*s24), -2*Parameter_R*x[3]*s20*s25}, {1}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
@@ -100,7 +100,7 @@ public:
         const double s6 = 2*u[0];
         const double s7 = cos(x[2]);
         const double s8 = pow(s7, 2);
-        const double s9 = Parameter_r*pow(x[3], 2);
+        const double s9 = Parameter_R*pow(x[3], 2);
         const double s10 = s4*s9;
         const double s11 = s4*s7;
         const double s12 = Parameter_Mp*s5;
@@ -108,7 +108,7 @@ public:
         const double s14 = 1.0/s13;
         const double s15 = Parameter_Mp*s14;
         const double s16 = 2*s14;
-        const double s17 = 2*Parameter_r*s15;
+        const double s17 = 2*Parameter_R*s15;
 		return {std::vector<double>{s15*(s10 + 4*s11*s15*(-s11*s6 + s7*s9 + 9.8100000000000005*cos(s2)) - s16*(-u[0]*s13 + Parameter_Mp*s10 + 4.9050000000000002*Parameter_Mp*s3)*(4*s12*s14*s8 + s5 - s8) + 19.620000000000001*s3 - s5*s6 + s6*s8), x[3]*s17*s7*(s12*s16 - 1), -s17*s4}, {}, {}, {}, {}, {}};
 	}
 private:
@@ -151,7 +151,7 @@ public:
 	double eval(const double *x, const double *u, const double *p, double t) override {
         const double s0 = sin(x[2]);
         const double s1 = Parameter_Mp*pow(s0, 2) + Parameter_Ms;
-		return (9.8100000000000005*s0*s1 - (u[0]*s1 - Parameter_Mp*Parameter_r*pow(x[3], 2)*s0 - 4.9050000000000002*Parameter_Mp*sin(2*x[2]))*cos(x[2]))/(Parameter_r*s1);
+		return (9.8100000000000005*s0*s1 - (u[0]*s1 - Parameter_Mp*Parameter_R*pow(x[3], 2)*s0 - 4.9050000000000002*Parameter_Mp*sin(2*x[2]))*cos(x[2]))/(Parameter_R*s1);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -162,9 +162,9 @@ public:
         const double s30 = cos(x[2]);
         const double s31 = 2*x[2];
         const double s32 = Parameter_Mp*s26;
-        const double s33 = Parameter_r*pow(x[3], 2);
+        const double s33 = Parameter_R*pow(x[3], 2);
         const double s34 = u[0]*s28 - 4.9050000000000002*Parameter_Mp*sin(s31) - s32*s33;
-        const double s35 = 1.0/Parameter_r;
+        const double s35 = 1.0/Parameter_R;
         const double s36 = s30*s35;
         const double s37 = 2*s32;
         const double s38 = 1.0/s28;
@@ -172,7 +172,7 @@ public:
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-        const double s2 = 1.0/Parameter_r;
+        const double s2 = 1.0/Parameter_R;
         const double s3 = sin(x[2]);
         const double s4 = pow(s3, 2);
         const double s5 = Parameter_Mp*s4;
@@ -183,7 +183,7 @@ public:
         const double s10 = 2*u[0];
         const double s11 = cos(x[2]);
         const double s12 = pow(s11, 2);
-        const double s13 = Parameter_r*pow(x[3], 2);
+        const double s13 = Parameter_R*pow(x[3], 2);
         const double s14 = s13*s3;
         const double s15 = Parameter_Mp*s11;
         const double s16 = -s10*s11*s3 + s11*s13 + 9.8100000000000005*cos(s8);
