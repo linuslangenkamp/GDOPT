@@ -1,4 +1,5 @@
 ### testing detection criteria for mesh refinement strategies
+### TODO: REMOVE ME LATER
 
 import pandas as pd
 import matplotlib.pyplot as plt

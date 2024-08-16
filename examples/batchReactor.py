@@ -27,10 +27,10 @@ end BatchReactor;
 
 model = Model("batchReactor")
 
-x1 = model.addX(start=1, lb=0, ub=1)
-x2 = model.addX(start=0, lb=0, ub=1)
+x1 = model.addX(symbol="x1", start=1, lb=0, ub=1)
+x2 = model.addX(symbol="x2", start=0, lb=0, ub=1)
 
-u = model.addU(lb=0, ub=5)
+u = model.addU(symbol="u", lb=0, ub=5)
 
 model.addMayer(x2, Objective.MAXIMIZE)
 
@@ -41,8 +41,11 @@ model.generate()
 
 model.optimize(tf=1, steps=25, rksteps=3,
                flags={"outputPath": "/tmp",
-                      "linearSolver": LinearSolver.MUMPS},
+                      "linearSolver": LinearSolver.MUMPS,
+                      "exportJacobianPath": "/tmp"},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 5})
 
 model.plot(dots=True)
+model.plotSparseMatrix(MatrixType.JACOBIAN)
+model.printResults()

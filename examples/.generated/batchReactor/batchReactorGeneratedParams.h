@@ -9,3 +9,4 @@
 #define MESH_ITERATIONS 5
 #define TOLERANCE 1e-14
 #define EXPORT_OPTIMUM_PATH "/tmp"
+#define EXPORT_JACOBIAN_PATH "/tmp"

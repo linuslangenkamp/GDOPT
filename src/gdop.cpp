@@ -702,7 +702,7 @@ bool GDOP::eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_
     if (values == nullptr) {
         int eq = init_jac_sparsity(iRow, jCol);
         if (exportJacobian) {
-            exportSparsity(iRow, jCol, nele_jac, {m, n}, exportJacobianPath);
+            exportSparsity(iRow, jCol, nele_jac, {m, n}, exportJacobianPath + "/" + problem->name + "_jacobian.csv");
         }
         assert(eq == m);
     }
@@ -972,7 +972,7 @@ bool GDOP::eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index
     if (values == nullptr) {
         init_h_sparsity(iRow, jCol);
         if (exportHessian) {
-            exportSparsity(iRow, jCol, nele_hess, {n, n}, exportHessianPath);
+            exportSparsity(iRow, jCol, nele_hess, {n, n}, exportHessianPath + "/" + problem->name + "_hessian.csv");
         }
     }
     else
