@@ -1,3 +1,5 @@
+from sympy.printing.c import C99CodePrinter
+
 from optimization.variables import *
 
 class Expression:
@@ -16,7 +18,7 @@ class Expression:
         partialExpression = numbered_symbols(prefix='s')
 
         subst0, exprEval = cse(self.expr, partialExpression)
-        cEval = ccode(exprEval[0])
+        cEval = toCode(exprEval[0])
 
         # Generate second-order derivatives only for lower triangular part
         cEvalDiff2 = [[], [], [], [], [], []]
@@ -38,22 +40,22 @@ class Expression:
         for i, expr in enumerate(substExpr2):
             var1, var2 = diffVars2[i]
             if type(var1) == State and type(var2) == State:
-                cEvalDiff2[0].append(ccode(expr))
+                cEvalDiff2[0].append(toCode(expr))
                 adjDiff_indices[0].append((var1.id, var2.id))  # indXX
             elif type(var1) == Input and type(var2) == State:
-                cEvalDiff2[1].append(ccode(expr))
+                cEvalDiff2[1].append(toCode(expr))
                 adjDiff_indices[1].append((var1.id, var2.id))  # indUX
             elif type(var1) == Input and type(var2) == Input:
-                cEvalDiff2[2].append(ccode(expr))
+                cEvalDiff2[2].append(toCode(expr))
                 adjDiff_indices[2].append((var1.id, var2.id))  # indUU
             elif type(var1) == Parameter and type(var2) == State:
-                cEvalDiff2[3].append(ccode(expr))
+                cEvalDiff2[3].append(toCode(expr))
                 adjDiff_indices[3].append((var1.id, var2.id))  # indPX
             elif type(var1) == Parameter and type(var2) == Input:
-                cEvalDiff2[4].append(ccode(expr))
+                cEvalDiff2[4].append(toCode(expr))
                 adjDiff_indices[4].append((var1.id, var2.id))  # indPU
             elif type(var1) == Parameter and type(var2) == Parameter:
-                cEvalDiff2[5].append(ccode(expr))
+                cEvalDiff2[5].append(toCode(expr))
                 adjDiff_indices[5].append((var1.id, var2.id))  # indPP
 
         adj_indices = [[], [], []]  # indX, indU, indP
@@ -73,13 +75,13 @@ class Expression:
             var = diffVars[v]
             if type(var) == State:
                 adj_indices[0].append(var.id)
-                cEvalDiff[0].append(ccode(expr))
+                cEvalDiff[0].append(toCode(expr))
             elif type(var) == Input:
                 adj_indices[1].append(var.id)
-                cEvalDiff[1].append(ccode(expr))
+                cEvalDiff[1].append(toCode(expr))
             elif type(var) == Parameter:
                 adj_indices[2].append(var.id)
-                cEvalDiff[2].append(ccode(expr))
+                cEvalDiff[2].append(toCode(expr))
 
         adj = "{{{}, {}, {}}}".format(
             "{{{}}}".format(", ".join(map(str, adj_indices[0]))),
@@ -106,7 +108,7 @@ class Expression:
         out += "\tdouble eval(const double *x, const double *u, const double *p, double t) override {\n"
 
         for s in subst0:
-            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            out += "        const double " + toCode(s[0]) + " = " + toCode(s[1]) + ";\n"
 
         out += f"\t\treturn {cEval};\n"
         out += "\t}\n\n"
@@ -114,7 +116,7 @@ class Expression:
         out += f"\tstd::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {{\n"
 
         for s in subst1:
-            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            out += "        const double " + toCode(s[0]) + " = " + toCode(s[1]) + ";\n"
 
         out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff[0]))
@@ -124,7 +126,7 @@ class Expression:
 
         out += f"\tstd::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {{\n"
         for s in subst2:
-            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            out += "        const double " + toCode(s[0]) + " = " + toCode(s[1]) + ";\n"
 
         out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[0]))
@@ -163,7 +165,7 @@ class Constraint(Expression):
         partialExpression = numbered_symbols(prefix='s')
 
         subst0, exprEval = cse(self.expr, partialExpression)
-        cEval = ccode(exprEval[0])
+        cEval = toCode(exprEval[0])
 
         # Generate second-order derivatives only for lower triangular part
         cEvalDiff2 = [[], [], [], [], [], []]
@@ -185,22 +187,22 @@ class Constraint(Expression):
         for i, expr in enumerate(substExpr2):
             var1, var2 = diffVars2[i]
             if type(var1) == State and type(var2) == State:
-                cEvalDiff2[0].append(ccode(expr))
+                cEvalDiff2[0].append(toCode(expr))
                 adjDiff_indices[0].append((var1.id, var2.id))  # indXX
             elif type(var1) == Input and type(var2) == State:
-                cEvalDiff2[1].append(ccode(expr))
+                cEvalDiff2[1].append(toCode(expr))
                 adjDiff_indices[1].append((var1.id, var2.id))  # indUX
             elif type(var1) == Input and type(var2) == Input:
-                cEvalDiff2[2].append(ccode(expr))
+                cEvalDiff2[2].append(toCode(expr))
                 adjDiff_indices[2].append((var1.id, var2.id))  # indUU
             elif type(var1) == Parameter and type(var2) == State:
-                cEvalDiff2[3].append(ccode(expr))
+                cEvalDiff2[3].append(toCode(expr))
                 adjDiff_indices[3].append((var1.id, var2.id))  # indPX
             elif type(var1) == Parameter and type(var2) == Input:
-                cEvalDiff2[4].append(ccode(expr))
+                cEvalDiff2[4].append(toCode(expr))
                 adjDiff_indices[4].append((var1.id, var2.id))  # indPU
             elif type(var1) == Parameter and type(var2) == Parameter:
-                cEvalDiff2[5].append(ccode(expr))
+                cEvalDiff2[5].append(toCode(expr))
                 adjDiff_indices[5].append((var1.id, var2.id))  # indPP
 
         adj_indices = [[], [], []]  # indX, indU, indP
@@ -220,13 +222,13 @@ class Constraint(Expression):
             var = diffVars[v]
             if type(var) == State:
                 adj_indices[0].append(var.id)
-                cEvalDiff[0].append(ccode(expr))
+                cEvalDiff[0].append(toCode(expr))
             elif type(var) == Input:
                 adj_indices[1].append(var.id)
-                cEvalDiff[1].append(ccode(expr))
+                cEvalDiff[1].append(toCode(expr))
             elif type(var) == Parameter:
                 adj_indices[2].append(var.id)
-                cEvalDiff[2].append(ccode(expr))
+                cEvalDiff[2].append(toCode(expr))
 
         adj = "{{{}, {}, {}}}".format(
             "{{{}}}".format(", ".join(map(str, adj_indices[0]))),
@@ -256,7 +258,7 @@ class Constraint(Expression):
         out += "\tdouble eval(const double *x, const double *u, const double *p, double t) override {\n"
 
         for s in subst0:
-            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            out += "        const double " + toCode(s[0]) + " = " + toCode(s[1]) + ";\n"
 
         out += f"\t\treturn {cEval};\n"
         out += "\t}\n\n"
@@ -264,7 +266,7 @@ class Constraint(Expression):
         out += f"\tstd::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {{\n"
 
         for s in subst1:
-            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            out += "        const double " + toCode(s[0]) + " = " + toCode(s[1]) + ";\n"
 
         out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff[0]))
@@ -274,7 +276,7 @@ class Constraint(Expression):
 
         out += f"\tstd::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {{\n"
         for s in subst2:
-            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            out += "        const double " + toCode(s[0]) + " = " + toCode(s[1]) + ";\n"
 
         out += "\t\treturn {std::vector<double>"
         out += "{{{}}}, ".format(", ".join(cEvalDiff2[0]))
@@ -308,7 +310,7 @@ class ParametricConstraint(Expression):
         partialExpression = numbered_symbols(prefix='s')
 
         subst0, substExpr = cse(self.expr, partialExpression)
-        cEval = ccode(substExpr[0])
+        cEval = toCode(substExpr[0])
 
         # Generate second-order derivatives only for lower triangular part
         cEvalDiff2 = []
@@ -326,7 +328,7 @@ class ParametricConstraint(Expression):
         subst2, substExpr2 = cse(allDiffs2, partialExpression)
 
         for expr in substExpr2:
-            cEvalDiff2.append(ccode(expr))
+            cEvalDiff2.append(toCode(expr))
 
         adj_indices = []  # indX, indU, indP
         cEvalDiff = []
@@ -342,7 +344,7 @@ class ParametricConstraint(Expression):
         subst1, substExpr = cse(allDiffs, partialExpression)
 
         for expr in substExpr:
-            cEvalDiff.append(ccode(expr))
+            cEvalDiff.append(toCode(expr))
 
         adj = f"{{{', '.join(map(str, adj_indices))}}}"
         adjDiff = "{{{}}}".format(", ".join("{{{}}}".format(", ".join(map(str, tpl))) for tpl in adjDiff_indices))
@@ -362,7 +364,7 @@ class ParametricConstraint(Expression):
         out += "\tdouble eval(const double* p) override {\n"
 
         for s in subst0:
-            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            out += "        const double " + toCode(s[0]) + " = " + toCode(s[1]) + ";\n"
 
         out += f"\t\treturn {cEval};\n"
         out += "\t}\n\n"
@@ -370,7 +372,7 @@ class ParametricConstraint(Expression):
         out += f"\tstd::vector<double> evalDiff(const double* p) override {{\n"
 
         for s in subst1:
-            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            out += "        const double " + toCode(s[0]) + " = " + toCode(s[1]) + ";\n"
 
         out += "\t\treturn std::vector<double>"
         out += f"{{{', '.join(cEvalDiff)}}}"
@@ -379,7 +381,7 @@ class ParametricConstraint(Expression):
         out += f"\tstd::vector<double> evalDiff2(const double* p) override {{\n"
 
         for s in subst2:
-            out += "        const double " + ccode(s[0]) + " = " + ccode(s[1]) + ";\n"
+            out += "        const double " + toCode(s[0]) + " = " + toCode(s[1]) + ";\n"
 
         out += "\t\treturn std::vector<double>"
         out += "{{{}}}".format(", ".join(cEvalDiff2))
@@ -389,3 +391,15 @@ class ParametricConstraint(Expression):
         out += f"\t{name}(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {{}}\n"
         out += "};\n\n\n"
         return out
+
+
+# custom ccode printer for const handling like pi
+class CustomCCodePrinter(C99CodePrinter):
+    def _print_Pi(self, expr):
+        return 'M_PI'
+
+# define global printer
+printer = CustomCCodePrinter()
+
+def toCode(expr):
+    return printer.doprint(expr)

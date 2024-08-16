@@ -14,7 +14,7 @@
 #include "solver.h"
 
 
-// runtime parameters
+// runtime parameters and global constants
 const double Parameter_Ms = PARAMETER_MS_VALUE;
 const double Parameter_Mp = PARAMETER_MP_VALUE;
 const double Parameter_R = PARAMETER_R_VALUE;
@@ -228,7 +228,7 @@ Problem createProblem_invertedPendulum() {
 
     Problem problem(
             4, 1, 0,  // #vars
-            {0, 0, 3.1405926535897932, 0},  // x0
+            {0, 0, -0.001 + M_PI, 0},  // x0
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
             {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
             {-2.5},  // lb u

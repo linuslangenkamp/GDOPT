@@ -27,10 +27,10 @@ end BatchReactor;
 
 model = Model("batchReactor")
 
-x1 = model.addX(symbol="x1", start=1, lb=0, ub=1)
-x2 = model.addX(symbol="x2", start=0, lb=0, ub=1)
+x1 = model.addState(symbol="x1", start=1, lb=0, ub=1)
+x2 = model.addState(symbol="x2", start=0, lb=0, ub=1)
 
-u = model.addU(symbol="u", lb=0, ub=5)
+u = model.addInput(symbol="u", lb=0, ub=5)
 
 model.addMayer(x2, Objective.MAXIMIZE)
 

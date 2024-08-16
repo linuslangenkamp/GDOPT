@@ -7,7 +7,7 @@ model = Model("bangBang")
 x1 = model.addState(start=0)
 x2 = model.addState(start=0)
 
-u = model.addControl(lb=-10, ub=10)
+u = model.addInput(lb=-10, ub=10)
 
 # x1'' = u
 model.addDynamic(x1, x2)

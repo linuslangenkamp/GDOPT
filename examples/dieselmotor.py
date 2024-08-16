@@ -53,13 +53,13 @@ eta_t = 6.8522930965034778e-001
 eta_vol = 8.9059680994120261e-001
 w_fric = 2.4723010996875069e-005
 
-w_ice = model.addVar(State(start=2.4989941562646081e-01, lb=4/state_norm1, ub=220/state_norm1))
-p_im = model.addVar(State(start=5.0614999999999999e-01, lb=0.8*p_amb/state_norm2, ub=2*p_amb/state_norm2))
-p_em = model.addVar(State(start=3.3926666666666666e-01, lb=p_amb/state_norm3, ub=3*p_amb/state_norm3))
-w_tc = model.addVar(State(start=6.8099999999999994e-02, lb=300/state_norm4, ub=10000/state_norm4))
+w_ice = model.addState(start=2.4989941562646081e-01, lb=4/state_norm1, ub=220/state_norm1)
+p_im = model.addState(start=5.0614999999999999e-01, lb=0.8*p_amb/state_norm2, ub=2*p_amb/state_norm2)
+p_em = model.addState(start=3.3926666666666666e-01, lb=p_amb/state_norm3, ub=3*p_amb/state_norm3)
+w_tc = model.addState(start=6.8099999999999994e-02, lb=300/state_norm4, ub=10000/state_norm4)
 
-u_f = model.addVar(Control(lb=0, ub=250/control_norm1))
-u_wg = model.addVar(Control(lb=0, ub=1))
+u_f = model.addInput(lb=0, ub=250/control_norm1)
+u_wg = model.addInput(lb=0, ub=1)
 
 W_ICE = state_norm1*w_ice
 P_IM = state_norm2*p_im
@@ -69,18 +69,18 @@ U_F = control_norm1*u_f
 
 Pi_c = P_IM/p_amb
 w_tc_corr = state_norm4*w_tc/sqrt(T_amb/T_amb)
-Pi_c_max = (((((w_tc_corr**2)*(R_c**2)*Psi_max)/((2*cp_a*T_amb)))+1)**(gamma_a/(gamma_a-1)))
+Pi_c_max = (((((w_tc_corr**2)*(R_c**2)*Psi_max)/(2*cp_a*T_amb))+1)**(gamma_a/(gamma_a-1)))
 Cm_temp = 1-((Pi_c/Pi_c_max)**2)
 dot_m_c = (dot_m_c_corr_max*sqrt(Cm_temp))*(p_amb/p_amb)/sqrt(T_amb/T_amb)
 P_c = dot_m_c*cp_a*T_amb*((Pi_c**((gamma_a-1)/gamma_a))-1)/eta_c
 
 dot_m_ci = eta_vol*P_IM*W_ICE*V_D/(4*pi*R_a*T_im)
 
-dot_m_f = U_F*W_ICE*n_cyl*(1e-6)/(4*pi)
+dot_m_f = U_F*W_ICE*n_cyl*1e-6/(4*pi)
 
 eta_ig = eta_igch*(1-(1/(r_c**(gamma_cyl-1))))
 T_pump = V_D*(P_EM-P_IM)
-T_ig = n_cyl*Hlhv*eta_ig*u_f*control_norm1*(1e-6)
+T_ig = n_cyl*Hlhv*eta_ig*u_f*control_norm1*1e-6
 T_fric = V_D*(10**5)*(c_fr1*((W_ICE*60/(2*pi*1000))**2)+c_fr2*(W_ICE*60/(2*pi*1000))+c_fr3)
 T_ice = (T_ig-T_fric-T_pump)/(4*pi)
 
@@ -114,9 +114,9 @@ model.addLagrange(dot_m_f)
 
 model.generate()
 
-model.optimize(steps=15, rksteps=1, tf=0.5,
+model.optimize(steps=10000, rksteps=3, tf=0.5,
                flags={"outputPath": "/tmp",
-                      "linearSolver": LinearSolver.MUMPS,
+                      "linearSolver": LinearSolver.MA57,
                       "tolerance": 1e-13},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 0})

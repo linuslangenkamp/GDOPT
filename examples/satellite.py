@@ -17,17 +17,17 @@ M2 = 0.0923
 M3 = 0.56098
 M4 = 0.43047
 
-x1 = model.addVar(State(start=0))
-x2 = model.addVar(State(start=0))
-x3 = model.addVar(State(start=0))
-x4 = model.addVar(State(start=1))
-x5 = model.addVar(State(start=0.01))
-x6 = model.addVar(State(start=0.005))
-x7 = model.addVar(State(start=0.001))
+x1 = model.addState(start=0)
+x2 = model.addState(start=0)
+x3 = model.addState(start=0)
+x4 = model.addState(start=1)
+x5 = model.addState(start=0.01)
+x6 = model.addState(start=0.005)
+x7 = model.addState(start=0.001)
 
-u1 = model.addVar(Control())
-u2 = model.addVar(Control())
-u3 = model.addVar(Control())
+u1 = model.addInput()
+u2 = model.addInput()
+u3 = model.addInput()
 
 model.addDynamic(x1, 0.5 * (x5 * x4 - x6 * x3 + x7 * x2))
 model.addDynamic(x2, 0.5 * (x5 * x3 + x6 * x4 - x7 * x1))
@@ -53,4 +53,4 @@ model.optimize(steps=1000, rksteps=3, tf=100,
                       "tolerance": 1e-14},
                meshFlags={})
 
-model.plot()
+model.plotInputs()

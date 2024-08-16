@@ -999,13 +999,13 @@ void GDOP::exportOptimum(const std::string& filename) const {
     }
     std::string vars;
     for (int vx = 0; vx < problem->sizeX; vx++) {
-        vars += ",x" + std::to_string(vx);
+        vars += ",x[" + std::to_string(vx) + "]";
     }
     for (int vu = 0; vu < problem->sizeU; vu++) {
-        vars += ",u" + std::to_string(vu);
+        vars += ",u[" + std::to_string(vu) + "]";
     }
     for (int vp = 0; vp < problem->sizeP; vp++) {
-        vars += ",p" + std::to_string(vp);
+        vars += ",p[" + std::to_string(vp) + "]";
     }
     auto header = "time" + vars;
     outFile << header << "\n";

@@ -1,6 +1,6 @@
 from optimization import *
 
-# choose implicit Euler, since its the most stable
+# choose implicit Euler, since it's the most stable
 
 model = Model("invertedPendulum")
 
@@ -12,10 +12,10 @@ G = -9.81
 s = model.addState(start=0)
 v = model.addState(start=0)
 
-phi = model.addState(start=PI-0.001)
+phi = model.addState(start=pi-0.001)
 omega = model.addState(start=0)
 
-u = model.addControl(lb=-2.5, ub=2.5)
+u = model.addInput(lb=-2.5, ub=2.5)
 
 dvdt = u + (sin(-phi)*Mp*R*omega**2 - cos(phi)*sin(-phi)*Mp*G) / (Ms + Mp * sin(-phi)**2) 
 
@@ -31,9 +31,9 @@ model.generate()
 
 Ms.setValue(1.5)
 
-model.optimize(steps=1000, rksteps=1, tf=12,
+model.optimize(steps=5000, rksteps=1, tf=12,
                flags={"outputPath": "/tmp",
-                      "linearSolver": LinearSolver.MUMPS},
+                      "linearSolver": LinearSolver.MA57},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 0})
 

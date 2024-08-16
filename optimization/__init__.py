@@ -7,13 +7,16 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+# set global precision
+pd.set_option('display.precision', 16)
+
 # TODO: only diff if first diff != 0
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
 # TODO: make framework more robust, cleaner
 
 class Model:
-    
+
     def __init__(self, name):
         self.creationTime = timer.process_time()
         self.xVars = []
@@ -28,6 +31,7 @@ class Model:
         self.A = []
         self.name = name
         self.alias = {}
+        self.addedDummy = False
         
         # additional stuff for running the model
         self.tf = None
@@ -71,7 +75,7 @@ class Model:
         
         # adds a parameter p for optimization
         # specify lb or ub if needed
-        
+
         variable = Parameter(symbol=symbol, lb=lb, ub=ub)
         self.alias[variable.symbol] = variable.name
         self.pVars.append(variable)
@@ -159,6 +163,7 @@ class Model:
         
         x = self.addState(start=0)
         self.addDynamic(x, 0)
+        self.addedDummy = True
     
     def setFinalTime(self, tf):
         self.tf = tf
@@ -257,7 +262,7 @@ class Model:
 #include "solver.h"
 \n\n'''
         
-        OUTPUT += "// runtime parameters\n"
+        OUTPUT += "// runtime parameters and global constants\n"
         for rp in self.rpVars:
             OUTPUT += f"const double {rp.symbol} = {str(rp.symbol).upper()}_VALUE;\n"
         else:
@@ -322,13 +327,13 @@ class Model:
 
     Problem problem(
             {len(self.xVars)}, {len(self.uVars)}, {len(self.pVars)},  // #vars
-            {{{', '.join(str(x.start) for x in self.xVars)}}},  // x0
-            {{{', '.join(str(x.lb if x.lb != -float('inf') else "MINUS_INFINITY") for x in self.xVars)}}},  // lb x
-            {{{', '.join(str(x.ub if x.ub != float('inf') else "PLUS_INFINITY") for x in self.xVars)}}},  // ub x
-            {{{', '.join(str(u.lb if u.lb != -float('inf') else "MINUS_INFINITY") for u in self.uVars)}}},  // lb u
-            {{{', '.join(str(u.ub if u.ub != float('inf') else "PLUS_INFINITY") for u in self.uVars)}}},  // ub u
-            {{{', '.join(str(p.lb if p.lb != -float('inf') else "MINUS_INFINITY") for p in self.pVars)}}},  // lb p
-            {{{', '.join(str(p.ub if p.ub != float('inf') else "PLUS_INFINITY") for p in self.pVars)}}},  // ub p
+            {{{', '.join(str(toCode(x.start)) for x in self.xVars)}}},  // x0
+            {{{', '.join(str(toCode(x.lb) if x.lb != -float('inf') else "MINUS_INFINITY") for x in self.xVars)}}},  // lb x
+            {{{', '.join(str(toCode(x.ub) if x.ub != float('inf') else "PLUS_INFINITY") for x in self.xVars)}}},  // ub x
+            {{{', '.join(str(toCode(u.lb) if u.lb != -float('inf') else "MINUS_INFINITY") for u in self.uVars)}}},  // lb u
+            {{{', '.join(str(toCode(u.ub) if u.ub != float('inf') else "PLUS_INFINITY") for u in self.uVars)}}},  // ub u
+            {{{', '.join(str(toCode(p.lb) if p.lb != -float('inf') else "MINUS_INFINITY") for p in self.pVars)}}},  // lb p
+            {{{', '.join(str(toCode(p.ub) if p.ub != float('inf') else "PLUS_INFINITY") for p in self.pVars)}}},  // ub p
             {"Mayer" + self.name + "::create()" if self.M else "{}"},
             {"Lagrange" + self.name + "::create()" if self.L else "{}"},
             std::move(F),
@@ -338,6 +343,7 @@ class Model:
             "{self.name}");
     return problem;
 }};\n"""
+
         OUTPUT += f"""
 int main() {{
     auto problem = std::make_shared<const Problem>(createProblem_{self.name}());
@@ -404,10 +410,15 @@ int main() {{
         # run the code
 
         # always with setter to ensure some security
-        
-        self.setFinalTime(tf)
-        self.setSteps(steps)
-        self.setRkSteps(rksteps)
+        if not self.addedDummy:
+            self.setFinalTime(tf)
+            self.setSteps(steps)
+            self.setRkSteps(rksteps)
+        else:
+            print("\nSetting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.")
+            self.setFinalTime(0)
+            self.setSteps(1)
+            self.setRkSteps(1)
 
         self.setFlags(flags)
 
@@ -455,13 +466,19 @@ int main() {{
         os.system(f"LD_LIBRARY_PATH=../cmake-build-release/src/ ./.generated/{self.name}/{self.name}")
 
         return 0
-    
+
+    def plotStates(self, meshIteration=None, interval=None, dots=False):
+        self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=[v.name for v in self.xVars])
+
+    def plotInputs(self, meshIteration=None, interval=None, dots=False):
+        self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=[v.name for v in self.uVars])
+
     def plot(self, meshIteration=None, interval=None, specifCols=None, dots=False):
         if meshIteration is None:
             meshIteration = self.meshIterations
         if interval is None:
             interval = [0, self.tf]
-        df = pd.read_csv(self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", sep=",")
+        self.getResults(meshIteration=meshIteration)
         plt.rcParams.update({
     'font.serif': ['Times New Roman'],
     'axes.labelsize': 14,
@@ -480,7 +497,7 @@ int main() {{
         })
 
         if specifCols is None:
-            columns_to_plot = df.columns[1:]
+            columns_to_plot = self.results.columns[1:]
         else:
             columns_to_plot = specifCols
 
@@ -492,9 +509,9 @@ int main() {{
 
         for idx, column in enumerate(columns_to_plot):
             ax = axs[idx]
-            ax.plot(df['time'], df[column], label=column, linewidth=2, linestyle='-', color='steelblue')
+            ax.plot(self.results['time'], self.results[column], label=column, linewidth=2, linestyle='-', color='steelblue')
             if dots:
-                ax.scatter(df['time'], df[column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+                ax.scatter(self.results['time'], self.results[column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
             ax.set_xlabel('time')
             ax.set_ylabel(column)
             ax.set_xlim(interval[0], interval[1])
@@ -509,6 +526,11 @@ int main() {{
         if meshIteration is None:
             meshIteration = self.meshIterations
         self.results = pd.read_csv(self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", sep=",")
+
+        # remove dummy column for purely parametric models
+        if self.addedDummy:
+            self.results = self.results.drop(columns=['x[0]'])
+
         self.results.rename(columns=self.alias, inplace=True)
         return self.results
 
@@ -519,6 +541,14 @@ int main() {{
             self.getResults(meshIteration)
         print("")
         print(self.results)
+
+    def printResultParameters(self, meshIteration=None):
+        if meshIteration is None:
+            meshIteration = self.meshIterations
+        if self.results is None:
+            self.getResults(meshIteration)
+        print("")
+        print(self.results[[v.name for v in self.pVars]].iloc[0].to_string())
 
     def plotSparseMatrix(self, matrixType):
         from matplotlib.patches import Rectangle
@@ -565,14 +595,15 @@ int main() {{
 
         plt.show()
 
-### GLOBAL ALIAS AND GLOBAL VAR DEFINITIONS 
+"""
+### GLOBAL ALIAS AND GLOBAL VAR DEFINITIONS
 
 # variables
-Continous = Input
+Continuous = Input
 Control = Input
 
 Model.addControl = Model.addInput
-Model.addContinous = Model.addInput
+Model.addContinuous = Model.addInput
 Model.addX = Model.addState
 Model.addU = Model.addInput
 Model.addP = Model.addParameter
@@ -588,11 +619,7 @@ Model.addF = Model.addDynamic
 Model.addG = Model.addPath
 Model.addR = Model.addFinal
 Model.addA = Model.addParametric
-
+"""
 # time symbol
 t = Symbol("t")
 time = t
-
-# consts
-PI = 3.14159265358979323846
-pi = PI

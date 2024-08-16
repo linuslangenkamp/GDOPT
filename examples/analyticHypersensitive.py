@@ -16,12 +16,12 @@ from optimization import *
 
 model = Model("analyticHypersensitive")
 
-x = model.addX(start=1.5)
-u = model.addU()
+x = model.addState(start=1.5)
+u = model.addInput()
 
-model.addF(x, -x + u)
-model.addR(1. - x, eq=0)
-model.addL(0.5 * (x**2 + u**2))
+model.addDynamic(x, -x + u)
+model.addFinal(1. - x, eq=0)
+model.addLagrange(0.5 * (x**2 + u**2))
 
 model.generate()
 
