@@ -1,4 +1,4 @@
-from optimization import *
+from codegen.optimization import *
 
 # choose implicit Euler, since its the most stable
 
@@ -28,3 +28,13 @@ model.addDynamic(omega, (sin(-phi)*G - cos(phi)*dvdt)/R)
 model.addLagrange(sin(phi/2)**2, Objective.MINIMIZE)
 
 model.generate()
+
+Ms.setValue(1.5)
+
+model.optimize(steps=1000, rksteps=1, tf=12,
+               flags={"outputPath": "/tmp",
+                      "linearSolver": LinearSolver.MUMPS},
+               meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+                          "meshIterations": 0})
+
+model.plot(meshIteration=0)

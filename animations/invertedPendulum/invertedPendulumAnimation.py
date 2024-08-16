@@ -79,7 +79,7 @@ def main(data):
 
 if __name__ == "__main__":
 	# "/home/linus/Documents/outputsGDOP"
-    path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData"
+    path = "/tmp"
     model = "invertedPendulum"
     it = 0
     file_path = path + "/" + model + str(it) + ".csv"

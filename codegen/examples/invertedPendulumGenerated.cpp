@@ -3,15 +3,21 @@
 
 // includes
 #define _USE_MATH_DEFINES
+#include "invertedPendulumGeneratedParams.h"
 #include <cmath>
 #include <string>
-#include "invertedPendulumGenerated.h"
 #include "constants.h"
+#include <problem.h>
+#include "integrator.h"
+#include "mesh.h"
+#include "gdop.h"
+#include "solver.h"
+
 
 // runtime parameters
-const double Parameter_Ms = 1;
-const double Parameter_Mp = 0.5;
-const double Parameter_R = 1;
+const double Parameter_Ms = PARAMETER_MS_VALUE;
+const double Parameter_Mp = PARAMETER_MP_VALUE;
+const double Parameter_R = PARAMETER_R_VALUE;
 
 
 // lagrange term
@@ -238,3 +244,50 @@ Problem createProblem_invertedPendulum() {
             "invertedPendulum");
     return problem;
 };
+
+int main() {
+    auto problem = std::make_shared<const Problem>(createProblem_invertedPendulum());
+    InitVars initVars = INIT_VARS;
+    Integrator rk = Integrator::radauIIA(RADAU_INTEGRATOR);
+    Mesh mesh = Mesh::createEquidistantMesh(INTERVALS, FINAL_TIME);
+    LinearSolver linearSolver = LINEAR_SOLVER;
+    MeshAlgorithm meshAlgorithm = MESH_ALGORITHM;
+    int meshIterations = MESH_ITERATIONS;
+
+    Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
+
+    // set solver flags
+    #ifdef EXPORT_OPTIMUM_PATH
+    solver.setExportOptimumPath(EXPORT_OPTIMUM_PATH);
+    #endif
+    
+    #ifdef EXPORT_HESSIAN_PATH
+    solver.setExportHessianPath(EXPORT_HESSIAN_PATH);
+    #endif
+    
+    #ifdef EXPORT_JACOBIAN_PATH
+    solver.setExportJacobianPath(EXPORT_JACOBIAN_PATH);
+    #endif
+    
+    #ifdef TOLERANCE
+    solver.setTolerance(TOLERANCE);
+    #endif
+    
+    // set solver mesh parameters
+    #ifdef LEVEL
+    solver.setMeshParameter("level", LEVEL);
+    #endif
+    
+    #ifdef C_TOL
+    solver.setMeshParameter("ctol", C_TOL);
+    #endif
+    
+    #ifdef SIGMA
+    solver.setMeshParameter("sigma", SIGMA);
+    #endif
+    
+    // optimize
+    int status = solver.solve();
+    return status;
+}        
+        

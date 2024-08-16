@@ -1,9 +1,9 @@
 
-// CODEGEN FOR MODEL "simpleParameter"
+// CODEGEN FOR MODEL "analyticHypersensitive"
 
 // includes
 #define _USE_MATH_DEFINES
-#include "simpleParameterGeneratedParams.h"
+#include "analyticHypersensitiveGeneratedParams.h"
 #include <cmath>
 #include <string>
 #include "constants.h"
@@ -17,116 +17,116 @@
 // runtime parameters
 
 
-// mayer term
-class MayersimpleParameter : public Expression {
+// lagrange term
+class LagrangeanalyticHypersensitive : public Expression {
 public:
-	static std::unique_ptr<MayersimpleParameter> create() {
-		Adjacency adj{{}, {}, {0, 1}};
-		AdjacencyDiff adjDiff{{}, {}, {}, {}, {}, {{1, 0}}};
-		return std::unique_ptr<MayersimpleParameter>(new MayersimpleParameter(std::move(adj), std::move(adjDiff)));
+	static std::unique_ptr<LagrangeanalyticHypersensitive> create() {
+		Adjacency adj{{0}, {0}, {}};
+		AdjacencyDiff adjDiff{{{0, 0}}, {}, {{0, 0}}, {}, {}, {}};
+		return std::unique_ptr<LagrangeanalyticHypersensitive>(new LagrangeanalyticHypersensitive(std::move(adj), std::move(adjDiff)));
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return p[0]*p[1];
+		return 0.5*pow(u[0], 2) + 0.5*pow(x[0], 2);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {}, {p[1], p[0]}};
+		return {std::vector<double>{1.0*x[0]}, {1.0*u[0]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {}, {}, {}, {}, {1}};
+		return {std::vector<double>{1.0}, {}, {1.0}, {}, {}, {}};
 	}
 private:
-	MayersimpleParameter(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
+	LagrangeanalyticHypersensitive(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
 };
 
 
 // dynamic constraints
-class F0simpleParameter : public Expression {
+class F0analyticHypersensitive : public Expression {
 public:
-	static std::unique_ptr<F0simpleParameter> create() {
-		Adjacency adj{{}, {}, {0}};
+	static std::unique_ptr<F0analyticHypersensitive> create() {
+		Adjacency adj{{0}, {0}, {}};
 		AdjacencyDiff adjDiff{{}, {}, {}, {}, {}, {}};
-		return std::unique_ptr<F0simpleParameter>(new F0simpleParameter(std::move(adj), std::move(adjDiff)));
+		return std::unique_ptr<F0analyticHypersensitive>(new F0analyticHypersensitive(std::move(adj), std::move(adjDiff)));
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 2*p[0]*t;
+		return u[0] - x[0];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {}, {2*t}};
+		return {std::vector<double>{-1}, {1}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
 		return {std::vector<double>{}, {}, {}, {}, {}, {}};
 	}
 private:
-	F0simpleParameter(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
+	F0analyticHypersensitive(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
 };
 
 
-// path constraints
-class G0simpleParameter : public Constraint {
+// final constraints
+class R0analyticHypersensitive : public Constraint {
 public:
-	static std::unique_ptr<G0simpleParameter> create() {
-		Adjacency adj{{0}, {0}, {1}};
+	static std::unique_ptr<R0analyticHypersensitive> create() {
+		Adjacency adj{{0}, {}, {}};
 		AdjacencyDiff adjDiff{{}, {}, {}, {}, {}, {}};
-		return std::unique_ptr<G0simpleParameter>(new G0simpleParameter(std::move(adj), std::move(adjDiff), 0.2, 0.25));
+		return std::unique_ptr<R0analyticHypersensitive>(new R0analyticHypersensitive(std::move(adj), std::move(adjDiff), 0, 0));
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return u[0] + p[1] - x[0];
+		return 1.0 - x[0];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-1}, {1}, {1}};
+		return {std::vector<double>{-1}, {}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
 		return {std::vector<double>{}, {}, {}, {}, {}, {}};
 	}
 private:
-	G0simpleParameter(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {}
+	R0analyticHypersensitive(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {}
 };
 
 
-Problem createProblem_simpleParameter() {
+Problem createProblem_analyticHypersensitive() {
 
     std::vector<std::unique_ptr<Expression>> F;
-    F.push_back(F0simpleParameter::create());
+    F.push_back(F0analyticHypersensitive::create());
     
     std::vector<std::unique_ptr<Constraint>> G;
-    G.push_back(G0simpleParameter::create());
+    
     
     std::vector<std::unique_ptr<Constraint>> R;
-    
+    R.push_back(R0analyticHypersensitive::create());
     
     std::vector<std::unique_ptr<ParamConstraint>> A;
     
 
     Problem problem(
-            1, 1, 2,  // #vars
-            {0},  // x0
+            1, 1, 0,  // #vars
+            {1.5},  // x0
             {MINUS_INFINITY},  // lb x
             {PLUS_INFINITY},  // ub x
-            {-1},  // lb u
-            {1},  // ub u
-            {MINUS_INFINITY, MINUS_INFINITY},  // lb p
-            {PLUS_INFINITY, PLUS_INFINITY},  // ub p
-            MayersimpleParameter::create(),
+            {MINUS_INFINITY},  // lb u
+            {PLUS_INFINITY},  // ub u
+            {},  // lb p
+            {},  // ub p
             {},
+            LagrangeanalyticHypersensitive::create(),
             std::move(F),
             std::move(G),
             std::move(R),
             std::move(A),
-            "simpleParameter");
+            "analyticHypersensitive");
     return problem;
 };
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_simpleParameter());
+    auto problem = std::make_shared<const Problem>(createProblem_analyticHypersensitive());
     InitVars initVars = INIT_VARS;
     Integrator rk = Integrator::radauIIA(RADAU_INTEGRATOR);
     Mesh mesh = Mesh::createEquidistantMesh(INTERVALS, FINAL_TIME);
@@ -160,6 +160,10 @@ int main() {
     
     #ifdef C_TOL
     solver.setMeshParameter("ctol", C_TOL);
+    #endif
+    
+    #ifdef SIGMA
+    solver.setMeshParameter("sigma", SIGMA);
     #endif
     
     // optimize

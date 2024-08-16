@@ -6,10 +6,13 @@ from enum import Enum
 import pandas as pd
 import matplotlib.pyplot as plt 
 
+# TODO: better structure in codegen, add subfolders and so on
 # TODO: only diff if first diff != 0
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
-# TODO: integrate entire framework and make it more robust
+# TODO: make framework more robust, cleaner
+# TODO: Maximize -> show
+
 
 class InvalidModel(Exception):
     pass
@@ -98,11 +101,14 @@ class RuntimeParameter(Variable):
             symbol = f'Parameter_{symbol}'
         obj = super().__new__(cls, symbol, lb, ub)
         obj.id = cls.id_counter
-        obj.default = default
+        obj.value = default
         obj.symbol = symbol
         cls.id_counter += 1
         return obj
-        
+
+    def setValue(self, value):
+        self.value = value
+
 # sorting of elements for adjacency structures
 class_order = {
     'State': 0,
@@ -528,7 +534,7 @@ class Model:
         self.linearSolver = LinearSolver.MUMPS
         self.meshAlgorithm = MeshAlgorithm.NONE
         self.meshIterations = 0
-        self.tolerance = 1e-12
+        self.tolerance = 1e-14
         self.exportHessianPath = None
         self.exportJacobianPath = None
         self.meshLevel = None
@@ -691,7 +697,31 @@ class Model:
     
     def setMeshSigma(self, meshSigma):
         self.meshSigma = meshSigma
-    
+
+    def setFlags(self, flags):
+        if "outputPath" in flags:
+            self.setOutputPath(flags["outputPath"])
+        if "linearSolver" in flags:
+            self.setLinearSolver(flags["linearSolver"])
+        if "tolerance" in flags:
+            self.setTolerance(flags["tolerance"])
+        if "exportHessianPath" in flags:
+            self.setExportHessianPath(flags["exportHessianPath"])
+        if "exportJacobianPath" in flags:
+            self.setExportJacobianPath(flags["exportJacobianPath"])
+
+    def setMeshFlags(self, meshFlags):
+        if "meshAlgorithm" in meshFlags:
+            self.setMeshAlgorithm(meshFlags["meshAlgorithm"])
+        if "meshIterations" in meshFlags:
+            self.setMeshIterations(meshFlags["meshIterations"])
+        if "meshLevel" in meshFlags:
+            self.setMeshLevel(meshFlags["meshLevel"])
+        if "meshCTol" in meshFlags:
+            self.setMeshCTol(meshFlags["meshCTol"])
+        if "meshSigma" in meshFlags:
+            self.setMeshSigma(meshFlags["meshSigma"])
+
     def generate(self):
         
         # does the entire code generation of the model
@@ -728,7 +758,7 @@ class Model:
         
         OUTPUT += "// runtime parameters\n"
         for rp in self.rpVars:
-            OUTPUT += f"const double {rp.symbol} = {rp.default};\n"
+            OUTPUT += f"const double {rp.symbol} = {str(rp.symbol).upper()}_VALUE;\n"
         else:
             OUTPUT += "\n\n"
         
@@ -845,6 +875,10 @@ int main() {{
     solver.setMeshParameter("ctol", C_TOL);
     #endif
     
+    #ifdef SIGMA
+    solver.setMeshParameter("sigma", SIGMA);
+    #endif
+    
     // optimize
     int status = solver.solve();
     return status;
@@ -855,7 +889,7 @@ int main() {{
         with open(f'{filename}.cpp', 'w') as file:
             file.write(OUTPUT)
 
-        print(f"Generated model to {filename}Generated.h and {filename}Generated.cpp\n")
+        print(f"Generated model to {filename}Generated.cpp\n")
         print(f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.")
         return 0
         
@@ -871,27 +905,9 @@ int main() {{
         self.setSteps(steps)
         self.setRkSteps(rksteps)
 
-        if "outputPath" in flags:
-            self.setOutputPath(flags["outputPath"])
-        if "linearSolver" in flags:
-            self.setLinearSolver(flags["linearSolver"])
-        if "tolerance" in flags:
-            self.setTolerance(flags["tolerance"])
-        if "exportHessianPath" in flags:
-            self.setExportHessianPath(flags["exportHessianPath"])
-        if "exportJacobianPath" in flags:
-            self.setExportJacobianPath(flags["exportJacobianPath"])
+        self.setFlags(flags)
 
-        if "meshAlgorithm" in meshFlags:
-            self.setMeshAlgorithm(meshFlags["meshAlgorithm"])
-        if "meshIterations" in meshFlags:
-            self.setMeshIterations(meshFlags["meshIterations"])
-        if "meshLevel" in meshFlags:
-            self.setMeshLevel(meshFlags["meshLevel"])
-        if "meshCTol" in meshFlags:
-            self.setMeshCTol(meshFlags["meshCTol"])
-        if "meshSigma" in meshFlags:
-            self.setMeshSigma(meshFlags["meshSigma"])
+        self.setMeshFlags(meshFlags)
 
         ### main codegen
         filename = self.name + "Generated"
@@ -903,18 +919,44 @@ int main() {{
         OUTPUT += f"#define LINEAR_SOLVER LinearSolver::{self.linearSolver.name}\n"
         OUTPUT += f"#define MESH_ALGORITHM MeshAlgorithm::{self.meshAlgorithm.name}\n"
         OUTPUT += f"#define MESH_ITERATIONS {self.meshIterations}\n"
-        OUTPUT += f'#define EXPORT_OPTIMUM_PATH "{self.outputFilePath}"'
+        OUTPUT += f"#define TOLERANCE {self.tolerance}\n"
+
+        if self.outputFilePath:
+            OUTPUT += f'#define EXPORT_OPTIMUM_PATH "{self.outputFilePath}"\n'
+        if self.exportHessianPath:
+            OUTPUT += f'#define EXPORT_HESSIAN_PATH "{self.exportHessianPath}"\n'
+        if self.exportJacobianPath:
+            OUTPUT += f'#define EXPORT_JACOBIAN_PATH "{self.exportJacobianPath}"\n'
+
+        if self.meshSigma:
+            OUTPUT += f'#define SIGMA {self.meshSigma}\n'
+
+        if self.meshLevel:
+            OUTPUT += f'#define LEVEL {self.meshLevel}\n'
+
+        if self.meshCTol:
+            OUTPUT += f'#define C_TOL {self.meshCTol}\n'
+
+        if self.rpVars:
+            OUTPUT += "\n// values for runtime parameters\n"
+
+        for rp in self.rpVars:
+            OUTPUT += f'#define {str(rp.symbol).upper()}_VALUE {rp.value}\n'
+
         with open(f'{filename}Params.h', 'w') as file:
             file.write(OUTPUT)
 
-        os.system(f"g++ {filename}.cpp -O3 -I../../src/ -L ../../cmake-build-release/src/ -lipopt_do -o{self.name}")
+        os.system(f"g++ {filename}.cpp -O3 -I../../src/ -L../../cmake-build-release/src -lipopt_do -o{self.name}") # vorher src lipopt_do
 
         os.system(f"LD_LIBRARY_PATH=../../cmake-build-release/src/ ./{self.name}")
 
         return 0
     
-    def plot(self, meshIteration=0, specifCols=None, dots=False):
-        interval = [0, self.tf]
+    def plot(self, meshIteration=None, interval=None, specifCols=None, dots=False):
+        if meshIteration is None:
+            meshIteration = self.meshIterations
+        if interval is None:
+            interval = [0, self.tf]
         df = pd.read_csv(self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", sep=",")
         plt.rcParams.update({
     'font.serif': ['Times New Roman'],
@@ -958,7 +1000,15 @@ int main() {{
 
         plt.tight_layout()
         plt.show()
-    
+
+    def getResults(self, meshIteration=0):
+        return pd.read_csv(self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", sep=",")
+
+    def printResults(self, meshIteration=0):
+        df = self.getResults(meshIteration)
+        print("")
+        print(df)
+
 ### GLOBAL ALIAS AND GLOBAL VAR DEFINITIONS 
 
 # variables

@@ -1,14 +1,23 @@
 
 // CODEGEN FOR MODEL "satellite"
 
+// includes
 #define _USE_MATH_DEFINES
+#include "satelliteGeneratedParams.h"
 #include <cmath>
 #include <string>
-#include "satelliteGenerated.h"
 #include "constants.h"
+#include <problem.h>
+#include "integrator.h"
+#include "mesh.h"
+#include "gdop.h"
+#include "solver.h"
 
 
+// runtime parameters
 
+
+// mayer term
 class Mayersatellite : public Expression {
 public:
 	static std::unique_ptr<Mayersatellite> create() {
@@ -33,6 +42,7 @@ private:
 };
 
 
+// lagrange term
 class Lagrangesatellite : public Expression {
 public:
 	static std::unique_ptr<Lagrangesatellite> create() {
@@ -57,6 +67,7 @@ private:
 };
 
 
+// dynamic constraints
 class F0satellite : public Expression {
 public:
 	static std::unique_ptr<F0satellite> create() {
@@ -263,3 +274,46 @@ Problem createProblem_satellite() {
             "satellite");
     return problem;
 };
+
+int main() {
+    auto problem = std::make_shared<const Problem>(createProblem_satellite());
+    InitVars initVars = INIT_VARS;
+    Integrator rk = Integrator::radauIIA(RADAU_INTEGRATOR);
+    Mesh mesh = Mesh::createEquidistantMesh(INTERVALS, FINAL_TIME);
+    LinearSolver linearSolver = LINEAR_SOLVER;
+    MeshAlgorithm meshAlgorithm = MESH_ALGORITHM;
+    int meshIterations = MESH_ITERATIONS;
+
+    Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
+
+    // set solver flags
+    #ifdef EXPORT_OPTIMUM_PATH
+    solver.setExportOptimumPath(EXPORT_OPTIMUM_PATH);
+    #endif
+    
+    #ifdef EXPORT_HESSIAN_PATH
+    solver.setExportHessianPath(EXPORT_HESSIAN_PATH);
+    #endif
+    
+    #ifdef EXPORT_JACOBIAN_PATH
+    solver.setExportJacobianPath(EXPORT_JACOBIAN_PATH);
+    #endif
+    
+    #ifdef TOLERANCE
+    solver.setTolerance(TOLERANCE);
+    #endif
+    
+    // set solver mesh parameters
+    #ifdef LEVEL
+    solver.setMeshParameter("level", LEVEL);
+    #endif
+    
+    #ifdef C_TOL
+    solver.setMeshParameter("ctol", C_TOL);
+    #endif
+    
+    // optimize
+    int status = solver.solve();
+    return status;
+}        
+        

@@ -1,4 +1,4 @@
-from optimization import *
+from codegen.optimization import *
 
 
 model = Model("satellite")
@@ -45,3 +45,12 @@ model.addLagrange(0.5 * (u1**2 + u2**2 + u3**2), Objective.MINIMIZE)
 
 
 model.generate()
+
+
+model.optimize(steps=1000, rksteps=3, tf=100,
+               flags={"outputPath": "/tmp",
+                      "linearSolver": LinearSolver.MUMPS,
+                      "tolerance": 1e-14},
+               meshFlags={})
+
+model.plot()

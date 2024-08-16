@@ -1,4 +1,4 @@
-from optimization import *
+from codegen.optimization import *
 
 ### I = [t0=0, tf=1]
 ### 1 interval with Step2 O(h^3) Radau scheme is sufficient for exact sol.
@@ -23,3 +23,11 @@ model.addG(p2 - x1 + u1, lb=0.2, ub=0.25)
 model.addM(p1 * p2)
 
 model.generate()
+
+model.optimize(steps=1, rksteps=2, tf=1,
+               flags={"outputPath": "/tmp",
+                      "linearSolver": LinearSolver.MUMPS,
+                      "tolerance": 1e-14},
+               meshFlags={})
+
+model.printResults()

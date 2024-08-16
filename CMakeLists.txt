@@ -16,30 +16,12 @@ ExternalProject_Add(mumps-ext
 ExternalProject_Add(ipopt-ext
         GIT_REPOSITORY https://github.com/coin-or/Ipopt.git
         GIT_TAG releases/3.14.16
-        CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/third-party-install/usr/local --enable-pardisomkl
+        CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/third-party-install/usr/local #--enable-pardisomkl
         BUILD_COMMAND make -j6
         BUILD_IN_SOURCE true
         DEPENDS mumps-ext)
 
-set(EXAMPLE_FILES
-        examples/batchReactor.cpp
-        examples/batchReactor.h
-        examples/trivialBangBang.cpp
-        examples/trivialBangBang.h
-        examples/analyticHypersensitive.cpp
-        examples/analyticHypersensitive.h
-        examples/hypersensitive.cpp
-        examples/hypersensitive.h
-        codegen/examples/dieselMotorGenerated.cpp
-        codegen/examples/satelliteGenerated.cpp
-        codegen/examples/satelliteGenerated.h
-        codegen/examples/simpleParameterGenerated.h
-        codegen/examples/simpleParameterGenerated.cpp
-        codegen/examples/pureParameterGenerated.cpp
-        codegen/examples/pureParameterGenerated.h
-        codegen/examples/invertedPendulumGenerated.cpp
-        codegen/examples/invertedPendulumGenerated.h
-)
+set(EXAMPLE_FILES)
 
 include_directories(src examples)
 

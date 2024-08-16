@@ -1,9 +1,9 @@
 
-// CODEGEN FOR MODEL "pureParameter"
+// CODEGEN FOR MODEL "batchReactor"
 
 // includes
 #define _USE_MATH_DEFINES
-#include "pureParameterGeneratedParams.h"
+#include "batchReactorGeneratedParams.h"
 #include <cmath>
 #include <string>
 #include "constants.h"
@@ -18,84 +18,86 @@
 
 
 // mayer term
-class MayerpureParameter : public Expression {
+class MayerbatchReactor : public Expression {
 public:
-	static std::unique_ptr<MayerpureParameter> create() {
-		Adjacency adj{{}, {}, {0, 1}};
+	static std::unique_ptr<MayerbatchReactor> create() {
+		Adjacency adj{{1}, {}, {}};
 		AdjacencyDiff adjDiff{{}, {}, {}, {}, {}, {}};
-		return std::unique_ptr<MayerpureParameter>(new MayerpureParameter(std::move(adj), std::move(adjDiff)));
+		return std::unique_ptr<MayerbatchReactor>(new MayerbatchReactor(std::move(adj), std::move(adjDiff)));
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -3*p[0] - 2*p[1];
+		return -x[1];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {}, {-3, -2}};
+		return {std::vector<double>{-1}, {}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
 		return {std::vector<double>{}, {}, {}, {}, {}, {}};
 	}
 private:
-	MayerpureParameter(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
+	MayerbatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
 };
 
 
 // dynamic constraints
-class F0pureParameter : public Expression {
+class F0batchReactor : public Expression {
 public:
-	static std::unique_ptr<F0pureParameter> create() {
-		Adjacency adj{{}, {}, {}};
-		AdjacencyDiff adjDiff{{}, {}, {}, {}, {}, {}};
-		return std::unique_ptr<F0pureParameter>(new F0pureParameter(std::move(adj), std::move(adjDiff)));
+	static std::unique_ptr<F0batchReactor> create() {
+		Adjacency adj{{0}, {0}, {}};
+		AdjacencyDiff adjDiff{{}, {{0, 0}}, {{0, 0}}, {}, {}, {}};
+		return std::unique_ptr<F0batchReactor>(new F0batchReactor(std::move(adj), std::move(adjDiff)));
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0;
+		return -1.0/2.0*u[0]*x[0]*(u[0] + 2);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {}, {}};
+        const double s1 = (1.0/2.0)*u[0] + 1;
+		return {std::vector<double>{-u[0]*s1}, {-1.0/2.0*u[0]*x[0] - x[0]*s1}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {}, {}, {}, {}, {}};
+        const double s0 = -u[0] - 1;
+		return {std::vector<double>{}, {s0}, {-x[0]}, {}, {}, {}};
 	}
 private:
-	F0pureParameter(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
+	F0batchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
 };
 
 
-// parametric constraints
-class A0pureParameter : public ParamConstraint {
+class F1batchReactor : public Expression {
 public:
-	static std::unique_ptr<A0pureParameter> create() {
-		ParamAdjacency adj{{0, 1}};
-		ParamAdjacencyDiff adjDiff{{{0, 0}, {1, 1}}};
-		return std::unique_ptr<A0pureParameter>(new A0pureParameter(std::move(adj), std::move(adjDiff), 1, 1));
+	static std::unique_ptr<F1batchReactor> create() {
+		Adjacency adj{{0}, {0}, {}};
+		AdjacencyDiff adjDiff{{}, {{0, 0}}, {}, {}, {}, {}};
+		return std::unique_ptr<F1batchReactor>(new F1batchReactor(std::move(adj), std::move(adjDiff)));
 	}
 
-	double eval(const double* p) override {
-		return pow(p[0], 2) + pow(p[1], 2);
+	double eval(const double *x, const double *u, const double *p, double t) override {
+		return u[0]*x[0];
 	}
 
-	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{2*p[0], 2*p[1]};
+	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
+		return {std::vector<double>{u[0]}, {x[0]}, {}};
 	}
 
-	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{2, 2};
+	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
+		return {std::vector<double>{}, {1}, {}, {}, {}, {}};
 	}
 private:
-	A0pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
+	F1batchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
 };
 
 
-Problem createProblem_pureParameter() {
+Problem createProblem_batchReactor() {
 
     std::vector<std::unique_ptr<Expression>> F;
-    F.push_back(F0pureParameter::create());
+    F.push_back(F0batchReactor::create());
+    F.push_back(F1batchReactor::create());
     
     std::vector<std::unique_ptr<Constraint>> G;
     
@@ -104,29 +106,29 @@ Problem createProblem_pureParameter() {
     
     
     std::vector<std::unique_ptr<ParamConstraint>> A;
-    A.push_back(A0pureParameter::create());
+    
 
     Problem problem(
-            1, 0, 2,  // #vars
-            {0},  // x0
-            {MINUS_INFINITY},  // lb x
-            {PLUS_INFINITY},  // ub x
-            {},  // lb u
-            {},  // ub u
-            {-1, -1},  // lb p
-            {1, 1},  // ub p
-            MayerpureParameter::create(),
+            2, 1, 0,  // #vars
+            {1, 0},  // x0
+            {0, 0},  // lb x
+            {1, 1},  // ub x
+            {0},  // lb u
+            {5},  // ub u
+            {},  // lb p
+            {},  // ub p
+            MayerbatchReactor::create(),
             {},
             std::move(F),
             std::move(G),
             std::move(R),
             std::move(A),
-            "pureParameter");
+            "batchReactor");
     return problem;
 };
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_pureParameter());
+    auto problem = std::make_shared<const Problem>(createProblem_batchReactor());
     InitVars initVars = INIT_VARS;
     Integrator rk = Integrator::radauIIA(RADAU_INTEGRATOR);
     Mesh mesh = Mesh::createEquidistantMesh(INTERVALS, FINAL_TIME);
@@ -160,6 +162,10 @@ int main() {
     
     #ifdef C_TOL
     solver.setMeshParameter("ctol", C_TOL);
+    #endif
+    
+    #ifdef SIGMA
+    solver.setMeshParameter("sigma", SIGMA);
     #endif
     
     // optimize

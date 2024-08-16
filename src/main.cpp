@@ -3,19 +3,9 @@
 #include "mesh.h"
 #include "gdop.h"
 #include "solver.h"
-#include "../examples/hypersensitive.h"
-#include "../examples/analyticHypersensitive.h"
-#include "../examples/trivialBangBang.h"
-#include "../codegen/examples/satelliteGenerated.h"
-#include "../codegen/examples/dieselMotorGenerated.h"
-#include "../codegen/examples/simpleParameterGenerated.h"
-#include "../codegen/examples/pureParameterGenerated.h"
-#include "../codegen/examples/invertedPendulumGenerated.h"
-#include "../examples/batchReactor.h"
-
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_dieselMotor());
+    auto problem = std::make_shared<const Problem>(createProblem_trivalBangBang());
     InitVars initVars = InitVars::CONST;
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
     Mesh mesh = Mesh::createEquidistantMesh(100, 0.5);

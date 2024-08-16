@@ -420,7 +420,7 @@ void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver)  {
     app->Options()->SetStringValue("linear_solver", getLinearSolverName(solver.linearSolver));
     app->Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
 
-    app->Options()->SetStringValue("output_file", "ipopt.out");
+    // app->Options()->SetStringValue("output_file", "ipopt.out");
 }
 
 void Solver::setMeshParameter(const std::string& field, double value) {
