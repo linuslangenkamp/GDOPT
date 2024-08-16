@@ -23,9 +23,10 @@ model.generate()
 
 # optimizer attributes can be set directly aswell
 model.meshAlgorithm = MeshAlgorithm.L2_BOUNDARY_NORM
-model.meshIterations = 5
+model.meshIterations = 10
 model.outputFilePath = "/tmp"
 
 model.optimize(tf=1, steps=15, rksteps=3)
 
 model.plot(dots=True)
+model.plotPointDensity(meshIteration="all")

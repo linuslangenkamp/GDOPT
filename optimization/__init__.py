@@ -49,7 +49,8 @@ class Model:
         self.meshSigma = None
 
         # stuff for analyzing the results
-        self.results = None
+        self.resultHistory = {}
+        self.modelInfo = {}
 
     def addState(self, start, symbol=None, lb=-float("inf"), ub=float("inf")):
         
@@ -465,7 +466,28 @@ int main() {{
 
         os.system(f"LD_LIBRARY_PATH=../cmake-build-release/src/ ./.generated/{self.name}/{self.name}")
 
+        self.initAnalysis()
+
         return 0
+
+    def initAnalysis(self):
+        with open('/tmp/modelinfo.txt', 'r') as file:
+            for line in file:
+                line = line.strip()
+                key, value = line.split(',')
+                key = key.strip()
+                value = value.strip()
+                self.modelInfo[key] = int(value)
+
+    def checkMeshIteration(self, meshIteration):
+        maxMeshIteration = self.modelInfo["maxMeshIteration"]
+        if meshIteration is None:
+            return maxMeshIteration
+        if type(meshIteration) == int:
+            if meshIteration > maxMeshIteration:
+                print(f"meshIteration too large. Setting meshIteration to maximum value of {maxMeshIteration}.")
+                meshIteration = maxMeshIteration
+        return meshIteration
 
     def plotStates(self, meshIteration=None, interval=None, dots=False):
         self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=[v.name for v in self.xVars])
@@ -474,8 +496,7 @@ int main() {{
         self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=[v.name for v in self.uVars])
 
     def plot(self, meshIteration=None, interval=None, specifCols=None, dots=False):
-        if meshIteration is None:
-            meshIteration = self.meshIterations
+        meshIteration = self.checkMeshIteration(meshIteration)
         if interval is None:
             interval = [0, self.tf]
         self.getResults(meshIteration=meshIteration)
@@ -497,7 +518,7 @@ int main() {{
         })
 
         if specifCols is None:
-            columns_to_plot = self.results.columns[1:]
+            columns_to_plot = self.resultHistory[meshIteration].columns[1:]
         else:
             columns_to_plot = specifCols
 
@@ -509,9 +530,9 @@ int main() {{
 
         for idx, column in enumerate(columns_to_plot):
             ax = axs[idx]
-            ax.plot(self.results['time'], self.results[column], label=column, linewidth=2, linestyle='-', color='steelblue')
+            ax.plot(self.resultHistory[meshIteration]['time'], self.resultHistory[meshIteration][column], label=column, linewidth=2, linestyle='-', color='steelblue')
             if dots:
-                ax.scatter(self.results['time'], self.results[column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+                ax.scatter(self.resultHistory[meshIteration]['time'], self.resultHistory[meshIteration][column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
             ax.set_xlabel('time')
             ax.set_ylabel(column)
             ax.set_xlim(interval[0], interval[1])
@@ -523,32 +544,76 @@ int main() {{
         plt.show()
 
     def getResults(self, meshIteration=None):
-        if meshIteration is None:
-            meshIteration = self.meshIterations
-        self.results = pd.read_csv(self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", sep=",")
+        meshIteration = self.checkMeshIteration(meshIteration)
 
-        # remove dummy column for purely parametric models
-        if self.addedDummy:
-            self.results = self.results.drop(columns=['x[0]'])
+        if meshIteration not in self.resultHistory:
+            try:
+                results = pd.read_csv(self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", sep=",")
+            except:
+                raise Exception("meshIteration out of range. Set Model.maxMeshIteration to the maximum mesh iteration!")
+            # remove dummy column for purely parametric models
+            if self.addedDummy:
+                results = results.drop(columns=['x[0]'])
 
-        self.results.rename(columns=self.alias, inplace=True)
-        return self.results
+            results.rename(columns=self.alias, inplace=True)
+            self.resultHistory[meshIteration] = results
+        return self.resultHistory[meshIteration]
 
     def printResults(self, meshIteration=None):
         if meshIteration is None:
-            meshIteration = self.meshIterations
-        if self.results is None:
-            self.getResults(meshIteration)
+            meshIteration = self.modelInfo["maxMeshIteration"]
+        meshIteration = self.checkMeshIteration(meshIteration)
+        self.getResults(meshIteration)
+        meshIteration = self.modelInfo["maxMeshIteration"]
         print("")
-        print(self.results)
+        print(self.resultHistory[meshIteration])
 
     def printResultParameters(self, meshIteration=None):
-        if meshIteration is None:
-            meshIteration = self.meshIterations
-        if self.results is None:
-            self.getResults(meshIteration)
+        meshIteration = self.checkMeshIteration(meshIteration)
+        self.getResults(meshIteration)
         print("")
-        print(self.results[[v.name for v in self.pVars]].iloc[0].to_string())
+        print(self.resultHistory[meshIteration][[v.name for v in self.pVars]].iloc[0].to_string())
+
+    def plotPointDensity(self,  meshIteration=None):
+
+        # test version of a density function to visualize the thickening at jumps and steep sections
+
+        meshIteration = self.checkMeshIteration(meshIteration)
+
+        if meshIteration == "all":    # all iterations
+            meshIteration = range(0, self.modelInfo["maxMeshIteration"] + 1)
+        elif type(meshIteration) == int:    # specific iteration
+            meshIteration = [meshIteration]
+
+        # else given iterable of iterations
+
+        for m in meshIteration[::-1]:   # reverse the list -> s.t. you can view at which iteration some detections stopped
+            self.getResults(m)
+            arr = self.resultHistory[m]["time"].to_numpy()
+
+            window_size = self.tf /self.steps
+            step_size = self.tf / (self.steps * self.rksteps)
+
+            arr_min, arr_max = min(arr), max(arr)
+            arr_range = np.arange(arr_min, arr_max, step_size)
+
+            local_density = []
+            for center in arr_range:
+                count = np.sum((arr >= center - window_size / 2) & (arr <= center + window_size / 2))
+                density = count / window_size
+                local_density.append(density)
+
+            plt.plot(arr_range, local_density, label=f'Mesh Iteration {m}')
+
+            if len(meshIteration) == 1:
+                plt.scatter(arr, np.zeros_like(arr) - 0.01, color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+
+        plt.xlabel('time')
+        plt.ylabel('Local Density')
+        plt.title('Local Mesh Point Density')
+        plt.legend()
+
+        plt.show()
 
     def plotSparseMatrix(self, matrixType):
         from matplotlib.patches import Rectangle

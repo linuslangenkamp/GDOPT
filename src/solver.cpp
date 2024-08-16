@@ -372,12 +372,25 @@ void Solver::printObjectiveHistory() {
     }
 }
 
+void Solver::createModelInfo() const {
+    // writes a tmp file that contains all relevant information of the model like the last mesh iteration and so on
+    // contains the metadata of the model
+    std::ofstream outFile("/tmp/modelinfo.txt");
+    if (!outFile) {
+        std::cerr << "Error opening file for writing: " << "/tmp/modelinfo.txt" << std::endl;
+        return;
+    }
+    outFile << "maxMeshIteration, " << meshIteration - 1 << "\n";
+    outFile.close();
+}
+
 void Solver::finalizeOptimization() {
     std::cout << "\n----------------------------------------------------------------" << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << "\nOutput for optimization of model: " << _priv->gdop->problem->name << std::endl;
 
+    createModelInfo();
     printMeshStats();
     printObjectiveHistory();
 

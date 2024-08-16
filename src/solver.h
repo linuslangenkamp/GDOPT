@@ -61,6 +61,7 @@ public:
     bool exportJacobian = false;
     void printObjectiveHistory();
     void printMeshStats() const;
+    void createModelInfo() const;
     void setExportOptimumPath(const std::string& exportPath);
     void setExportJacobianPath(const std::string& exportPath);
     void setExportHessianPath(const std::string& exportPath);

@@ -14,7 +14,7 @@
 #include "solver.h"
 
 
-// runtime parameters
+// runtime parameters and global constants
 
 
 // mayer term
@@ -258,7 +258,7 @@ Problem createProblem_satellite() {
 
     Problem problem(
             7, 3, 0,  // #vars
-            {0, 0, 0, 1, 0.01, 0.005, 0.001},  // x0
+            {0, 0, 0, 1, 0.01, 0.0050000000000000001, 0.001},  // x0
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
             {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb u

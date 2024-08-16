@@ -44,8 +44,9 @@ model.optimize(tf=1, steps=25, rksteps=3,
                       "linearSolver": LinearSolver.MUMPS,
                       "exportJacobianPath": "/tmp"},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-                          "meshIterations": 5})
+                          "meshIterations": 10})
 
-model.plot(dots=True)
+model.plot(dots=True, meshIteration=7)
 model.plotSparseMatrix(MatrixType.JACOBIAN)
 model.printResults()
+model.plotPointDensity(meshIteration="all")

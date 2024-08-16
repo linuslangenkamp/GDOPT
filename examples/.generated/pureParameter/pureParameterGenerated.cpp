@@ -14,7 +14,7 @@
 #include "solver.h"
 
 
-// runtime parameters
+// runtime parameters and global constants
 
 
 // mayer term

@@ -1010,6 +1010,24 @@ void GDOP::exportOptimum(const std::string& filename) const {
     auto header = "time" + vars;
     outFile << header << "\n";
 
+    // time = 0 -> interpolate the control backwards
+
+    std::string values = "0";
+    for (int vx = 0; vx < problem->sizeX; vx++) {
+        values += "," + double2Str(problem->x0[vx]);
+    }
+    for (int vu = 0; vu < problem->sizeU; vu++) {
+        std::vector<double> uValues = {};
+        for (int j = 0; j < rk.steps; j++) {
+            uValues.push_back(optimum[vu + offX + offXU * j]);
+        }
+        values += "," + double2Str(Integrator::evalLagrange(rk.c, uValues, 0.0));
+    }
+    for (int vp = 0; vp < problem->sizeP; vp++) {
+        values += "," + double2Str(optimum[vp + offXUTotal]);
+    }
+    outFile << values << "\n";
+
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
             std::string values = double2Str(mesh.grid[i] + rk.c[j] * mesh.deltaT[i]);

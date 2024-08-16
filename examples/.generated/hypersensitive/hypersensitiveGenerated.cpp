@@ -15,7 +15,6 @@
 
 
 // runtime parameters and global constants
-const double CONST_PI = 3.1415926535897932385;
 
 
 // lagrange term
