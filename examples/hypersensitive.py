@@ -21,4 +21,4 @@ model.optimize(tf=10000, steps=200, rksteps=7,
                           "meshLevel": 0})
 
 model.plotInputs(interval=[9980, 10000], dots=True)
-model.plotPointDensity()
+model.plotPointCumulativeCount(interval=[9980, 10000], meshIteration="all")

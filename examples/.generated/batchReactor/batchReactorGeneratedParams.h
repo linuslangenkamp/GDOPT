@@ -1,7 +1,7 @@
 //defines
 
 #define INIT_VARS InitVars::CONST
-#define RADAU_INTEGRATOR IntegratorSteps::Steps3
+#define RADAU_INTEGRATOR IntegratorSteps::Steps1
 #define INTERVALS 25
 #define FINAL_TIME 1
 #define LINEAR_SOLVER LinearSolver::MUMPS

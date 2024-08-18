@@ -39,14 +39,14 @@ model.addDynamic(x2, u * x1)
 
 model.generate()
 
-model.optimize(tf=1, steps=25, rksteps=3,
+model.optimize(tf=1, steps=25, rksteps=1,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MUMPS,
                       "exportJacobianPath": "/tmp"},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 10})
 
-model.plot(dots=True, meshIteration=7)
+model.plot(dots=True)
 model.plotSparseMatrix(MatrixType.JACOBIAN)
 model.printResults()
-model.plotPointDensity(meshIteration="all")
+model.plotPointCumulativeCount(meshIteration="all")

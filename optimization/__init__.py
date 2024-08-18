@@ -574,43 +574,30 @@ int main() {{
         print("")
         print(self.resultHistory[meshIteration][[v.name for v in self.pVars]].iloc[0].to_string())
 
-    def plotPointDensity(self,  meshIteration=None):
+    def plotPointCumulativeCount(self, meshIteration=None, interval=None):
 
-        # test version of a density function to visualize the thickening at jumps and steep sections
+        if interval is None:
+            interval = [0, self.tf]
 
         meshIteration = self.checkMeshIteration(meshIteration)
 
-        if meshIteration == "all":    # all iterations
+        if meshIteration == "all":  # all iterations
             meshIteration = range(0, self.modelInfo["maxMeshIteration"] + 1)
-        elif type(meshIteration) == int:    # specific iteration
+        elif isinstance(meshIteration, int):  # specific iteration
             meshIteration = [meshIteration]
 
-        # else given iterable of iterations
-
-        for m in meshIteration[::-1]:   # reverse the list -> s.t. you can view at which iteration some detections stopped
+        for m in meshIteration[::-1]:  # reverse the list -> view at which iteration some detections stopped
             self.getResults(m)
             arr = self.resultHistory[m]["time"].to_numpy()
 
-            window_size = self.tf /self.steps
-            step_size = self.tf / (self.steps * self.rksteps)
+            cumulative_count = np.arange(1, len(arr) + 1)
 
-            arr_min, arr_max = min(arr), max(arr)
-            arr_range = np.arange(arr_min, arr_max, step_size)
+            plt.plot(arr, cumulative_count, label=f'Mesh Iteration {m}')
+            plt.xlim(interval)
 
-            local_density = []
-            for center in arr_range:
-                count = np.sum((arr >= center - window_size / 2) & (arr <= center + window_size / 2))
-                density = count / window_size
-                local_density.append(density)
-
-            plt.plot(arr_range, local_density, label=f'Mesh Iteration {m}')
-
-            if len(meshIteration) == 1:
-                plt.scatter(arr, np.zeros_like(arr) - 0.01, color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
-
-        plt.xlabel('time')
-        plt.ylabel('Local Density')
-        plt.title('Local Mesh Point Density')
+        plt.xlabel('Time')
+        plt.ylabel('Cumulative Count')
+        plt.title('Cumulative Count of Mesh Points Over Time')
         plt.legend()
 
         plt.show()
