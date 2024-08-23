@@ -1,144 +1,96 @@
-from mpmath import extend
-from sympy import *
+from sympy import symbols, diff, exp, sin
 
-
+# Dictionary to store first and second derivatives
 DerivativeMap = {}
 Derivative2Map = {}
-AllSymbols = []
 
 class Function:
-
-    def __init__(self, expr, adjPure, adjComp, symbol=None):
+    def __init__(self, expr, dependencies, direct_symbols=None, symbol=None):
+        """
+        expr: The symbolic expression of the function.
+        dependencies: A list of other Function objects this function depends on.
+        direct_symbols: A set of symbols (e.g., x1, x2) that this function directly depends on.
+        symbol: The symbolic representation of the function itself.
+        """
         self.expr = expr
-        self.adjPure = adjPure
-        self.adjComp = adjComp
-        self.adjSymbols = adjPure.union(v.symbol for v in adjComp)
-        if symbol is not None:
-            self.symbol = symbols(symbol)
-            AllSymbols.append(self.symbol)
-        else:
-            self.symbol = symbol
+        self.dependencies = dependencies  # List of g's that f depends on
+        self.direct_symbols = direct_symbols if direct_symbols else set()  # Direct dependencies on x1, x2, etc.
+        self.symbol = symbols(symbol) if symbol else None
 
     def diff(self, x):
+        if (self, x) in DerivativeMap:
+            return DerivativeMap[(self, x)]
+
         der = 0
 
-        for g in self.adjComp:
-            if (g, x) not in DerivativeMap:
-                # TODO: actually not g.adjPure, g.adjComp, but only the vars that are contained in dg/dx
-                dgdx = g.diff(x).expr
-                if isinstance(dgdx, (int, float)) or dgdx.is_number or len(dgdx.free_symbols) < 2:
-                    symbol = None
-                else:
-                    symbol = f"d{g.symbol}d{x.name}"
-                DerivativeMap[(g, x)] = Function(dgdx, g.adjPure, g.adjComp, symbol=symbol)
-
+        # Chain rule for dependencies
+        for g in self.dependencies:
+            dgdx = g.diff(x).expr if (g, x) not in DerivativeMap else DerivativeMap[(g, x)].expr
             dfdg = diff(self.expr, g.symbol)
+            der += dfdg * dgdx
 
-            der += dfdg * DerivativeMap[(g, x)].getSymbolOrExpr()
-
-        if x in self.adjSymbols:
+        # Direct derivative with respect to x
+        if x in self.direct_symbols or x in self.expr.free_symbols:
             der += diff(self.expr, x)
 
-        DerivativeMap[(self, x)] = Function(der, self.adjPure, self.adjComp, symbol=f"d{self.symbol}d{x.name}")
-
+        DerivativeMap[(self, x)] = Function(der, self.dependencies, self.direct_symbols)
         return DerivativeMap[(self, x)]
 
-    def getSymbolOrExpr(self):
-        if self.symbol is None:
-            return self.expr
-        else:
-            return self.symbol
-
-"""
     def diff2(self, x, y):
-        der = 0
+        if (self, x, y) in Derivative2Map:
+            return Derivative2Map[(self, x, y)]
 
-        for g in self.adjComp:
-            if (g, x, y) not in Derivative2Map:
-                # TODO: actually not g.adjPure, g.adjComp, but only the vars that are contained in dg/dxdy, if not null and not symbol -> do symbolizing not always
-                Derivative2Map[(g, x, y)] = Function(DerivativeMap[(g, x)].diff(y), g.adjPure, g.adjComp, symbol=f"d{g.symbol}d{x.name}d{y.name}")
+        der2 = 0
 
-            dfdg = DerivativeMap[(self, g)]
-            d2fdg2 = dfdg.diff(g.symbol)
+        # Chain rule for second derivatives
+        for g in self.dependencies:
+            df_dg = self.diff(g.symbol).expr
+            dg_dx = g.diff(x).expr
+            dg_dy = g.diff(y).expr
 
-            der += d2fdg2 * DerivativeMap[(g, x)].getValue() * DerivativeMap[(g, y)].getValue() + dfdg * Derivative2Map[(g, x, y)].getValue()
+            df2_dg2 = diff(df_dg, g.symbol)
+            term1 = df2_dg2 * dg_dx * dg_dy
 
-        if y in self.adjPure:
-            der += diff(DerivativeMap[(self, x)], y)
+            dg2_dxdy = diff(g.expr, x, y)
+            term2 = df_dg * dg2_dxdy
 
-        DerivativeMap[(self, x)] = Function(der, self.adjPure, self.adjComp, symbol=f"d{self.symbol}d{x.name}")
-        return der
-"""
+            der2 += term1 + term2
 
-# -> dg2dx1*cos(g2 + g3) + dg3dx1*cos(g2 + g3) + 1 do this with maps that capture every subexpression
-"""
-proposed approach diff:
+        # Direct second derivative contribution
+        if x in self.direct_symbols or x in self.expr.free_symbols:
+            der2 += diff(self.diff(x).expr, y)
 
-* for all given functions f(x1, ..., xn) in F:
-    * find all subexpression g_i in f
-    * add f~(x1, ..., xn, g1, ..., gm) = f.subst(x,g) to F~
+        Derivative2Map[(self, x, y)] = Function(der2, self.dependencies, self.direct_symbols)
+        return Derivative2Map[(self, x, y)]
 
-* for all given functions g in G:
-    * calculate the derivative of g w.r.t to the adjacent variables (x*, g*) for all i 
-      and add them to a map (g, var): der(g, var)
-
-* for all given functions f~ in F~:
-    * calculate the derivative of f w.r.t to the adjacent variables (x*, g*)
-    
-* get cse of the set of all derivatives
-
-* return
-
-diff2:
-
-"""
-
-### JACOBIAN
-
+# Define symbols
 x1, x2 = symbols("x1 x2")
-variables = [x1, x2]
 
-g1 = Function(x1**2 + x2**2, {x1, x2}, set(), symbol="g1")
-g2 = Function(g1.symbol**2 + x1, {x1}, {g1}, symbol="g2")
-g3 = Function(x1**4, {x1}, set(), symbol="g3")
-f1 = Function(sin(g2.symbol + g3.symbol) + g2.symbol*x1, {x1}, {g2, g3})
-f2 = Function(exp(g2.symbol + g3.symbol), set(), {g2, g3})
+# Define functions
+g1 = Function(x1**2 + x2**2, [], direct_symbols={x1, x2}, symbol="g1")
+g2 = Function(g1.symbol**2 + x1, [g1], direct_symbols={x1}, symbol="g2")
+g3 = Function(x1**4, [], direct_symbols={x1}, symbol="g3")
+f1 = Function(sin(g2.symbol + g3.symbol) + g2.symbol * x1, [g2, g3], direct_symbols={x1}, symbol="f1")
+f2 = Function(exp(g2.symbol + g3.symbol) + x2**2, [g2, g3], direct_symbols={x2}, symbol="f2")
 
-functionsG = [g1, g2, g3]
-for g in functionsG:
-    for v in g.adjSymbols:
-        print()
-        print(g.expr, v)
-        print(g.diff(v).expr)
+# Compute first derivatives for g's
+for g in [g1, g2, g3]:
+    for v in [x1, x2]:
+        print(f"∂{g.symbol}/∂{v} =", g.diff(v).expr)
 
-functionsF = [f1, f2]
+# Compute first derivatives for f's
+for f in [f1, f2]:
+    for v in [x1, x2]:
+        print(f"∂{f.symbol}/∂{v} =", f.diff(v).expr)
 
+# Compute second derivatives (Hessian) for g's
+for g in [g1, g2, g3]:
+    for v1 in [x1, x2]:
+        for v2 in [x1, x2]:
+            print(f"∂²{g.symbol}/∂{v1}∂{v2} =", g.diff2(v1, v2).expr)
 
-for f in functionsF:
-    for v in variables: # TODO: here only adj vars -> need adj info from 1st cse call where g1... are generated
-        print()
-        print(f.expr, v)
-        print(f.diff(v).expr)
-
-
-
-
-partialExpression = numbered_symbols(prefix='s')
-#print(cse(derivatives, partialExpression))
-
-
-### HESSIAN
-derivatives2 = []
-for g in functionsG:
-
-    for idx1, v1 in enumerate(g.adjSymbols):
-        for idx2, v2 in enumerate(g.adjSymbols):
-            if idx2 >= idx1:
-                print()
-"""
-for f in functionsF:
-    for v1 in variables: # TODO: here only adj vars -> need adj info from 1st cse call where g1... are generated
-        for v2 in variables: # TODO: here only adj vars -> need adj info from 1st cse call where g1... are generated
-            derivatives2.append(Function(f.diff2(v1, v2), f.adjPure, f.adjComp))
-"""
-#print([x.expr for x in derivatives2])
+# Compute second derivatives (Hessian) for f's
+for f in [f1, f2]:
+    for v1 in [x1, x2]:
+        for v2 in [x1, x2]:
+            print(f"∂²{f.symbol}/∂{v1}∂{v2} =", f.diff2(v1, v2).expr)
