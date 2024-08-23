@@ -31,5 +31,8 @@ add_subdirectory(src)
 add_executable(example_runner src/main.cpp ${EXAMPLE_FILES})
 target_link_libraries(example_runner ipopt_do)
 
+add_executable(bangbang_example examples/.generated/bangBang/bangBangGenerated.cpp)
+target_link_libraries(bangbang_example ipopt_do)
+
 get_property(dirs DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
 message("Include directories: ${dirs}")

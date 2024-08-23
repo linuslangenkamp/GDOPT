@@ -15,8 +15,7 @@ model.addMayer(3*p1 + 2*p2, Objective.MAX)
 
 model.generate()
 
-model.optimize(steps=1, rksteps=1, tf=0,
-               flags={"outputPath": "/tmp",
+model.optimize(flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MA57,
                       "tolerance": 1e-14},
                meshFlags={})
