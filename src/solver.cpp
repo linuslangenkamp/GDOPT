@@ -5,14 +5,16 @@
 
 /* MILESTONE TODOS: TYPE | IMPORTANCE | EFFORT from 1 to 5
  * TODO:
-    * add, test more mesh refinement algorithms                     4, 2
-    * tf as free variable                                           2, 4.5
-    * OpenModelica interface                                        4, 5
-    * Python interface                                              4, 2
-    * vectorized equation, derivatives with local substituitions    4, 5
-    * saving of local hessian and jacobian structures               1, 1
-    * creation of local jacobian structure                          0, 1
-    * better initial guess, e.g. solve(.), evolutionary algorithms  2, 2
+    1 add, test more mesh refinement algorithms                         4, 3
+    2 vectorized equation, derivatives with local substitutions         4, 5
+        -> just use AD: define vec(f,g), vec(r), vec(a(p))
+        -> with cse in the eval -> reverse mode AD
+    3 OpenModelica interface (depends on 1,2)                           4, 5
+    4 tf as free variable                                               2, 4.5
+    5 Python interface has to be extended                               2, 2
+    6 saving of local hessian and jacobian structures (contained in 2)  1, 1
+    7 creation of local jacobian structure (contained in 2)             0, 1
+    8 better initial guess, e.g. solve(.), evolutionary algorithms      2, 2
 */
 
 void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver) ;
