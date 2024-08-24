@@ -27,7 +27,7 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return p[0]*p[1];
+		return p[1]*p[0];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -52,7 +52,7 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 2*p[0]*t;
+		return 2*t*p[0];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -110,11 +110,11 @@ Problem createProblem_simpleParameter() {
             1, 1, 2,  // #vars
             {0},  // x0
             {MINUS_INFINITY},  // lb x
-            {PLUS_INFINITY},  // ub x
+            {PLUS_INFINITY},    // ub x
             {-1},  // lb u
-            {1},  // ub u
+            {1},    // ub u
             {MINUS_INFINITY, MINUS_INFINITY},  // lb p
-            {PLUS_INFINITY, PLUS_INFINITY},  // ub p
+            {PLUS_INFINITY, PLUS_INFINITY},    // ub p
             MayersimpleParameter::create(),
             {},
             std::move(F),

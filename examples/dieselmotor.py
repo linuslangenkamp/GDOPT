@@ -3,6 +3,8 @@ from optimization import *
 
 model = Model("dieselMotor")
 
+model.setExpressionSimplification(True)
+
 p_amb = 1.0111134146341463e+005
 T_amb = 2.9846362195121958e+002
 gamma_a = 1.3964088397790055e+000

@@ -1,3 +1,4 @@
+import sympy.simplify
 from optimization.variables import *
 from symengine import *
 
@@ -5,8 +6,14 @@ from symengine import *
 varInfo = {}
 
 class Expression:
+    simplification = False
+
     def __init__(self, expr):
-        self.expr = expr
+        if Expression.simplification:
+            self.expr = sympy.simplify(expr)
+        else:
+            self.expr = expr
+
         self.adj = []
         try:
             for sym in expr.free_symbols:
@@ -34,10 +41,12 @@ class Expression:
                         or (isinstance(info1, InputStruct) and isinstance(info2, InputStruct) and i < j)
                         or (isinstance(info1, ParameterStruct) and isinstance(info2, ParameterStruct) and i < j)):
 
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        allDiffs2.append(der)
-                        diffVars2.append((var1, var2))
+                    der = diff(self.expr, var1)
+                    if var2 in der.free_symbols:
+                        der = diff(der, var2)
+                        if der != 0:
+                            allDiffs2.append(der)
+                            diffVars2.append((var1, var2))
 
         subst2, substExpr2 = cseCustom(allDiffs2)
 
@@ -163,7 +172,7 @@ class Constraint(Expression):
 
     def __init__(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
         super().__init__(expr)
-        if eq != None:
+        if eq is not None:
             self.lb = eq
             self.ub = eq
         else:
@@ -188,10 +197,12 @@ class Constraint(Expression):
                         or (isinstance(info1, InputStruct) and isinstance(info2, InputStruct) and i < j)
                         or (isinstance(info1, ParameterStruct) and isinstance(info2, ParameterStruct) and i < j)):
 
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        allDiffs2.append(der)
-                        diffVars2.append((var1, var2))
+                    der = diff(self.expr, var1)
+                    if var2 in der.free_symbols:
+                        der = diff(der, var2)
+                        if der != 0:
+                            allDiffs2.append(der)
+                            diffVars2.append((var1, var2))
 
         subst2, substExpr2 = cseCustom(allDiffs2)
 
@@ -312,7 +323,7 @@ class ParametricConstraint(Expression):
 
     def __init__(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
         super().__init__(expr)
-        if eq != None:
+        if eq is not None:
             self.lb = eq
             self.ub = eq
         else:
@@ -334,10 +345,12 @@ class ParametricConstraint(Expression):
             for j, var2 in enumerate(self.adj):
                 info1, info2 = varInfo[var1], varInfo[var2]
                 if isinstance(info1, ParameterStruct) and isinstance(info2, ParameterStruct) and i >= j:
-                    der = diff(self.expr, var1, var2)
-                    if der != 0:
-                        allDiffs2.append(der)
-                        adjDiff_indices.append((info1.id, info2.id))  # indPP
+                    der = diff(self.expr, var1)
+                    if var2 in der.free_symbols:
+                        der = diff(der, var2)
+                        if der != 0:
+                            allDiffs2.append(der)
+                            adjDiff_indices.append((info1.id, info2.id))  # indPP
 
         subst2, substExpr2 = cseCustom(allDiffs2)
 
@@ -414,5 +427,5 @@ def cseCustom(expressions):
     if type(expressions) is not list:
         expressions = [expressions]
 
-    replacements, reduced_exprs = cse(expressions)
-    return replacements, reduced_exprs
+    replacements, reducedExprs = cse(expressions)
+    return replacements, reducedExprs

@@ -27,11 +27,11 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return pow(x[4], 2) + pow(x[5], 2) + pow(x[6], 2) + pow(x[0] - 0.70106000000000002, 2) + pow(x[1] - 0.092299999999999993, 2) + pow(x[2] - 0.56098000000000003, 2) + pow(x[3] - 0.43047000000000002, 2);
+		return pow(x[4], 2) + pow(x[5], 2) + pow(x[6], 2) + pow(-0.70106 + x[0], 2) + pow(-0.56098 + x[2], 2) + pow(-0.43047 + x[3], 2) + pow(-0.0923 + x[1], 2);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{2*x[0] - 1.40212, 2*x[1] - 0.18459999999999999, 2*x[2] - 1.1219600000000001, 2*x[3] - 0.86094000000000004, 2*x[4], 2*x[5], 2*x[6]}, {}, {}};
+		return {std::vector<double>{2*(-0.70106 + x[0]), 2*(-0.0923 + x[1]), 2*(-0.56098 + x[2]), 2*(-0.43047 + x[3]), 2*x[4], 2*x[5], 2*x[6]}, {}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
@@ -52,7 +52,7 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0.5*pow(u[0], 2) + 0.5*pow(u[1], 2) + 0.5*pow(u[2], 2);
+		return 0.5*(pow(u[0], 2) + pow(u[1], 2) + pow(u[2], 2));
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -77,7 +77,7 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0.5*x[1]*x[6] - 0.5*x[2]*x[5] + 0.5*x[3]*x[4];
+		return 0.5*(x[3]*x[4] - x[5]*x[2] + x[6]*x[1]);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -101,7 +101,7 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -0.5*x[0]*x[6] + 0.5*x[2]*x[4] + 0.5*x[3]*x[5];
+		return 0.5*(-x[0]*x[6] + x[3]*x[5] + x[4]*x[2]);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -125,7 +125,7 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0.5*x[0]*x[5] - 0.5*x[1]*x[4] + 0.5*x[3]*x[6];
+		return 0.5*(x[0]*x[5] + x[3]*x[6] - x[4]*x[1]);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -149,7 +149,7 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -0.5*x[0]*x[4] - 0.5*x[1]*x[5] - 0.5*x[2]*x[6];
+		return -0.5*(x[0]*x[4] + x[5]*x[1] + x[6]*x[2]);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -173,11 +173,11 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return (11.0/20000.0)*u[0] - 41667.0/500000.0*x[5]*x[6];
+		return (1.0/1000000.0)*(550*u[0] - 83334*x[6]*x[5]);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-41667.0/500000.0*x[6], -41667.0/500000.0*x[5]}, {11.0/20000.0}, {}};
+		return {std::vector<double>{(-41667.0/500000.0)*x[6], (-41667.0/500000.0)*x[5]}, {11.0/20000.0}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
@@ -197,11 +197,11 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return (50.0/833333.0)*u[1] - 83333.0/833333.0*x[4]*x[6];
+		return (1.0/833333.0)*(50*u[1] - 83333*x[6]*x[4]);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-83333.0/833333.0*x[6], -83333.0/833333.0*x[4]}, {50.0/833333.0}, {}};
+		return {std::vector<double>{(-83333.0/833333.0)*x[6], (-83333.0/833333.0)*x[4]}, {50.0/833333.0}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
@@ -221,7 +221,7 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return (550.0/916667.0)*u[2] + (166667.0/916667.0)*x[4]*x[5];
+		return (1.0/916667.0)*(550*u[2] + 166667*x[5]*x[4]);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -258,13 +258,13 @@ Problem createProblem_satellite() {
 
     Problem problem(
             7, 3, 0,  // #vars
-            {0, 0, 0, 1, 0.01, 0.0050000000000000001, 0.001},  // x0
+            {0, 0, 0, 1, 0.01, 0.005, 0.001},  // x0
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
-            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
+            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},    // ub x
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb u
-            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub u
+            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},    // ub u
             {},  // lb p
-            {},  // ub p
+            {},    // ub p
             Mayersatellite::create(),
             Lagrangesatellite::create(),
             std::move(F),

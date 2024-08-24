@@ -27,7 +27,7 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0.5*pow(u[0], 2) + 0.5*pow(x[0], 2);
+		return 0.5*(pow(u[0], 2) + pow(x[0], 2));
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -110,11 +110,11 @@ Problem createProblem_hypersensitive() {
             1, 1, 0,  // #vars
             {1},  // x0
             {MINUS_INFINITY},  // lb x
-            {PLUS_INFINITY},  // ub x
+            {PLUS_INFINITY},    // ub x
             {MINUS_INFINITY},  // lb u
-            {PLUS_INFINITY},  // ub u
+            {PLUS_INFINITY},    // ub u
             {},  // lb p
-            {},  // ub p
+            {},    // ub p
             {},
             Lagrangehypersensitive::create(),
             std::move(F),

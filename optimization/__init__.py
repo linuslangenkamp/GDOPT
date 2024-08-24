@@ -31,7 +31,7 @@ class Model:
         self.name = name
         self.alias = {}
         self.addedDummy = False
-        
+
         # additional stuff for running the model
         self.tf = None
         self.steps = None
@@ -213,6 +213,12 @@ class Model:
     
     def setMeshSigma(self, meshSigma):
         self.meshSigma = meshSigma
+
+    def setExpressionSimplification(self, simp):
+
+        # turn initial simplification of expression at generation on / off, standard = off, good for large models
+
+        Expression.simplification = simp
 
     def setFlags(self, flags):
         if "outputPath" in flags:

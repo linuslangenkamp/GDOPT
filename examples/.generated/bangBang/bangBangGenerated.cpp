@@ -160,11 +160,11 @@ Problem createProblem_bangBang() {
             2, 1, 0,  // #vars
             {0, 0},  // x0
             {MINUS_INFINITY, MINUS_INFINITY},  // lb x
-            {PLUS_INFINITY, PLUS_INFINITY},  // ub x
+            {PLUS_INFINITY, PLUS_INFINITY},    // ub x
             {-10},  // lb u
-            {10},  // ub u
+            {10},    // ub u
             {},  // lb p
-            {},  // ub p
+            {},    // ub p
             MayerbangBang::create(),
             {},
             std::move(F),
