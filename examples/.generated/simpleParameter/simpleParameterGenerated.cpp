@@ -77,7 +77,7 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return u[0] + p[1] - x[0];
+		return p[1] + u[0] - x[0];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {

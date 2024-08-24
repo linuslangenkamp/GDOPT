@@ -11,6 +11,6 @@
 #define EXPORT_OPTIMUM_PATH "/tmp"
 
 // values for runtime parameters
-#define PARAMETER_MS_VALUE 1.5
-#define PARAMETER_MP_VALUE 0.5
-#define PARAMETER_R_VALUE 1
+#define MS_VALUE 1.5
+#define MP_VALUE 0.5
+#define R_VALUE 1

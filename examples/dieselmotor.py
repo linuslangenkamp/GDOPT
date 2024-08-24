@@ -53,13 +53,13 @@ eta_t = 6.8522930965034778e-001
 eta_vol = 8.9059680994120261e-001
 w_fric = 2.4723010996875069e-005
 
-w_ice = model.addState(start=2.4989941562646081e-01, lb=4/state_norm1, ub=220/state_norm1)
-p_im = model.addState(start=5.0614999999999999e-01, lb=0.8*p_amb/state_norm2, ub=2*p_amb/state_norm2)
-p_em = model.addState(start=3.3926666666666666e-01, lb=p_amb/state_norm3, ub=3*p_amb/state_norm3)
-w_tc = model.addState(start=6.8099999999999994e-02, lb=300/state_norm4, ub=10000/state_norm4)
+w_ice = model.addState(start=2.4989941562646081e-01, lb=4/state_norm1, ub=220/state_norm1, symbol="w_ice")
+p_im = model.addState(start=5.0614999999999999e-01, lb=0.8*p_amb/state_norm2, ub=2*p_amb/state_norm2, symbol="p_im")
+p_em = model.addState(start=3.3926666666666666e-01, lb=p_amb/state_norm3, ub=3*p_amb/state_norm3, symbol="p_em")
+w_tc = model.addState(start=6.8099999999999994e-02, lb=300/state_norm4, ub=10000/state_norm4, symbol="w_tc")
 
-u_f = model.addInput(lb=0, ub=250/control_norm1)
-u_wg = model.addInput(lb=0, ub=1)
+u_f = model.addInput(lb=0, ub=250/control_norm1, symbol="u_f")
+u_wg = model.addInput(lb=0, ub=1, symbol="u_wg")
 
 W_ICE = state_norm1*w_ice
 P_IM = state_norm2*p_im
@@ -103,7 +103,6 @@ Psi_wg = sqrt(2*gamma_e/(gamma_e-1)*((Pi_wgs**(2/gamma_e))-(Pi_wgs**((gamma_e+1)
 dot_m_wg = P_EM*Psi_wg*A_wg_eff*u_wg/(sqrt(T_eo*R_e))
 
 P_ICE = T_ice*W_ICE/control_norm3
-print(0.0001*((P_t-P_c)/(0.000197779559297041*W_TC)-2.47230109968751E-005*W_TC*W_TC))
 model.addDynamic(w_ice, 0.0012987012987013*T_ice)
 model.addDynamic(p_im, 20.2505119361145*((0.526906365590249*sqrt(Cm_temp))-dot_m_ci))
 model.addDynamic(p_em, 0.0476078551344513*(T_eo*(dot_m_ci+dot_m_f-dot_m_t-dot_m_wg)))

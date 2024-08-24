@@ -50,7 +50,7 @@ model.generate()
 model.optimize(steps=1000, rksteps=3, tf=100,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MUMPS,
-                      "tolerance": 1e-14},
+                      "tolerance": 1e-12},
                meshFlags={})
 
 model.plotInputs()

@@ -29,7 +29,7 @@ model.addLagrange(sin(phi/2)**2, Objective.MINIMIZE)
 
 model.generate()
 
-Ms.setValue(1.5)
+model.setValue(Ms, 1.5)
 
 model.optimize(steps=5000, rksteps=1, tf=12,
                flags={"outputPath": "/tmp",

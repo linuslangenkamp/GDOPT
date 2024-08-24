@@ -10,11 +10,11 @@ def load_data(file_path):
         for row in reader:
             data.append({
                 "time": float(row['time']),
-                "s": float(row['x0']),
-                "v": float(row['x1']),
-                "phi": float(row['x2']),
-                "vphi": float(row['x3']),
-                "tau": float(row['u0'])
+                "s": float(row['x[0]']),
+                "v": float(row['x[1]']),
+                "phi": float(row['x[2]']),
+                "vphi": float(row['x[3]']),
+                "tau": float(row['u[0]'])
             })
     return data
 

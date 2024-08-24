@@ -7,5 +7,5 @@
 #define LINEAR_SOLVER LinearSolver::MUMPS
 #define MESH_ALGORITHM MeshAlgorithm::NONE
 #define MESH_ITERATIONS 0
-#define TOLERANCE 1e-14
+#define TOLERANCE 1e-12
 #define EXPORT_OPTIMUM_PATH "/tmp"

@@ -52,17 +52,16 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -1.0/2.0*u[0]*x[0]*(u[0] + 2);
+		return -x[0]*((1.0/2.0)*pow(u[0], 2) + u[0]);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-        const double s1 = (1.0/2.0)*u[0] + 1;
-		return {std::vector<double>{-u[0]*s1}, {-1.0/2.0*u[0]*x[0] - x[0]*s1}, {}};
+		return {std::vector<double>{-1.0/2.0*pow(u[0], 2) - u[0]}, {-x[0]*(u[0] + 1)}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-        const double s0 = -u[0] - 1;
-		return {std::vector<double>{}, {s0}, {-x[0]}, {}, {}, {}};
+        const double x0 = -u[0] - 1;
+		return {std::vector<double>{}, {x0}, {-x[0]}, {}, {}, {}};
 	}
 private:
 	F0batchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}

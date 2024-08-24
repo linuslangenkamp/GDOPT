@@ -39,7 +39,7 @@ model.addDynamic(x2, u * x1)
 
 model.generate()
 
-model.optimize(tf=1, steps=25, rksteps=1,
+model.optimize(tf=1, steps=25, rksteps=3,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MUMPS,
                       "exportJacobianPath": "/tmp"},
