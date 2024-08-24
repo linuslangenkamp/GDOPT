@@ -56,10 +56,10 @@ class_order = {
 
 
 def get_sort_key(symbol, obj_map):
-    obj = obj_map[symbol]  # Get the object that corresponds to the symbol
-    class_name = obj.__class__.__name__.replace('Struct', '')  # Get the class name
-    order = class_order.get(class_name, float('inf'))  # Determine the type order
-    return (order, obj.id)  # Return a tuple with type order and id for sorting
+    obj = obj_map[symbol]
+    class_name = obj.__class__.__name__.replace('Struct', '')
+    order = class_order.get(class_name, float('inf'))
+    return (order, obj.id)
 
 
 def sort_symbols(symbols, obj_map):
