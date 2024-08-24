@@ -480,7 +480,7 @@ int main() {{
             file.write(OUTPUT)
 
         print("\nCompiling generated code.")
-        os.system(f"g++ .generated/{self.name}/{filename}.cpp -O3 -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}") # vorher src lipopt_do
+        os.system(f"g++ .generated/{self.name}/{filename}.cpp -Ofast -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}") # vorher src lipopt_do
 
         os.system(f"LD_LIBRARY_PATH=../cmake-build-release/src/ ./.generated/{self.name}/{self.name}")
 
