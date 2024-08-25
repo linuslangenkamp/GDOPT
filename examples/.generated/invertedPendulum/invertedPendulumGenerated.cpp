@@ -317,11 +317,13 @@ Problem createProblem_invertedPendulum() {
             4, 1, 0,  // #vars
             {0, 0, -0.001 + acos(-1), 0},  // x0
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
-            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},    // ub x
+            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
+            {0},  // u0 initial guesses for optimization
             {-2.5},  // lb u
-            {2.5},    // ub u
+            {2.5},  // ub u
+            {},  // p0 initial guesses for optimization
             {},  // lb p
-            {},    // ub p
+            {},  // ub p
             {},
             LagrangeinvertedPendulum::create(),
             std::move(F),

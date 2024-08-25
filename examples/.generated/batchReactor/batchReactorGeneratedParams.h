@@ -10,6 +10,3 @@
 #define TOLERANCE 1e-14
 #define EXPORT_OPTIMUM_PATH "/tmp"
 #define EXPORT_JACOBIAN_PATH "/tmp"
-
-// values for runtime parameters
-#define EFF_VALUE 1

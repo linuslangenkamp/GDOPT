@@ -64,23 +64,23 @@ class Model:
         self.xVars.append(variable)
         return variable
     
-    def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf")):
+    def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf"), start=0):
         
         # adds an input / control u for optimization
-        # specify lb or ub if needed
+        # specify lb or ub, start/initialGuess if needed
 
-        info = InputStruct(symbol=symbol, lb=lb, ub=ub)
+        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=start)
         variable = Symbol(f'u[{info.id}]')
         varInfo[variable] = info
         self.uVars.append(variable)
         return variable
         
-    def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf")):
+    def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf"), start=0):
         
         # adds a parameter p for optimization
-        # specify lb or ub if needed
+        # specify lb or ub if needed, start/initialGuess if needed
 
-        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub)
+        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=start)
         variable = Symbol(f'p[{info.id}]')
         varInfo[variable] = info
         self.pVars.append(variable)
@@ -349,8 +349,10 @@ class Model:
             {{{', '.join(str(toCode(varInfo[x].start)) for x in self.xVars)}}},  // x0
             {{{', '.join(str(toCode(varInfo[x].lb) if varInfo[x].lb != -float('inf') else "MINUS_INFINITY") for x in self.xVars)}}},  // lb x
             {{{', '.join(str(toCode(varInfo[x].ub) if varInfo[x].ub != float('inf') else "PLUS_INFINITY") for x in self.xVars)}}},  // ub x
+            {{{', '.join(str(toCode(varInfo[u].initialGuess)) for u in self.uVars)}}},  // u0 initial guesses for optimization
             {{{', '.join(str(toCode(varInfo[u].lb) if varInfo[u].lb != -float('inf') else "MINUS_INFINITY") for u in self.uVars)}}},  // lb u
             {{{', '.join(str(toCode(varInfo[u].ub) if varInfo[u].ub != float('inf') else "PLUS_INFINITY") for u in self.uVars)}}},  // ub u
+            {{{', '.join(str(toCode(varInfo[p].initialGuess)) for p in self.pVars)}}},  // p0 initial guesses for optimization
             {{{', '.join(str(toCode(varInfo[p].lb) if varInfo[p].lb != -float('inf') else "MINUS_INFINITY") for p in self.pVars)}}},  // lb p
             {{{', '.join(str(toCode(varInfo[p].ub) if varInfo[p].ub != float('inf') else "PLUS_INFINITY") for p in self.pVars)}}},  // ub p
             {"Mayer" + self.name + "::create()" if self.M else "{}"},

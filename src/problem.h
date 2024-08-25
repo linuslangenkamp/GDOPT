@@ -11,8 +11,8 @@ class Problem {
 public:
     Problem(int sizeX, int sizeU, int sizeP,
             std::vector<double> x0, std::vector<double> lbX, std::vector<double> ubX,
-            std::vector<double> lbU, std::vector<double> ubU,
-            std::vector<double> lbP, std::vector<double> ubP,
+            std::vector<double> uStart, std::vector<double> lbU, std::vector<double> ubU,
+            std::vector<double> pStart, std::vector<double> lbP, std::vector<double> ubP,
             std::unique_ptr<Expression> M, std::unique_ptr<Expression> L,
             std::vector<std::unique_ptr<Expression>> F,
             std::vector<std::unique_ptr<Constraint>> G,
@@ -27,8 +27,10 @@ public:
     std::vector<double> x0;                          // starting value for states
     std::vector<double> lbX;                         // global lower bound on state vars
     std::vector<double> ubX;                         // global upper bound on state vars
+    std::vector<double> uStart;                      // starting values for control vars - not forced, only initial values for optimization
     std::vector<double> lbU;                         // global lower bound on control vars
     std::vector<double> ubU;                         // global upper bound on control vars
+    std::vector<double> pStart;                      // starting values for paramters - not forced, only initial values for optimization
     std::vector<double> lbP;                         // global lower bound on parameters
     std::vector<double> ubP;                         // global upper bound on parameters
 

@@ -260,11 +260,13 @@ Problem createProblem_satellite() {
             7, 3, 0,  // #vars
             {0, 0, 0, 1, 0.01, 0.005, 0.001},  // x0
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
-            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},    // ub x
+            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
+            {0, 0, 0},  // u0 initial guesses for optimization
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb u
-            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},    // ub u
+            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub u
+            {},  // p0 initial guesses for optimization
             {},  // lb p
-            {},    // ub p
+            {},  // ub p
             Mayersatellite::create(),
             Lagrangesatellite::create(),
             std::move(F),

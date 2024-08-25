@@ -759,11 +759,13 @@ Problem createProblem_dieselMotor() {
             4, 2, 0,  // #vars
             {0.249899415626461, 0.50615, 0.339266666666667, 0.0681},  // x0
             {0.0181818181818182, 0.404445365853659, 0.337037804878049, 0.03},  // lb x
-            {1.0, 1.01111341463415, 1.01111341463415, 1.0},    // ub x
+            {1.0, 1.01111341463415, 1.01111341463415, 1.0},  // ub x
+            {0, 0},  // u0 initial guesses for optimization
             {0, 0},  // lb u
-            {1.0, 1},    // ub u
+            {1.0, 1},  // ub u
+            {},  // p0 initial guesses for optimization
             {},  // lb p
-            {},    // ub p
+            {},  // ub p
             MayerdieselMotor::create(),
             LagrangedieselMotor::create(),
             std::move(F),

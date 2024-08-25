@@ -313,12 +313,17 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
             for (int i = 0; i < n; i++) {
                 int v = i % offXU;
                 if (v < offX && i < offXUTotal) {
-                    x[i] = problem->x0[v];
+                    x[i] = problem->x0[v];  // starting for states is x0 globally
+                }
+                else if (v < offXU && i < offXUTotal && sz(problem->uStart) == problem->sizeU) {
+                    x[i] = problem->uStart[v - offX];  // starting for controls is uStart if enough args where given
+                }
+                else if (i >= offXUTotal && sz(problem->pStart) == problem->sizeP) {
+                    x[i] = problem->pStart[i - offXUTotal];  // starting for parameters is pStart if enough args where given
                 }
                 else {
-                    x[i] = 0.5;
+                    x[i] = 0;   // default fallback, if not enough args where given for the specific variable
                 }
-
             }
             break;
         case InitVars::CALLBACK:

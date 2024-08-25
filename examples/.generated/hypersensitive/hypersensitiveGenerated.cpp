@@ -110,11 +110,13 @@ Problem createProblem_hypersensitive() {
             1, 1, 0,  // #vars
             {1},  // x0
             {MINUS_INFINITY},  // lb x
-            {PLUS_INFINITY},    // ub x
+            {PLUS_INFINITY},  // ub x
+            {0},  // u0 initial guesses for optimization
             {MINUS_INFINITY},  // lb u
-            {PLUS_INFINITY},    // ub u
+            {PLUS_INFINITY},  // ub u
+            {},  // p0 initial guesses for optimization
             {},  // lb p
-            {},    // ub p
+            {},  // ub p
             {},
             Lagrangehypersensitive::create(),
             std::move(F),

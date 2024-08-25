@@ -8,7 +8,7 @@ model = Model("pureParameter")
 
 Items = 15
 
-P = [model.addParameter(symbol=f"p{i}", lb=0, ub=1) for i in range(Items)]
+P = [model.addParameter(symbol=f"p{i}", lb=0, ub=1, start=0.5) for i in range(Items)]
 
 # force binary decision variables
 for p in P:

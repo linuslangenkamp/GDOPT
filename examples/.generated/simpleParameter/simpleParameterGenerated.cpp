@@ -110,11 +110,13 @@ Problem createProblem_simpleParameter() {
             1, 1, 2,  // #vars
             {0},  // x0
             {MINUS_INFINITY},  // lb x
-            {PLUS_INFINITY},    // ub x
+            {PLUS_INFINITY},  // ub x
+            {0},  // u0 initial guesses for optimization
             {-1},  // lb u
-            {1},    // ub u
+            {1},  // ub u
+            {0.5, 0.5},  // p0 initial guesses for optimization
             {MINUS_INFINITY, MINUS_INFINITY},  // lb p
-            {PLUS_INFINITY, PLUS_INFINITY},    // ub p
+            {PLUS_INFINITY, PLUS_INFINITY},  // ub p
             MayersimpleParameter::create(),
             {},
             std::move(F),

@@ -21,8 +21,9 @@ class StateStruct(VariableStruct):
 class InputStruct(VariableStruct):
     id_counter = 0
 
-    def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf")):
+    def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf"), initialGuess=0):
         super().__init__(symbol, lb, ub)
+        self.initialGuess = initialGuess
         self.symbol = symbol if symbol is not None else f'u[{InputStruct.id_counter}]'
         self.id = InputStruct.id_counter
         InputStruct.id_counter += 1
@@ -31,8 +32,9 @@ class InputStruct(VariableStruct):
 class ParameterStruct(VariableStruct):
     id_counter = 0
 
-    def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf")):
+    def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf"), initialGuess=0):
         super().__init__(symbol, lb, ub)
+        self.initialGuess = initialGuess
         self.symbol = symbol if symbol is not None else f'p[{ParameterStruct.id_counter}]'
         self.id = ParameterStruct.id_counter
         ParameterStruct.id_counter += 1

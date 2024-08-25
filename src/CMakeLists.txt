@@ -12,3 +12,4 @@ target_link_directories(ipopt_do PRIVATE ${CMAKE_BINARY_DIR}/third-party-install
 target_link_libraries(ipopt_do PRIVATE ipopt)
 target_link_libraries(ipopt_do PRIVATE dl)
 target_link_libraries(ipopt_do PRIVATE lapack)
+target_compile_options(ipopt_do PRIVATE -ffast-math)
