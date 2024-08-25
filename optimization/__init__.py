@@ -263,7 +263,7 @@ class Model:
         # codegen
         filename = self.name + "Generated"
 
-        print("Starting .cpp codegen ...\n")
+        print("Starting .cpp codegen...\n")
         
         OUTPUT = f'''
 // CODEGEN FOR MODEL "{self.name}"\n
@@ -421,10 +421,10 @@ int main() {{
             file.write(OUTPUT)
 
         print(f"Generated model to .generated/{self.name}/{filename}.cpp.\n")
-        print(f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.")
+        print(f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.\n")
         return 0
         
-    def optimize(self, tf=0, steps=1, rksteps=1, flags={}, meshFlags={}):
+    def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}):
         
         # generate corresponding main function with flags, mesh, refinement
         # set runtime parameter file from map
@@ -483,8 +483,11 @@ int main() {{
         with open(f'.generated/{self.name}/{filename}Params.h', 'w') as file:
             file.write(OUTPUT)
 
-        print("\nCompiling generated code.") # TODO: investigate if -ffast-math is save here
+        print("Compiling generated code...\n")
+        compileStart = timer.time()
+        # TODO: investigate if -ffast-math is save here
         os.system(f"g++ .generated/{self.name}/{filename}.cpp -O3 -ffast-math -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}") # vorher src lipopt_do
+        print(f"Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.")
 
         os.system(f"LD_LIBRARY_PATH=../cmake-build-release/src/ ./.generated/{self.name}/{self.name}")
 

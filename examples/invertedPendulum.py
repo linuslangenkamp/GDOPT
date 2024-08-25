@@ -31,7 +31,7 @@ model.generate()
 
 model.setValue(Ms, 1.5)
 
-model.optimize(steps=5000, rksteps=1, tf=12,
+model.optimize(steps=5000, rksteps=1, tf=8,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MA57},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,

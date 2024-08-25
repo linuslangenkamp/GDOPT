@@ -5,10 +5,9 @@
 
 /* MILESTONE TODOS: TYPE | IMPORTANCE | EFFORT from 1 to 5
  * TODO:
-    1 add, test more mesh refinement algorithms                         4, 3
+    1 add, construct, test more mesh refinement algorithms              4, 3
     2 vectorized equation, derivatives with local substitutions         4, 5
-        -> just use AD?: define vec(f,g), vec(r), vec(a(p))
-        -> with cse in the eval -> reverse mode AD
+        -> define vec(f,g), vec(r), vec(a(p))
     3 OpenModelica interface (depends on 1,2)                           4, 5
     4 tf as free variable                                               2, 4.5
     5 Python interface has to be extended                               2, 2

@@ -872,6 +872,7 @@ void GDOP::evalHessianS2(Number* values, const Number *x, ParamExpression& expr,
 int GDOP::get_h_values(const Number *x, Number *values, Number obj_factor, const Number *lambda) {
     int eq = 0;
     for (int i = 0; i < mesh.intervals - 1; i++) {
+#pragma omp parallel for
         for (int j = 0; j < rk.steps; j++) {
             const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
             const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
