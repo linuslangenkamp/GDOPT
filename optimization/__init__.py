@@ -1,7 +1,4 @@
 import os
-
-from pygame.midi import Input
-
 from optimization.variables import *
 from optimization.expressions import *
 from optimization.structures import *
@@ -13,7 +10,6 @@ import matplotlib.pyplot as plt
 # set global precision
 pd.set_option('display.precision', 16)
 
-# TODO: only diff if first diff != 0
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
 
@@ -301,28 +297,28 @@ class Model:
             OUTPUT += self.L.codegen("Lagrange" + self.name)
             print("Lagrange: codegen done.\n")
         
-        if self.F != []:
+        if self.F:
             OUTPUT += "// dynamic constraints\n"
         
         for n, f in enumerate(self.F):
             OUTPUT += f.codegen("F" + str(n) + self.name)
             print(f"Dynamic constraint {n}: codegen done.\n")
             
-        if self.G != []:
+        if self.G:
             OUTPUT += "// path constraints\n"
             
         for n, g in enumerate(self.G):
             OUTPUT += g.codegen("G" + str(n) + self.name)
             print(f"Path constraint {n}: codegen done.\n")
         
-        if self.R != []:
+        if self.R:
             OUTPUT += "// final constraints\n"
         
         for n, r in enumerate(self.R):
             OUTPUT += r.codegen("R" + str(n) + self.name)
             print(f"Final constraint {n}: codegen done.\n")
         
-        if self.A != []:
+        if self.A:
             OUTPUT += "// parametric constraints\n"
         
         for n, a in enumerate(self.A):
@@ -352,11 +348,11 @@ class Model:
             {len(self.xVars)}, {len(self.uVars)}, {len(self.pVars)},  // #vars
             {{{', '.join(str(toCode(varInfo[x].start)) for x in self.xVars)}}},  // x0
             {{{', '.join(str(toCode(varInfo[x].lb) if varInfo[x].lb != -float('inf') else "MINUS_INFINITY") for x in self.xVars)}}},  // lb x
-            {{{', '.join(str(toCode(varInfo[x].ub) if varInfo[x].ub != float('inf') else "PLUS_INFINITY") for x in self.xVars)}}},    // ub x
+            {{{', '.join(str(toCode(varInfo[x].ub) if varInfo[x].ub != float('inf') else "PLUS_INFINITY") for x in self.xVars)}}},  // ub x
             {{{', '.join(str(toCode(varInfo[u].lb) if varInfo[u].lb != -float('inf') else "MINUS_INFINITY") for u in self.uVars)}}},  // lb u
-            {{{', '.join(str(toCode(varInfo[u].ub) if varInfo[u].ub != float('inf') else "PLUS_INFINITY") for u in self.uVars)}}},    // ub u
+            {{{', '.join(str(toCode(varInfo[u].ub) if varInfo[u].ub != float('inf') else "PLUS_INFINITY") for u in self.uVars)}}},  // ub u
             {{{', '.join(str(toCode(varInfo[p].lb) if varInfo[p].lb != -float('inf') else "MINUS_INFINITY") for p in self.pVars)}}},  // lb p
-            {{{', '.join(str(toCode(varInfo[p].ub) if varInfo[p].ub != float('inf') else "PLUS_INFINITY") for p in self.pVars)}}},    // ub p
+            {{{', '.join(str(toCode(varInfo[p].ub) if varInfo[p].ub != float('inf') else "PLUS_INFINITY") for p in self.pVars)}}},  // ub p
             {"Mayer" + self.name + "::create()" if self.M else "{}"},
             {"Lagrange" + self.name + "::create()" if self.L else "{}"},
             std::move(F),

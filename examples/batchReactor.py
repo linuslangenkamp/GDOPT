@@ -48,5 +48,4 @@ model.optimize(tf=1, steps=25, rksteps=3,
 
 model.plot(dots=True)
 model.plotSparseMatrix(MatrixType.JACOBIAN)
-model.printResults()
 model.plotPointCumulativeCount(meshIteration="all")

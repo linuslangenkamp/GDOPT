@@ -15,6 +15,7 @@
 
 
 // runtime parameters and global constants
+const double eff = EFF_VALUE;
 
 
 // mayer term
@@ -52,16 +53,18 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -x[0]*(u[0] + (1.0/2.0)*pow(u[0], 2));
+		return -x[0]*(u[0]*EFF_VALUE + (1.0/2.0)*pow(u[0], 2));
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-(u[0] + (1.0/2.0)*pow(u[0], 2))}, {-x[0]*(1 + u[0])}, {}};
+		return {std::vector<double>{-(u[0]*EFF_VALUE + (1.0/2.0)*pow(u[0], 2))}, {-x[0]*(EFF_VALUE + u[0])}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-        const double x0 = -(1 + u[0]);
-		return {std::vector<double>{}, {x0}, {-x[0]}, {}, {}, {}};
+        const double x0 = -(EFF_VALUE + u[0]);
+        const double x1 = -u[0];
+        const double x2 = -x[0];
+		return {std::vector<double>{}, {x0}, {x2}, {}, {}, {}};
 	}
 private:
 	F0batchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -77,15 +80,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return u[0]*x[0];
+		return u[0]*x[0]*EFF_VALUE;
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{u[0]}, {x[0]}, {}};
+		return {std::vector<double>{u[0]*EFF_VALUE}, {x[0]*EFF_VALUE}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {1}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {EFF_VALUE}, {}, {}, {}, {}};
 	}
 private:
 	F1batchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -111,11 +114,11 @@ Problem createProblem_batchReactor() {
             2, 1, 0,  // #vars
             {1, 0},  // x0
             {0, 0},  // lb x
-            {1, 1},    // ub x
+            {1, 1},  // ub x
             {0},  // lb u
-            {5},    // ub u
+            {5},  // ub u
             {},  // lb p
-            {},    // ub p
+            {},  // ub p
             MayerbatchReactor::create(),
             {},
             std::move(F),
