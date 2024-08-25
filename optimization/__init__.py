@@ -1,4 +1,7 @@
 import os
+
+from pygame.midi import Input
+
 from optimization.variables import *
 from optimization.expressions import *
 from optimization.structures import *
@@ -29,7 +32,6 @@ class Model:
         self.R = []
         self.A = []
         self.name = name
-        self.alias = {}
         self.addedDummy = False
 
         # additional stuff for running the model
@@ -50,6 +52,10 @@ class Model:
         # stuff for analyzing the results
         self.resultHistory = {}
         self.modelInfo = {}
+        self.xVarNames = []
+        self.uVarNames = []
+        self.pVarNames = []
+        self.rpVarNames = []
 
     def addState(self, start, symbol=None, lb=-float("inf"), ub=float("inf")):
         
@@ -146,7 +152,7 @@ class Model:
         
         # adds a path constraint: lb <= g(.(t)) <= ub or g(.(t)) == eq
         
-        if eq != None and (lb != -float("inf") or ub != float("inf")):
+        if eq is not None and (lb != -float("inf") or ub != float("inf")):
             raise InvalidModel("Can't set eq and lb or ub.")
         self.G.append(Constraint(expr, lb=lb, ub=ub, eq=eq))
     
@@ -154,7 +160,7 @@ class Model:
         
         # adds a final constraint: lb <= r(.(tf)) <= ub or r(.(tf)) == eq
         
-        if eq != None and (lb != -float("inf") or ub != float("inf")):
+        if eq is not None and (lb != -float("inf") or ub != float("inf")):
             raise InvalidModel("Can't set eq and lb or ub.")
         self.R.append(Constraint(expr, lb=lb, ub=ub, eq=eq))
         
@@ -479,8 +485,8 @@ int main() {{
         with open(f'.generated/{self.name}/{filename}Params.h', 'w') as file:
             file.write(OUTPUT)
 
-        print("\nCompiling generated code.")
-        os.system(f"g++ .generated/{self.name}/{filename}.cpp -Ofast -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}") # vorher src lipopt_do
+        print("\nCompiling generated code.") # TODO: investigate if -ffast-math is save here
+        os.system(f"g++ .generated/{self.name}/{filename}.cpp -O3 -ffast-math -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}") # vorher src lipopt_do
 
         os.system(f"LD_LIBRARY_PATH=../cmake-build-release/src/ ./.generated/{self.name}/{self.name}")
 
@@ -561,20 +567,32 @@ int main() {{
         plt.tight_layout()
         plt.show()
 
+    def initVarNames(self):
+        self.xVarNames = [info.symbol for variable, info in varInfo.items() if isinstance(info, StateStruct)]
+        self.uVarNames = [info.symbol for variable, info in varInfo.items() if isinstance(info, InputStruct)]
+        self.pVarNames = [info.symbol for variable, info in varInfo.items() if isinstance(info, ParameterStruct)]
+        self.rpVarNames = [info.symbol for variable, info in varInfo.items() if isinstance(info, RuntimeParameterStruct)]
+
     def getResults(self, meshIteration=None):
         meshIteration = self.checkMeshIteration(meshIteration)
 
         if meshIteration not in self.resultHistory:
             try:
-                results = pd.read_csv(self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", sep=",")
+                results = pd.read_csv(self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", delimiter=",")
             except:
                 raise Exception("meshIteration out of range. Set Model.maxMeshIteration to the maximum mesh iteration!")
+
             # remove dummy column for purely parametric models
             if self.addedDummy:
                 results = results.drop(columns=['x[0]'])
 
-            results.rename(columns=self.alias, inplace=True)
+            alias = {variable.name: varInfo[variable].symbol for variable in varInfo}
+            for col in results.columns:
+                if col not in alias:
+                    alias[col] = col
+            results.rename(columns=alias, inplace=True)
             self.resultHistory[meshIteration] = results
+        self.initVarNames()
         return self.resultHistory[meshIteration]
 
     def printResults(self, meshIteration=None):
@@ -590,7 +608,7 @@ int main() {{
         meshIteration = self.checkMeshIteration(meshIteration)
         self.getResults(meshIteration)
         print("")
-        print(self.resultHistory[meshIteration][[v.name for v in self.pVars]].iloc[0].to_string())
+        print(self.resultHistory[meshIteration][self.pVarNames].iloc[0].to_string())
 
     def plotPointCumulativeCount(self, meshIteration=None, interval=None):
 
@@ -665,6 +683,10 @@ int main() {{
 
         plt.show()
 
+# time symbol
+t = Symbol("t")
+time = t
+
 """
 ### GLOBAL ALIAS AND GLOBAL VAR DEFINITIONS
 
@@ -690,6 +712,3 @@ Model.addG = Model.addPath
 Model.addR = Model.addFinal
 Model.addA = Model.addParametric
 """
-# time symbol
-t = Symbol("t")
-time = t

@@ -21,7 +21,7 @@ model.addMayer(x1, Objective.MAXIMIZE)
 
 model.generate()
 
-# optimizer attributes can be set directly aswell
+# optimizer attributes can be set directly as well
 model.meshAlgorithm = MeshAlgorithm.L2_BOUNDARY_NORM
 model.meshIterations = 10
 model.outputFilePath = "/tmp"

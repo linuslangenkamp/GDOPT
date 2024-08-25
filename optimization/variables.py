@@ -14,7 +14,7 @@ class StateStruct(VariableStruct):
     def __init__(self, start, symbol=None, lb=-float("inf"), ub=float("inf")):
         super().__init__(symbol, lb, ub)
         self.start = start
-        self.symbol = symbol if symbol is not None else f'x[{self.id}]'
+        self.symbol = symbol if symbol is not None else f'x[{StateStruct.id_counter}]'
         self.id = StateStruct.id_counter
         StateStruct.id_counter += 1
 
@@ -23,7 +23,7 @@ class InputStruct(VariableStruct):
 
     def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf")):
         super().__init__(symbol, lb, ub)
-        self.symbol = symbol if symbol is not None else f'u[{self.id}]'
+        self.symbol = symbol if symbol is not None else f'u[{InputStruct.id_counter}]'
         self.id = InputStruct.id_counter
         InputStruct.id_counter += 1
 
@@ -33,7 +33,7 @@ class ParameterStruct(VariableStruct):
 
     def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf")):
         super().__init__(symbol, lb, ub)
-        self.symbol = symbol if symbol is not None else f'p[{self.id}]'
+        self.symbol = symbol if symbol is not None else f'p[{ParameterStruct.id_counter}]'
         self.id = ParameterStruct.id_counter
         ParameterStruct.id_counter += 1
 
@@ -43,7 +43,7 @@ class RuntimeParameterStruct(VariableStruct):
 
     def __init__(self, default, symbol=None, lb=-float("inf"), ub=float("inf")):
         super().__init__(symbol, lb, ub)
-        self.symbol = symbol if symbol is not None else f'rp[{self.id}]'
+        self.symbol = symbol if symbol is not None else f'rp[{ParameterStruct.id_counter}]'
         self.id = ParameterStruct.id_counter
         self.value = default
         ParameterStruct.id_counter += 1
