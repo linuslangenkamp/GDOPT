@@ -463,7 +463,6 @@ int main() {{
         # set runtime parameter file from map
         # run the code
 
-        # always with setter to ensure some security
         if not self.addedDummy:
             self.setFinalTime(tf)
             self.setSteps(steps)
@@ -700,8 +699,8 @@ int main() {{
             plt.xlim(interval)
 
         plt.xlabel('Time')
-        plt.ylabel('Cumulative Count')
-        plt.title('Cumulative Count of Mesh Points Over Time')
+        plt.ylabel('Cumulative Count of Iteration m - Iteration 0')
+        plt.title('Cumulative Count of Mesh Points Over Time - Count of the initial Mesh')
         plt.legend()
 
         plt.show()
@@ -755,13 +754,9 @@ int main() {{
 t = Symbol("t")
 time = t
 
-"""
 ### GLOBAL ALIAS AND GLOBAL VAR DEFINITIONS
 
 # variables
-Continuous = Input
-Control = Input
-
 Model.addControl = Model.addInput
 Model.addContinuous = Model.addInput
 Model.addX = Model.addState
@@ -779,4 +774,3 @@ Model.addF = Model.addDynamic
 Model.addG = Model.addPath
 Model.addR = Model.addFinal
 Model.addA = Model.addParametric
-"""

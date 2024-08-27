@@ -1,8 +1,6 @@
 from optimization import *
 
-
 model = Model("satellite")
-
 
 I1 = 1000000
 I2 = 833333

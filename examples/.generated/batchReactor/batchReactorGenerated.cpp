@@ -23,13 +23,13 @@ const double DEPLETION_SPEED = DEPLETION_SPEED_VALUE;
 class MayerbatchReactor : public Expression {
 public:
 	static std::unique_ptr<MayerbatchReactor> create() {
-		Adjacency adj{{1}, {}, {}};
+		Adjacency adj{{2}, {}, {}};
 		AdjacencyDiff adjDiff{{}, {}, {}, {}, {}, {}};
 		return std::unique_ptr<MayerbatchReactor>(new MayerbatchReactor(std::move(adj), std::move(adjDiff)));
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -x[1];
+		return -x[2];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
@@ -79,8 +79,36 @@ class F1batchReactor : public Expression {
 public:
 	static std::unique_ptr<F1batchReactor> create() {
 		Adjacency adj{{0}, {0}, {}};
-		AdjacencyDiff adjDiff{{}, {{0, 0}}, {}, {}, {}, {}};
+		AdjacencyDiff adjDiff{{}, {{0, 0}}, {{0, 0}}, {}, {}, {}};
 		return std::unique_ptr<F1batchReactor>(new F1batchReactor(std::move(adj), std::move(adjDiff)));
+	}
+
+	double eval(const double *x, const double *u, const double *p, double t) override {
+		return (1.0/2.0)*pow(u[0], 2)*x[0]*DEPLETION_SPEED_VALUE;
+	}
+
+	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
+        const double x0 = (1.0/2.0)*pow(u[0], 2);
+		return {std::vector<double>{x0*DEPLETION_SPEED_VALUE}, {u[0]*x[0]*DEPLETION_SPEED_VALUE}, {}};
+	}
+
+	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
+        const double x0 = u[0]*DEPLETION_SPEED_VALUE;
+        const double x1 = (1.0/2.0)*pow(u[0], 2);
+        const double x2 = u[0]*x[0];
+		return {std::vector<double>{}, {x0}, {x[0]*DEPLETION_SPEED_VALUE}, {}, {}, {}};
+	}
+private:
+	F1batchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
+};
+
+
+class F2batchReactor : public Expression {
+public:
+	static std::unique_ptr<F2batchReactor> create() {
+		Adjacency adj{{0}, {0}, {}};
+		AdjacencyDiff adjDiff{{}, {{0, 0}}, {}, {}, {}, {}};
+		return std::unique_ptr<F2batchReactor>(new F2batchReactor(std::move(adj), std::move(adjDiff)));
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
@@ -95,7 +123,7 @@ public:
 		return {std::vector<double>{}, {REACT_SPEED_VALUE}, {}, {}, {}, {}};
 	}
 private:
-	F1batchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
+	F2batchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
 };
 
 
@@ -104,6 +132,7 @@ Problem createProblem_batchReactor() {
     std::vector<std::unique_ptr<Expression>> F;
     F.push_back(F0batchReactor::create());
     F.push_back(F1batchReactor::create());
+    F.push_back(F2batchReactor::create());
     
     std::vector<std::unique_ptr<Constraint>> G;
     
@@ -115,10 +144,10 @@ Problem createProblem_batchReactor() {
     
 
     Problem problem(
-            2, 1, 0,  // #vars
-            {1, 0},  // x0
-            {0, 0},  // lb x
-            {1, 1},  // ub x
+            3, 1, 0,  // #vars
+            {1, 0, 0},  // x0
+            {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
+            {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
             {0},  // u0 initial guesses for optimization
             {0},  // lb u
             {5},  // ub u
