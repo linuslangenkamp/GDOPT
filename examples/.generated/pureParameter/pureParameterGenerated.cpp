@@ -21,17 +21,17 @@
 class MayerpureParameter : public Expression {
 public:
 	static std::unique_ptr<MayerpureParameter> create() {
-		Adjacency adj{{}, {}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}};
+		Adjacency adj{{}, {}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
 		AdjacencyDiff adjDiff{{}, {}, {}, {}, {}, {}};
 		return std::unique_ptr<MayerpureParameter>(new MayerpureParameter(std::move(adj), std::move(adjDiff)));
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -(0.152873968104274*p[0] + 1.7168252587759*p[10] + 1.88173719133442*p[11] + 1.63174344016537*p[12] + 0.526654031353459*p[13] + 0.252286564167189*p[14] + 0.444153979792149*p[1] + 0.964924808424995*p[2] + 0.648268388616711*p[3] + 0.285426759974794*p[4] + 1.96804465856293*p[5] + 1.01193586952027*p[6] + 0.144581537101869*p[7] + 1.50505417146067*p[8] + 0.0238087490909578*p[9]);
+		return -(0.352666764466367*p[0] + 1.38705343110812*p[10] + 0.0567932627042522*p[11] + 1.95578178727557*p[1] + 1.14992683725071*p[2] + 0.980278587263446*p[3] + 0.750500133055863*p[4] + 1.38702844102647*p[5] + 0.20593112891996*p[6] + 0.863846644948894*p[7] + 1.79413394527747*p[8] + 0.880128134696915*p[9]);
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {}, {-0.152873968104274, -0.444153979792149, -0.964924808424995, -0.648268388616711, -0.285426759974794, -1.96804465856293, -1.01193586952027, -0.144581537101869, -1.50505417146067, -0.0238087490909578, -1.7168252587759, -1.88173719133442, -1.63174344016537, -0.526654031353459, -0.252286564167189}};
+		return {std::vector<double>{}, {}, {-0.352666764466367, -1.95578178727557, -1.14992683725071, -0.980278587263446, -0.750500133055863, -1.38702844102647, -0.20593112891996, -0.863846644948894, -1.79413394527747, -0.880128134696915, -1.38705343110812, -0.0567932627042522}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
@@ -77,15 +77,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[0] + pow(p[0], 2));
+		return -p[0] + pow(p[0], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[0])};
+		return std::vector<double>{-1 + 2*p[0]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A0pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -101,15 +101,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[1] + pow(p[1], 2));
+		return -p[1] + pow(p[1], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[1])};
+		return std::vector<double>{-1 + 2*p[1]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A1pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -125,15 +125,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[2] + pow(p[2], 2));
+		return -p[2] + pow(p[2], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[2])};
+		return std::vector<double>{-1 + 2*p[2]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A2pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -149,15 +149,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[3] + pow(p[3], 2));
+		return -p[3] + pow(p[3], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[3])};
+		return std::vector<double>{-1 + 2*p[3]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A3pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -173,15 +173,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[4] + pow(p[4], 2));
+		return -p[4] + pow(p[4], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[4])};
+		return std::vector<double>{-1 + 2*p[4]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A4pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -197,15 +197,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[5] + pow(p[5], 2));
+		return -p[5] + pow(p[5], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[5])};
+		return std::vector<double>{-1 + 2*p[5]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A5pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -221,15 +221,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[6] + pow(p[6], 2));
+		return -p[6] + pow(p[6], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[6])};
+		return std::vector<double>{-1 + 2*p[6]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A6pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -245,15 +245,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[7] + pow(p[7], 2));
+		return -p[7] + pow(p[7], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[7])};
+		return std::vector<double>{-1 + 2*p[7]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A7pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -269,15 +269,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[8] + pow(p[8], 2));
+		return -p[8] + pow(p[8], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[8])};
+		return std::vector<double>{-1 + 2*p[8]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A8pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -293,15 +293,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[9] + pow(p[9], 2));
+		return -p[9] + pow(p[9], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[9])};
+		return std::vector<double>{-1 + 2*p[9]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A9pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -317,15 +317,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[10] + pow(p[10], 2));
+		return -p[10] + pow(p[10], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[10])};
+		return std::vector<double>{-1 + 2*p[10]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A10pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -341,15 +341,15 @@ public:
 	}
 
 	double eval(const double* p) override {
-		return -(-p[11] + pow(p[11], 2));
+		return -p[11] + pow(p[11], 2);
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[11])};
+		return std::vector<double>{-1 + 2*p[11]};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
+		return std::vector<double>{2};
 	}
 private:
 	A11pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
@@ -359,96 +359,24 @@ private:
 class A12pureParameter : public ParamConstraint {
 public:
 	static std::unique_ptr<A12pureParameter> create() {
-		ParamAdjacency adj{{12}};
-		ParamAdjacencyDiff adjDiff{{{12, 12}}};
-		return std::unique_ptr<A12pureParameter>(new A12pureParameter(std::move(adj), std::move(adjDiff), 0, 0));
-	}
-
-	double eval(const double* p) override {
-		return -(-p[12] + pow(p[12], 2));
-	}
-
-	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[12])};
-	}
-
-	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
-	}
-private:
-	A12pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
-};
-
-
-class A13pureParameter : public ParamConstraint {
-public:
-	static std::unique_ptr<A13pureParameter> create() {
-		ParamAdjacency adj{{13}};
-		ParamAdjacencyDiff adjDiff{{{13, 13}}};
-		return std::unique_ptr<A13pureParameter>(new A13pureParameter(std::move(adj), std::move(adjDiff), 0, 0));
-	}
-
-	double eval(const double* p) override {
-		return -(-p[13] + pow(p[13], 2));
-	}
-
-	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[13])};
-	}
-
-	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
-	}
-private:
-	A13pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
-};
-
-
-class A14pureParameter : public ParamConstraint {
-public:
-	static std::unique_ptr<A14pureParameter> create() {
-		ParamAdjacency adj{{14}};
-		ParamAdjacencyDiff adjDiff{{{14, 14}}};
-		return std::unique_ptr<A14pureParameter>(new A14pureParameter(std::move(adj), std::move(adjDiff), 0, 0));
-	}
-
-	double eval(const double* p) override {
-		return -(-p[14] + pow(p[14], 2));
-	}
-
-	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{-(-1 + 2*p[14])};
-	}
-
-	std::vector<double> evalDiff2(const double* p) override {
-		return std::vector<double>{-2};
-	}
-private:
-	A14pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
-};
-
-
-class A15pureParameter : public ParamConstraint {
-public:
-	static std::unique_ptr<A15pureParameter> create() {
-		ParamAdjacency adj{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}};
+		ParamAdjacency adj{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
 		ParamAdjacencyDiff adjDiff{{}};
-		return std::unique_ptr<A15pureParameter>(new A15pureParameter(std::move(adj), std::move(adjDiff), MINUS_INFINITY, 5));
+		return std::unique_ptr<A12pureParameter>(new A12pureParameter(std::move(adj), std::move(adjDiff), MINUS_INFINITY, 5));
 	}
 
 	double eval(const double* p) override {
-		return 0.989614145245674*p[0] + 1.83381414008353*p[10] + 1.9969247970382*p[11] + 0.272265247538793*p[12] + 0.832453337096074*p[13] + 1.54098370456447*p[14] + 1.79396354140524*p[1] + 0.657159420149244*p[2] + 0.440374400300925*p[3] + 1.8349598556623*p[4] + 0.231431022250533*p[5] + 0.0386835389577318*p[6] + 1.79708257968256*p[7] + 1.00215126546455*p[8] + 1.25414419413018*p[9];
+		return 1.07142197102829*p[0] + 0.19272133573218*p[10] + 0.989058271595834*p[11] + 1.80852090454887*p[1] + 1.10231079535841*p[2] + 1.00656135057573*p[3] + 1.6966668049781*p[4] + 1.15199312525342*p[5] + 1.47681522590808*p[6] + 0.336705269042069*p[7] + 0.612259458864112*p[8] + 0.51448351347483*p[9];
 	}
 
 	std::vector<double> evalDiff(const double* p) override {
-		return std::vector<double>{0.989614145245674, 1.79396354140524, 0.657159420149244, 0.440374400300925, 1.8349598556623, 0.231431022250533, 0.0386835389577318, 1.79708257968256, 1.00215126546455, 1.25414419413018, 1.83381414008353, 1.9969247970382, 0.272265247538793, 0.832453337096074, 1.54098370456447};
+		return std::vector<double>{1.07142197102829, 1.80852090454887, 1.10231079535841, 1.00656135057573, 1.6966668049781, 1.15199312525342, 1.47681522590808, 0.336705269042069, 0.612259458864112, 0.51448351347483, 0.19272133573218, 0.989058271595834};
 	}
 
 	std::vector<double> evalDiff2(const double* p) override {
 		return std::vector<double>{};
 	}
 private:
-	A15pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
+	A12pureParameter(ParamAdjacency adj, ParamAdjacencyDiff adjDiff, double lb, double ub) : ParamConstraint(std::move(adj), std::move(adjDiff), lb, ub) {}
 };
 
 
@@ -477,21 +405,18 @@ Problem createProblem_pureParameter() {
     A.push_back(A10pureParameter::create());
     A.push_back(A11pureParameter::create());
     A.push_back(A12pureParameter::create());
-    A.push_back(A13pureParameter::create());
-    A.push_back(A14pureParameter::create());
-    A.push_back(A15pureParameter::create());
 
     Problem problem(
-            1, 0, 15,  // #vars
+            1, 0, 12,  // #vars
             {0},  // x0
             {MINUS_INFINITY},  // lb x
             {PLUS_INFINITY},  // ub x
             {},  // u0 initial guesses for optimization
             {},  // lb u
             {},  // ub u
-            {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5},  // p0 initial guesses for optimization
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // lb p
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  // ub p
+            {0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8},  // p0 initial guesses for optimization
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // lb p
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},  // ub p
             MayerpureParameter::create(),
             {},
             std::move(F),

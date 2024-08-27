@@ -125,7 +125,8 @@ class Model:
         # for actual constants simply write pythonic var = value
 
         info = RuntimeParameterStruct(default=default, symbol=symbol)
-        variable = Symbol(f"{str(info.symbol).upper()}_VALUE")
+        variable = Symbol(f"{str(info.symbol).upper().strip(' ')}_VALUE")
+        print(f"{str(info.symbol).upper().strip(' ')}_VALUE")
         varInfo[variable] = info
         self.rpVars.append(variable)
         return variable
@@ -315,7 +316,7 @@ class Model:
         OUTPUT += "// runtime parameters and global constants\n"
         for rp in self.rpVars:
             info = varInfo[rp]
-            OUTPUT += f"const double {info.symbol} = {str(info.symbol).upper()}_VALUE;\n"
+            OUTPUT += f"const double {info.symbol} = {str(info.symbol).upper().strip(' ')}_VALUE;\n"
         else:
             OUTPUT += "\n\n"
         
@@ -510,7 +511,7 @@ int main() {{
 
         for rp in self.rpVars:
             info = varInfo[rp]
-            OUTPUT += f'#define {str(info.symbol).upper()}_VALUE {info.value}\n'
+            OUTPUT += f'#define {str(info.symbol).upper().strip(" ")}_VALUE {info.value}\n'
 
         with open(f'.generated/{self.name}/{filename}Params.h', 'w') as file:
             file.write(OUTPUT)
@@ -642,6 +643,7 @@ int main() {{
         self.getResults(meshIteration)
         print("")
         print(self.resultHistory[meshIteration][self.pVarNames].iloc[0].to_string())
+        print("")
 
     def plotPointCumulativeCount(self, meshIteration=None, interval=None):
 
@@ -662,6 +664,39 @@ int main() {{
             cumulative_count = np.arange(1, len(arr) + 1)
 
             plt.plot(arr, cumulative_count, label=f'Mesh Iteration {m}')
+            plt.xlim(interval)
+
+        plt.xlabel('Time')
+        plt.ylabel('Cumulative Count')
+        plt.title('Cumulative Count of Mesh Points Over Time')
+        plt.legend()
+
+        plt.show()
+
+    def plotPointDifferenceCount(self, meshIteration=None, interval=None):
+
+        if interval is None:
+            interval = [0, self.tf]
+
+        meshIteration = self.checkMeshIteration(meshIteration)
+
+        if meshIteration == "all":  # all iterations
+            meshIteration = range(0, self.modelInfo["maxMeshIteration"] + 1)
+
+        self.getResults(0)
+        time0 = self.resultHistory[0]["time"].to_numpy()
+        count0 = np.arange(1, len(time0) + 1)
+
+        for m in meshIteration[::-1]:  # reverse the list -> view at which iteration some detections stopped
+            self.getResults(m)
+            arr = self.resultHistory[m]["time"].to_numpy()
+
+            cumulative_count = np.arange(1, len(arr) + 1)
+
+            # subtract the interpolated mesh count from interval 0
+            differenceInterpolated = cumulative_count - np.interp(arr, time0, count0)
+
+            plt.plot(arr, differenceInterpolated, label=f'Mesh Iteration {m}')
             plt.xlim(interval)
 
         plt.xlabel('Time')

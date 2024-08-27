@@ -32,14 +32,17 @@ x2 = model.addState(symbol="x2", start=0, lb=0, ub=1)
 
 u = model.addInput(symbol="u", lb=0, ub=5)
 
+R_v = model.addRuntimeParameter(default=1, symbol="REACT_SPEED")
+D_v = model.addRuntimeParameter(default=0.3, symbol="DEPLETION_SPEED")
+
 model.addMayer(x2, Objective.MAXIMIZE)
 
-model.addDynamic(x1, -(u + u**2 / 2) * x1)
-model.addDynamic(x2, u * x1)
+model.addDynamic(x1, -(u * R_v + u**2 / 2 * D_v) * x1)
+model.addDynamic(x2, u * x1 * R_v)
 
 model.generate()
 
-model.optimize(tf=1, steps=250, rksteps=3,
+model.optimize(tf=1, steps=25, rksteps=3,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MA57,
                       "exportJacobianPath": "/tmp"},
@@ -49,4 +52,4 @@ model.optimize(tf=1, steps=250, rksteps=3,
 model.plot(dots=True)
 model.plotSparseMatrix(MatrixType.JACOBIAN)
 model.printResults()
-model.plotPointCumulativeCount(meshIteration="all")
+model.plotPointDifferenceCount(meshIteration="all")

@@ -26,7 +26,7 @@ model.addMayer(p1 * p2)
 
 model.generate()
 
-model.optimize(steps=50, rksteps=3, tf=1,
+model.optimize(steps=25, rksteps=3, tf=1,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MUMPS,
                       "tolerance": 1e-14},

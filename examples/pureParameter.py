@@ -6,11 +6,9 @@ model = Model("pureParameter")
 # by creating purely parametric models, it is possible to solve
 # standard NLPs: in this case a knapsack problem as a NLP
 
-Items = 15
+Items = 12
 
-P = [model.addBinaryParameter(symbol=f"p{i}") for i in range(Items)]
-
-# force binary decision variables
+P = [model.addBinaryParameter(symbol=f"p{i}", start=0.8) for i in range(Items)]
 
 Weights = [random.uniform(0, 2) for i in range(Items)]
 Values = [random.uniform(0, 2) for i in range(Items)]
@@ -27,3 +25,12 @@ model.optimize(flags={"outputPath": "/tmp",
                meshFlags={})
 
 model.printResultParameters()
+weights = 0
+for i in range(Items):
+    if model.resultHistory[0][f"p{i}"].iloc[0] > 0.5:
+        print(f"Weight {Weights[i]}, Value {Values[i]}: chosen.")
+        weights += Weights[i]
+    else:
+        print(f"Weight {Weights[i]}, Value {Values[i]}: not chosen.")
+
+print(f"Total weights: {weights}")
