@@ -92,6 +92,31 @@ private:
 };
 
 
+// path constraints
+class G0batchReactor : public Constraint {
+public:
+	static std::unique_ptr<G0batchReactor> create() {
+		Adjacency adj{{}, {0}, {}};
+		AdjacencyDiff adjDiff{{}, {}, {{0, 0}}, {}, {}, {}};
+		return std::unique_ptr<G0batchReactor>(new G0batchReactor(std::move(adj), std::move(adjDiff), 0, 0));
+	}
+
+	double eval(const double *x, const double *u, const double *p, double t) override {
+		return (-4 + u[0])*(-2 + u[0]);
+	}
+
+	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
+		return {std::vector<double>{}, {-6 + 2*u[0]}, {}};
+	}
+
+	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
+		return {std::vector<double>{}, {}, {2}, {}, {}, {}};
+	}
+private:
+	G0batchReactor(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {}
+};
+
+
 Problem createProblem_batchReactor() {
 
     std::vector<std::unique_ptr<Expression>> F;
@@ -99,7 +124,7 @@ Problem createProblem_batchReactor() {
     F.push_back(F1batchReactor::create());
     
     std::vector<std::unique_ptr<Constraint>> G;
-    
+    G.push_back(G0batchReactor::create());
     
     std::vector<std::unique_ptr<Constraint>> R;
     
@@ -112,7 +137,7 @@ Problem createProblem_batchReactor() {
             {1, 0},  // x0
             {0, 0},  // lb x
             {1, 1},  // ub x
-            {0},  // u0 initial guesses for optimization
+            {3},  // u0 initial guesses for optimization
             {0},  // lb u
             {5},  // ub u
             {},  // p0 initial guesses for optimization

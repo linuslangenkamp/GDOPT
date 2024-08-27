@@ -95,9 +95,33 @@ private:
 class G0bangBang : public Constraint {
 public:
 	static std::unique_ptr<G0bangBang> create() {
+		Adjacency adj{{}, {0}, {}};
+		AdjacencyDiff adjDiff{{}, {}, {{0, 0}}, {}, {}, {}};
+		return std::unique_ptr<G0bangBang>(new G0bangBang(std::move(adj), std::move(adjDiff), 0, 0));
+	}
+
+	double eval(const double *x, const double *u, const double *p, double t) override {
+		return -100 + pow(u[0], 2);
+	}
+
+	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
+		return {std::vector<double>{}, {2*u[0]}, {}};
+	}
+
+	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
+		return {std::vector<double>{}, {}, {2}, {}, {}, {}};
+	}
+private:
+	G0bangBang(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {}
+};
+
+
+class G1bangBang : public Constraint {
+public:
+	static std::unique_ptr<G1bangBang> create() {
 		Adjacency adj{{1}, {0}, {}};
 		AdjacencyDiff adjDiff{{}, {{0, 1}}, {}, {}, {}, {}};
-		return std::unique_ptr<G0bangBang>(new G0bangBang(std::move(adj), std::move(adjDiff), -30, 30));
+		return std::unique_ptr<G1bangBang>(new G1bangBang(std::move(adj), std::move(adjDiff), -30, 30));
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
@@ -112,7 +136,7 @@ public:
 		return {std::vector<double>{}, {1}, {}, {}, {}, {}};
 	}
 private:
-	G0bangBang(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {}
+	G1bangBang(Adjacency adj, AdjacencyDiff adjDiff, double lb, double ub) : Constraint(std::move(adj), std::move(adjDiff), lb, ub) {}
 };
 
 
@@ -149,6 +173,7 @@ Problem createProblem_bangBang() {
     
     std::vector<std::unique_ptr<Constraint>> G;
     G.push_back(G0bangBang::create());
+    G.push_back(G1bangBang::create());
     
     std::vector<std::unique_ptr<Constraint>> R;
     R.push_back(R0bangBang::create());
@@ -161,7 +186,7 @@ Problem createProblem_bangBang() {
             {0, 0},  // x0
             {MINUS_INFINITY, MINUS_INFINITY},  // lb x
             {PLUS_INFINITY, PLUS_INFINITY},  // ub x
-            {0},  // u0 initial guesses for optimization
+            {5},  // u0 initial guesses for optimization
             {-10},  // lb u
             {10},  // ub u
             {},  // p0 initial guesses for optimization

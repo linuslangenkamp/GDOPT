@@ -39,9 +39,9 @@ model.addDynamic(x2, u * x1)
 
 model.generate()
 
-model.optimize(tf=1, steps=25, rksteps=3,
+model.optimize(tf=1, steps=250, rksteps=3,
                flags={"outputPath": "/tmp",
-                      "linearSolver": LinearSolver.MUMPS,
+                      "linearSolver": LinearSolver.MA57,
                       "exportJacobianPath": "/tmp"},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 10})

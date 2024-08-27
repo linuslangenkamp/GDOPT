@@ -8,18 +8,16 @@ model = Model("pureParameter")
 
 Items = 15
 
-P = [model.addParameter(symbol=f"p{i}", lb=0, ub=1, start=0.5) for i in range(Items)]
+P = [model.addBinaryParameter(symbol=f"p{i}") for i in range(Items)]
 
 # force binary decision variables
-for p in P:
-    model.addParametric(p * (p - 1), eq=0)
 
 Weights = [random.uniform(0, 2) for i in range(Items)]
 Values = [random.uniform(0, 2) for i in range(Items)]
 
 model.addParametric(sum(Weights[i] * P[i] for i in range(Items)), ub=5)
 
-model.addMayer(sum(Values[i] * P[i] for i in range(Items)), Objective.MAX)
+model.addMayer(sum(Values[i] * P[i] for i in range(Items)), Objective.MAXIMIZE)
 
 model.generate()
 

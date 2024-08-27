@@ -74,6 +74,22 @@ class Model:
         varInfo[variable] = info
         self.uVars.append(variable)
         return variable
+
+    def addBinaryInput(self, lb=0, ub=1, symbol=None, start=None):
+
+        # dangerous, might break the code
+        # adds an input / control u for optimization
+        # specify lb or ub, start/initialGuess if needed
+        # to ensure the binary type, adds a parametric equation (u - lb) * (u - ub) == 0 to the model
+
+        if start is None:
+            start = (lb + ub) / 2
+        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=start)
+        variable = Symbol(f'u[{info.id}]')
+        varInfo[variable] = info
+        self.uVars.append(variable)
+        self.addPath(variable**2 - variable * (lb + ub) + lb * ub, eq=0)    # forces binary type
+        return variable
         
     def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf"), start=0):
         
@@ -85,7 +101,23 @@ class Model:
         varInfo[variable] = info
         self.pVars.append(variable)
         return variable
-    
+
+    def addBinaryParameter(self, lb=0, ub=1, symbol=None, start=None):
+
+        # dangerous, might break the code
+        # adds a binary parameter p for optimization
+        # specify lb or ub, start/initialGuess if needed
+        # to ensure the binary type, adds a parametric equation (p - lb) * (p - ub) == 0 to the model
+
+        if start is None:
+            start = (lb + ub) / 2
+        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=start)
+        variable = Symbol(f'p[{info.id}]')
+        varInfo[variable] = info
+        self.pVars.append(variable)
+        self.addParametric(variable**2 - variable * (lb + ub) + lb * ub, eq=0)     # forces binary type
+        return variable
+
     def addRuntimeParameter(self, default, symbol):
         
         # adds a runtime parameter: can be changed for optimization
