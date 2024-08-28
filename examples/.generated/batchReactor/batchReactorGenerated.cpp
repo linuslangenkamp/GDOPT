@@ -58,16 +58,11 @@ public:
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-        const double x0 = (1.0/2.0)*pow(u[0], 2);
-		return {std::vector<double>{-(u[0]*REACT_SPEED_VALUE + x0*DEPLETION_SPEED_VALUE)}, {-x[0]*(REACT_SPEED_VALUE + u[0]*DEPLETION_SPEED_VALUE)}, {}};
+		return {std::vector<double>{-(u[0]*REACT_SPEED_VALUE + (1.0/2.0)*pow(u[0], 2)*DEPLETION_SPEED_VALUE)}, {-x[0]*(REACT_SPEED_VALUE + u[0]*DEPLETION_SPEED_VALUE)}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
         const double x0 = -(REACT_SPEED_VALUE + u[0]*DEPLETION_SPEED_VALUE);
-        const double x1 = -u[0];
-        const double x2 = (-1.0/2.0)*pow(u[0], 2);
-        const double x3 = -x[0];
-        const double x4 = -u[0]*x[0];
 		return {std::vector<double>{}, {x0}, {-x[0]*DEPLETION_SPEED_VALUE}, {}, {}, {}};
 	}
 private:
@@ -88,14 +83,11 @@ public:
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-        const double x0 = (1.0/2.0)*pow(u[0], 2);
-		return {std::vector<double>{x0*DEPLETION_SPEED_VALUE}, {u[0]*x[0]*DEPLETION_SPEED_VALUE}, {}};
+		return {std::vector<double>{(1.0/2.0)*pow(u[0], 2)*DEPLETION_SPEED_VALUE}, {u[0]*x[0]*DEPLETION_SPEED_VALUE}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
         const double x0 = u[0]*DEPLETION_SPEED_VALUE;
-        const double x1 = (1.0/2.0)*pow(u[0], 2);
-        const double x2 = u[0]*x[0];
 		return {std::vector<double>{}, {x0}, {x[0]*DEPLETION_SPEED_VALUE}, {}, {}, {}};
 	}
 private:

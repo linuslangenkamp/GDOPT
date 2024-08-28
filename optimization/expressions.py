@@ -17,7 +17,7 @@ class Expression:
         self.adj = []
         try:
             for sym in expr.free_symbols:
-                if sym in varInfo:
+                if sym in varInfo and not isinstance(varInfo[sym], RuntimeParameterStruct):
                     self.adj.append(sym)
             sort_symbols(self.adj, varInfo)
         except:

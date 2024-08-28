@@ -115,7 +115,7 @@ model.addLagrange(dot_m_f)
 
 model.generate()
 
-model.optimize(steps=5000, rksteps=3, tf=0.5,
+model.optimize(steps=10000, rksteps=3, tf=0.5,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MA57,
                       "tolerance": 1e-13},
