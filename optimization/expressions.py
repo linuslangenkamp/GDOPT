@@ -1,4 +1,3 @@
-import sympy.simplify
 from optimization.variables import *
 from symengine import *
 
@@ -10,7 +9,7 @@ class Expression:
 
     def __init__(self, expr):
         if Expression.simplification:
-            self.expr = sympy.simplify(expr)
+            self.expr = expr.simplify()
         else:
             self.expr = expr
 

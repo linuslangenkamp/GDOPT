@@ -36,7 +36,6 @@ public:
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-        const double x0 = 2*u[0];
 		return {std::vector<double>{2, 2}, {}, {2*RP_VALUE}, {}, {}, {}};
 	}
 private:
