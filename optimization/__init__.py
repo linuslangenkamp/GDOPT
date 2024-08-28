@@ -448,7 +448,7 @@ int main() {{
         print(".cpp: codegen done.\n")
 
 
-        os.makedirs(f".generated/{self.name}",exist_ok=True)
+        os.makedirs(f".generated/{self.name}", exist_ok=True)
 
         with open(f'.generated/{self.name}/{filename}.cpp', 'w') as file:
             file.write(OUTPUT)
@@ -457,25 +457,28 @@ int main() {{
         print(f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.\n")
         return 0
         
-    def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}):
+    def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
         
         # generate corresponding main function with flags, mesh, refinement
         # set runtime parameter file from map
         # run the code
 
-        if not self.addedDummy:
-            self.setFinalTime(tf)
-            self.setSteps(steps)
-            self.setRkSteps(rksteps)
+        if not resimulate:      # use everything from the previous optimization
+            if not self.addedDummy:       # use provided values / standard values
+                self.setFinalTime(tf)
+                self.setSteps(steps)
+                self.setRkSteps(rksteps)
+            else:                           # purely parametric
+                print("\nSetting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.")
+                self.setFinalTime(0)
+                self.setSteps(1)
+                self.setRkSteps(1)
+
+            self.setFlags(flags)
+
+            self.setMeshFlags(meshFlags)
         else:
-            print("\nSetting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.")
-            self.setFinalTime(0)
-            self.setSteps(1)
-            self.setRkSteps(1)
-
-        self.setFlags(flags)
-
-        self.setMeshFlags(meshFlags)
+            self.resultHistory = {}     # clear result history for new optimization
 
         ### main codegen
         filename = self.name + "Generated"
@@ -596,6 +599,46 @@ int main() {{
             ax.legend(frameon=True, loc='best')
             ax.grid(True)
             ax.title.set_fontsize(16)
+
+        plt.tight_layout()
+        plt.show()
+
+    def parametricPlot(self, varX, varY, meshIteration=None, interval=None, dots=False):
+        meshIteration = self.checkMeshIteration(meshIteration)
+        if interval is None:
+            interval = [0, self.tf]
+        self.getResults(meshIteration=meshIteration)
+        plt.rcParams.update({
+            'font.serif': ['Times New Roman'],
+            'axes.labelsize': 14,
+            'axes.titlesize': 16,
+            'xtick.labelsize': 12,
+            'ytick.labelsize': 12,
+            'legend.fontsize': 12,
+            'legend.frameon': True,
+            'legend.loc': 'best',
+            'grid.alpha': 0.3,
+            'grid.linestyle': '--',
+            'grid.linewidth': 0.5,
+            'figure.figsize': (12, 8),
+            'axes.titlepad': 20,
+            'axes.labelpad': 10
+        })
+
+        x_data = self.resultHistory[meshIteration][varInfo[varX].symbol]
+        y_data = self.resultHistory[meshIteration][varInfo[varY].symbol]
+        time_data = self.resultHistory[meshIteration]['time']
+        timeFiltered = (time_data >= interval[0]) & (time_data <= interval[1])
+        name1, name2 = varInfo[varX].symbol, varInfo[varY].symbol
+
+        plt.plot(x_data[timeFiltered], y_data[timeFiltered])
+
+        if dots:
+            plt.scatter(x_data[timeFiltered], y_data[timeFiltered], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+
+        plt.title(f'{name1} vs {name2}')
+        plt.xlabel(name1)
+        plt.ylabel(name2)
 
         plt.tight_layout()
         plt.show()

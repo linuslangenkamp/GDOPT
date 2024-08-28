@@ -11,7 +11,7 @@ model = "BatchReactor"
 it = 0
 specifCol = 'u0'
 interval = [0, 1]
-intervals = 100
+intervals = 25
 steps = 3
 
 x = sy.symbols('x')

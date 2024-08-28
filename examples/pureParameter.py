@@ -4,7 +4,7 @@ import random
 model = Model("pureParameter")
 
 # by creating purely parametric models, it is possible to solve
-# standard NLPs: in this case a knapsack problem as a NLP
+# standard NLPs: in this case a knapsack problem as a NLP, which is conditioned poorly :)
 
 Items = 12
 

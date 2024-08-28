@@ -44,12 +44,12 @@ model.addDynamic(x2, u * x1 * R_v)
 
 model.generate()
 
-model.optimize(tf=1, steps=25, rksteps=3,
+model.optimize(tf=1, steps=50, rksteps=3,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MA57,
                       "exportJacobianPath": "/tmp"},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-                          "meshIterations": 10})
+                          "meshIterations": 5})
 
 model.plot(dots=True)
 model.plotSparseMatrix(MatrixType.JACOBIAN)

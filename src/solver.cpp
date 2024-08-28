@@ -3,7 +3,7 @@
 #include "gdop_impl.h"
 #include "IpIpoptApplication.hpp"
 
-/* MILESTONE TODOS: TYPE | IMPORTANCE | EFFORT from 1 to 5
+/* BIG TODOS: TYPE | IMPORTANCE | EFFORT from 1 to 5
  * TODO:
     1 add, construct, test more mesh refinement algorithms              4, 3
     2 vectorized equation, derivatives with local substitutions         4, 5
