@@ -9,6 +9,8 @@
 #define MESH_ITERATIONS 10
 #define TOLERANCE 1e-14
 #define EXPORT_OPTIMUM_PATH "/tmp"
+#define LEVEL -0.5
+#define C_TOL 0.5
 
 // values for runtime parameters
-#define RP_VALUE 0.1
+#define RP_VALUE 1

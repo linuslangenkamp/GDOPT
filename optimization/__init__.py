@@ -126,7 +126,6 @@ class Model:
 
         info = RuntimeParameterStruct(default=default, symbol=symbol)
         variable = Symbol(f"{str(info.symbol).upper().strip(' ')}_VALUE")
-        print(f"{str(info.symbol).upper().strip(' ')}_VALUE")
         varInfo[variable] = info
         self.rpVars.append(variable)
         return variable

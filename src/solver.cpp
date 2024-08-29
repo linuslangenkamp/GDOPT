@@ -187,7 +187,7 @@ std::vector<int> Solver::l2BoundaryNorm() const {
             // (int_0^1 (d^{1,2}/dt^{1,2} p_u(t))^2 dt)^0.5 - L2 norm of the (1st, 2nd) diff
             double L2Diff1 = std::sqrt(_priv->gdop->rk.integrate(sq_p_uDiff));
             double L2Diff2 = std::sqrt(_priv->gdop->rk.integrate(sq_p_uDiff2));
-
+            std::cout << "i: " << i << ", L2Diff1: " << L2Diff1 << std::endl;
             // difference in derivatives from polynomial of adjacent intervals must not exceed some eps
             // using p1 (+1) error; basically isclose(.) in numpy bib
             double p1ErrorDiff = std::abs(p_uDiff[0]  - lastDiffs[u][0]) / (1 + std::max({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])}));
