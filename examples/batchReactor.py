@@ -51,7 +51,7 @@ model.optimize(tf=1, steps=50, rksteps=3,
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 5})
 
-model.plot(dots=True)
+model.plotInputs(dots=True, meshIteration=0, interval=[0.8, 1])
 model.plotSparseMatrix(MatrixType.JACOBIAN)
 model.printResults()
 model.plotPointDifferenceCount(meshIteration="all")

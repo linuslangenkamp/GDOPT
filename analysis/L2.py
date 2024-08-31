@@ -10,7 +10,7 @@ def calcL2(f, var):
 # bei sprüngen wird das integral eh nie verschwinden. Überlege Sprungfunktion auf kleiner werdenden interval mit e.g.
 # kubischer interpolation, steigung wird nur noch höher
 
-f = -5*x**5 + x**6 - 5*x
+f = -34*x**3 + 25*x**2 - 5*x
 
 # [t_i + j/2**k * h, t_i + (j+1)/2**k * h] -> [0, 1] ohne einschränkung
 # ableitung des transformierten polynom p: d/dt p(t)

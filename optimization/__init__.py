@@ -520,7 +520,7 @@ int main() {{
         print("Compiling generated code...\n")
         compileStart = timer.time()
         # TODO: investigate if -ffast-math is save here
-        os.system(f"g++ .generated/{self.name}/{filename}.cpp -O3 -ffast-math -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}") # vorher src lipopt_do
+        os.system(f"g++ .generated/{self.name}/{filename}.cpp -O3 -ffast-math -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}")
         print(f"Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.")
 
         os.system(f"LD_LIBRARY_PATH=../cmake-build-release/src/ ./.generated/{self.name}/{self.name}")
@@ -549,10 +549,12 @@ int main() {{
         return meshIteration
 
     def plotStates(self, meshIteration=None, interval=None, dots=False):
-        self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=[v.name for v in self.xVars])
+        self.initVarNames()
+        self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.xVarNames)
 
     def plotInputs(self, meshIteration=None, interval=None, dots=False):
-        self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=[v.name for v in self.uVars])
+        self.initVarNames()
+        self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.uVarNames)
 
     def plot(self, meshIteration=None, interval=None, specifCols=None, dots=False):
         meshIteration = self.checkMeshIteration(meshIteration)
