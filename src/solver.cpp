@@ -14,9 +14,11 @@
     6 saving of local hessian and jacobian structures (contained in 4?) 1, 1
     7 creation of local jacobian structure (contained in 4?)            0, 1
     8 better initial guess, e.g. solve(.), evolutionary algorithms      3, 3
+    9 test framework for huge examples / industry relevant              3, 2
+   10 add nominal, linear, quadratic, const hessian arguments           2, 2
 */
 
-void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver) ;
+void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver);
 
 struct SolverPrivate {
     SmartPtr<GDOP> gdop;
@@ -198,7 +200,7 @@ std::vector<int> Solver::l2BoundaryNorm() const {
             }
             lastDiffs[u] = {p_uDiff[sz(_priv->gdop->rk.c)], p_uDiff2[sz(_priv->gdop->rk.c)]};
 
-            // detection if "i" has to be inserted
+            // detection if "i" has to be inserted; TODO: investigate behavior if i-1, i+1 are not inserted, const regions are removed
             if (intervalInserted || L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u]) {
                 if (i >= 1)
                     markerSet.insert(i - 1);
