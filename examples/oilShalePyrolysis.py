@@ -25,12 +25,12 @@ model.addMayer(x2, Objective.MAXIMIZE)
 
 model.generate()
 
-model.optimize(tf=8, steps=500, rksteps=5,
+model.optimize(tf=8, steps=50, rksteps=3,
                flags={"outputPath": "/tmp",
-                      "tolerance": 1e-12,
+                      "tolerance": 1e-14,
                       "linearSolver": LinearSolver.MA57,
                       "exportJacobianPath": "/tmp"},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-                          "meshIterations": 0})
+                          "meshIterations": 2})
 
 model.plot()

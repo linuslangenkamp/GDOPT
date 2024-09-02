@@ -2,7 +2,7 @@
 
 #define INIT_VARS InitVars::CONST
 #define RADAU_INTEGRATOR IntegratorSteps::Steps1
-#define INTERVALS 50000
+#define INTERVALS 5000
 #define FINAL_TIME 1
 #define LINEAR_SOLVER LinearSolver::MA57
 #define MESH_ALGORITHM MeshAlgorithm::L2_BOUNDARY_NORM

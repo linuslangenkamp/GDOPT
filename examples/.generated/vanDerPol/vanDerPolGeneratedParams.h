@@ -13,4 +13,4 @@
 #define C_TOL 0.5
 
 // values for runtime parameters
-#define RP_VALUE 1
+#define RP_VALUE 0.1

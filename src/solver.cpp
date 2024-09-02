@@ -6,16 +6,15 @@
 /* BIG TODOS: TYPE | IMPORTANCE | EFFORT from 1 to 5
  * TODO:
     1 add, construct, test more mesh refinement algorithms              4, 3
-    2 OpenModelica interface (depends on 1,2)                           4, 5
+    2 OpenModelica interface                                            4, 5
     3 tf as free variable                                               2, 4.5
-    4 vectorized equation, derivatives with local substitutions         2, 5
+    4 vectorized equation, derivatives with local substitutions         2, 4
     -> define vec(f,g), vec(r), vec(a(p))
-    5 Python interface has to be extended                               2, 2
-    6 saving of local hessian and jacobian structures (contained in 4?) 1, 1
-    7 creation of local jacobian structure (contained in 4?)            0, 1
-    8 better initial guess, e.g. solve(.), evolutionary algorithms      3, 3
-    9 test framework for huge examples / industry relevant              3, 2
-   10 add nominal, linear, quadratic, const hessian arguments           2, 2
+    5 saving of local hessian and jacobian structures (contained in 4?) 1, 1
+    6 creation of local jacobian structure (contained in 4?)            0, 1
+    7 better initial guess, e.g. solve(.), evolutionary algorithms      3, 3
+    8 test framework for huge examples / industry relevant              3, 2
+    9 add nominal, linear, quadratic, const hessian detection           2, 2
 */
 
 void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver);
@@ -36,7 +35,6 @@ Solver::~Solver() {
 
 std::string getLinearSolverName(LinearSolver solver) {
     switch (solver) {
-        // TODO: add SPRAL solver (bsd licensed)
         case LinearSolver::MUMPS: return "MUMPS";
         case LinearSolver::MA27: return "MA27";
         case LinearSolver::MA57: return "MA57";
@@ -436,6 +434,7 @@ void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver)  {
     app->Options()->SetStringValue("linear_solver", getLinearSolverName(solver.linearSolver));
     app->Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
 
+    // app->Options()->SetStringValue("hessian_constant", "yes");
     // app->Options()->SetStringValue("output_file", "ipopt.out");
 }
 

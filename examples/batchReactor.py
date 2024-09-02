@@ -44,7 +44,7 @@ model.addDynamic(x2, u * x1 * R_v)
 
 model.generate()
 
-model.optimize(tf=1, steps=50, rksteps=3,
+model.optimize(tf=1, steps=100, rksteps=3,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MA57,
                       "exportJacobianPath": "/tmp"},

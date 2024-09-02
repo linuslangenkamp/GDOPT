@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 import sympy as sy
 from mpmath import *
 
-path = "/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData/batchReactorRefinement"
-model = "BatchReactor"
+path = "/tmp"
+model = "batchReactor"
 it = 0
-specifCol = 'u0'
+specifCol = 'u[0]'
 interval = [0, 1]
-intervals = 25
+intervals = 50
 steps = 3
 
 x = sy.symbols('x')

@@ -17,7 +17,7 @@ model.addMayer(x4, Objective.MINIMIZE)
 
 model.generate()
 
-model.optimize(tf=1, steps=50000, rksteps=1,
+model.optimize(tf=1, steps=5000, rksteps=1,
                flags={"outputPath": "/tmp",
                       "tolerance": 1e-12,
                       "linearSolver": LinearSolver.MA57,
