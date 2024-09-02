@@ -30,7 +30,7 @@ public:
     std::vector<double> uStart;                      // starting values for control vars - not forced, only initial values for optimization
     std::vector<double> lbU;                         // global lower bound on control vars
     std::vector<double> ubU;                         // global upper bound on control vars
-    std::vector<double> pStart;                      // starting values for paramters - not forced, only initial values for optimization
+    std::vector<double> pStart;                      // starting values for parameters - not forced, only initial values for optimization
     std::vector<double> lbP;                         // global lower bound on parameters
     std::vector<double> ubP;                         // global upper bound on parameters
 

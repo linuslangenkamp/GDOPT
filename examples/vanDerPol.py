@@ -1,6 +1,5 @@
 from optimization import *
 
-
 model = Model("vanDerPol")
 
 x1 = model.addState(start=0)

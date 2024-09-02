@@ -1,6 +1,5 @@
 from optimization import *
 
-
 model = Model("dieselMotor")
 
 #model.setExpressionSimplification(True)
@@ -103,8 +102,8 @@ Pi_wg = p_amb/P_EM
 Pi_wgs = Pi_wg
 Psi_wg = sqrt(2*gamma_e/(gamma_e-1)*((Pi_wgs**(2/gamma_e))-(Pi_wgs**((gamma_e+1)/gamma_e))))
 dot_m_wg = P_EM*Psi_wg*A_wg_eff*u_wg/(sqrt(T_eo*R_e))
-
 P_ICE = T_ice*W_ICE/control_norm3
+
 model.addDynamic(w_ice, 0.0012987012987013*T_ice)
 model.addDynamic(p_im, 20.2505119361145*((0.526906365590249*sqrt(Cm_temp))-dot_m_ci))
 model.addDynamic(p_em, 0.0476078551344513*(T_eo*(dot_m_ci+dot_m_f-dot_m_t-dot_m_wg)))

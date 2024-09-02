@@ -11,7 +11,6 @@ G = -9.81
 
 s = model.addState(start=0)
 v = model.addState(start=0)
-
 phi = model.addState(start=pi-0.001)
 omega = model.addState(start=0)
 
@@ -21,7 +20,6 @@ dvdt = u + (sin(-phi)*Mp*R*omega**2 - cos(phi)*sin(-phi)*Mp*G) / (Ms + Mp * sin(
 
 model.addDynamic(s, v)
 model.addDynamic(v, dvdt)
-
 model.addDynamic(phi, omega)
 model.addDynamic(omega, (sin(-phi)*G - cos(phi)*dvdt)/R)
 

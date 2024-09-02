@@ -4,8 +4,10 @@ from enum import Enum
 class InvalidModel(Exception):
     pass
 
+
 class InvalidMatrix(Exception):
     pass
+
 
 class Objective(Enum):
     MINIMIZE = 1
@@ -28,6 +30,7 @@ class MeshAlgorithm(Enum):
     NONE = 1
     BASIC = 2
     L2_BOUNDARY_NORM = 3
+
 
 class MatrixType(Enum):
     DEFAULT = 1

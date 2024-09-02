@@ -3,6 +3,7 @@ from optimization import *
 model = Model("hypersensitive")
 
 x = model.addState(start=1)
+
 u = model.addInput()
 
 model.addDynamic(x, -x**3 + u)
@@ -17,8 +18,8 @@ model.optimize(tf=10000, steps=30, rksteps=9,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MA57},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-                          "meshIterations": 12,
+                          "meshIterations": 20,
                           "meshLevel": 0})
 
-model.plotInputs(interval=[0, 10000], dots=True)
+model.plotInputs(interval=[9980, 10000], dots=True)
 model.plotPointDifferenceCount(interval=[9980, 10000], meshIteration="all")

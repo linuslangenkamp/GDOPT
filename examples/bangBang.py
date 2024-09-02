@@ -1,8 +1,6 @@
 from optimization import *
 
-
 model = Model("bangBang")
-
 
 x1 = model.addState(start=0)
 x2 = model.addState(start=0)

@@ -29,7 +29,7 @@ model.optimize(tf=10000, steps=100, rksteps=9,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MA57},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-                          "meshIterations": 10,
+                          "meshIterations": 20,
                           "meshLevel": 0})
 
 model.plot(interval=[9980, 10000], dots=True)

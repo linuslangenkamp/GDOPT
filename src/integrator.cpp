@@ -242,6 +242,16 @@ Integrator Integrator::testIntegrator(const double a) {
 
 Integrator Integrator::radauIIA(IntegratorSteps steps) {
 
+/*
+Schema has to be of the following structure:
+    c_1 | a_11, ..., a_1m
+    c_2 | a_12, ..., a_2m
+     .  |  .    ...,  .
+    c_m | a_m1, ..., a_m,m
+    ----------------------
+        | a_m1, ..., a_m,m =: vec(b)^T
+*/
+
     switch (steps) {
         case IntegratorSteps::Steps1:
             return {{1.0},

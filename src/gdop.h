@@ -17,6 +17,6 @@ enum class InitVars {
 
 class GDOP;
 
-GDOP *create_gdop(const std::shared_ptr<const Problem> & problem, Mesh &mesh, Integrator &rk, InitVars initVars);
+GDOP *create_gdop(const std::shared_ptr<const Problem>& problem, Mesh& mesh, Integrator& rk, InitVars initVars);
 
 #endif //GDOP_H

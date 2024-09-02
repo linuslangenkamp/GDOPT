@@ -29,9 +29,7 @@ Solver::Solver(GDOP* gdop, const int maxMeshIterations, LinearSolver linearSolve
     this->_priv->gdop = gdop;
 }
 
-Solver::~Solver() {
-
-}
+Solver::~Solver() = default;
 
 std::string getLinearSolverName(LinearSolver solver) {
     switch (solver) {
@@ -163,7 +161,7 @@ std::vector<int> Solver::l2BoundaryNorm() const {
                 for (int j = 0; j < _priv->gdop->rk.steps; j++) {
                     uCoeffs.push_back(_priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
                 }
-                uCoeffs.insert(uCoeffs.begin(), _priv->gdop->rk.evalLagrange(_priv->gdop->rk.c, uCoeffs, 0.0));
+                uCoeffs.insert(uCoeffs.begin(), Integrator::evalLagrange(_priv->gdop->rk.c, uCoeffs, 0.0));
 
             }
             else {

@@ -8,6 +8,7 @@ class VariableStruct:
         self.id = VariableStruct.id_counter
         VariableStruct.id_counter += 1
 
+
 class StateStruct(VariableStruct):
     id_counter = 0
 
@@ -17,6 +18,7 @@ class StateStruct(VariableStruct):
         self.symbol = symbol if symbol is not None else f'x[{StateStruct.id_counter}]'
         self.id = StateStruct.id_counter
         StateStruct.id_counter += 1
+
 
 class InputStruct(VariableStruct):
     id_counter = 0
@@ -50,19 +52,18 @@ class RuntimeParameterStruct(VariableStruct):
         self.value = default
         ParameterStruct.id_counter += 1
 
+
 class_order = {
     'State': 0,
     'Input': 1,
     'Parameter': 2
 }
 
-
 def get_sort_key(symbol, obj_map):
     obj = obj_map[symbol]
     class_name = obj.__class__.__name__.replace('Struct', '')
     order = class_order.get(class_name, float('inf'))
-    return (order, obj.id)
-
+    return order, obj.id
 
 def sort_symbols(symbols, obj_map):
     return symbols.sort(key=lambda s: get_sort_key(s, obj_map))

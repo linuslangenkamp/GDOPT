@@ -1,6 +1,5 @@
 from optimization import *
 
-
 model = Model("oilShalePyrolysis")
 
 x1 = model.addState(start = 1, symbol="kerogen")

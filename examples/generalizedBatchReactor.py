@@ -1,5 +1,3 @@
-from email.policy import default
-
 from optimization import *
 import random
 
@@ -21,6 +19,7 @@ for v in range(N):
 u = model.addInput(symbol="u", lb=0, ub=5, start=1)
 
 energy = model.addState(symbol="energy", start=0) # total energy consumed by the control
+
 EXP_E = model.addRuntimeParameter(default=4, symbol="EXPONENT_ENERGY")
 DEPL = model.addRuntimeParameter(default=35, symbol="DEPLETION_COEFF")
 
@@ -47,6 +46,7 @@ for v in range(N):
         model.addDynamic(x[N-1], sum(u * coeffs[N-1][k] * x[k] for k in range(N)) + DEPL * x[0] * u**2)
 
 model.addDynamic(energy, u**EXP_E)
+
 model.addFinal(energy, ub=0.5)
 
 model.addMayer(x[0], Objective.MAXIMIZE)
