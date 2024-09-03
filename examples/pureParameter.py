@@ -8,7 +8,7 @@ model = Model("pureParameter")
 
 Items = 12
 
-P = [model.addBinaryParameter(symbol=f"p{i}", start=0.8) for i in range(Items)]
+P = [model.addBinaryParameter(symbol=f"p{i}", guess=0.8) for i in range(Items)]
 
 Weights = [random.uniform(0, 2) for i in range(Items)]
 Values = [random.uniform(0, 2) for i in range(Items)]

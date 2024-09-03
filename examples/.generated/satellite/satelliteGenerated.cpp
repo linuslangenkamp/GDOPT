@@ -236,6 +236,10 @@ private:
 };
 
 
+std::vector<double> uInitialGuess(double t) {
+	 return {0, 0, 0};
+};
+
 Problem createProblem_satellite() {
 
     std::vector<std::unique_ptr<Expression>> F;
@@ -261,7 +265,7 @@ Problem createProblem_satellite() {
             {0, 0, 0, 1, 0.01, 0.005, 0.001},  // x0
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
             {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
-            {0, 0, 0},  // u0 initial guesses for optimization
+            &uInitialGuess,  // u0 initial guesses for optimization
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb u
             {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub u
             {},  // p0 initial guesses for optimization

@@ -3,8 +3,8 @@
 
 Problem::Problem(int sizeX, int sizeU, int sizeP,
                  std::vector<double> x0, std::vector<double> lbX, std::vector<double> ubX,
-                 std::vector<double> uStart, std::vector<double> lbU, std::vector<double> ubU,
-                 std::vector<double> pStart, std::vector<double> lbP, std::vector<double> ubP,
+                 std::function<std::vector<double>(double)> uInitialGuess, std::vector<double> lbU, std::vector<double> ubU,
+                 std::vector<double> pInitialGuess, std::vector<double> lbP, std::vector<double> ubP,
                  std::unique_ptr<Expression> M, std::unique_ptr<Expression> L,
                  std::vector<std::unique_ptr<Expression>> F,
                  std::vector<std::unique_ptr<Constraint>> G,
@@ -13,8 +13,8 @@ Problem::Problem(int sizeX, int sizeU, int sizeP,
                  std::string name)
         : sizeX(sizeX), sizeU(sizeU), sizeP(sizeP),
           x0(std::move(x0)), lbX(std::move(lbX)), ubX(std::move(ubX)),
-          uStart(std::move(uStart)), lbU(std::move(lbU)), ubU(std::move(ubU)),
-          pStart(std::move(pStart)), lbP(std::move(lbP)), ubP(std::move(ubP)),
+          uInitialGuess(std::move(uInitialGuess)), lbU(std::move(lbU)), ubU(std::move(ubU)),
+          pInitialGuess(std::move(pInitialGuess)), lbP(std::move(lbP)), ubP(std::move(ubP)),
           M(std::move(M)), L(std::move(L)), F(std::move(F)), G(std::move(G)), R(std::move(R)), A(std::move(A)),
           name(std::move(name)) {
 }

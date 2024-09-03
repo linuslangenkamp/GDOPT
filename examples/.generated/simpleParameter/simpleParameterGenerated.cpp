@@ -92,6 +92,10 @@ private:
 };
 
 
+std::vector<double> uInitialGuess(double t) {
+	 return {0};
+};
+
 Problem createProblem_simpleParameter() {
 
     std::vector<std::unique_ptr<Expression>> F;
@@ -111,7 +115,7 @@ Problem createProblem_simpleParameter() {
             {0},  // x0
             {MINUS_INFINITY},  // lb x
             {PLUS_INFINITY},  // ub x
-            {0},  // u0 initial guesses for optimization
+            &uInitialGuess,  // u0 initial guesses for optimization
             {-1},  // lb u
             {1},  // ub u
             {0.5, 0.5},  // p0 initial guesses for optimization

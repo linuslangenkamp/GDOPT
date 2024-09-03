@@ -207,6 +207,10 @@ private:
 };
 
 
+std::vector<double> uInitialGuess(double t) {
+	 return {700};
+};
+
 Problem createProblem_oilShalePyrolysis() {
 
     std::vector<std::unique_ptr<Expression>> F;
@@ -229,7 +233,7 @@ Problem createProblem_oilShalePyrolysis() {
             {1, 0, 0, 0},  // x0
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
             {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
-            {700},  // u0 initial guesses for optimization
+            &uInitialGuess,  // u0 initial guesses for optimization
             {698.15},  // lb u
             {748.15},  // ub u
             {},  // p0 initial guesses for optimization

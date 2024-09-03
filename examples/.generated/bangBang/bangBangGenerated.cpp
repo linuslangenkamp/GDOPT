@@ -141,6 +141,10 @@ private:
 };
 
 
+std::vector<double> uInitialGuess(double t) {
+	 return {0};
+};
+
 Problem createProblem_bangBang() {
 
     std::vector<std::unique_ptr<Expression>> F;
@@ -161,7 +165,7 @@ Problem createProblem_bangBang() {
             {0, 0},  // x0
             {MINUS_INFINITY, MINUS_INFINITY},  // lb x
             {PLUS_INFINITY, PLUS_INFINITY},  // ub x
-            {0},  // u0 initial guesses for optimization
+            &uInitialGuess,  // u0 initial guesses for optimization
             {-10},  // lb u
             {10},  // ub u
             {},  // p0 initial guesses for optimization

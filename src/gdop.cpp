@@ -306,26 +306,58 @@ bool GDOP::get_bounds_info(Index n, Number *x_l, Number *x_u, Index m, Number *g
 
 bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Number *z_L, Number *z_U, Index m,
                               bool init_lambda, Number *lambda) {
-    // TODO: implement different strategies: SOLVE()
+    // TODO: implement different strategies:
+    //  * SOLVE(.) -> given u(t), p guesses and x0: simulate the dynamic with given scheme, newton iteration, linear system
+    //  * genetic / bionic algorithm
     assert(n == numberVars);
     switch (initVars) {
         case InitVars::CONST:
-            for (int i = 0; i < n; i++) {
-                int v = i % offXU;
-                if (v < offX && i < offXUTotal) {
-                    x[i] = problem->x0[v];  // starting for states is x0 globally
+            for (int i = 0; i < mesh.intervals; i++) {
+                for (int j = 0; j < rk.steps; j++) {
+                    const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
+                    const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                    const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+                    for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                        x[xij + dimX] = problem->x0[dimX];
+                    }
+                    std::vector<double> uGuess = problem->uInitialGuess(tij);
+                    for (int dimU = 0; dimU < problem->sizeU; dimU++) {
+                        x[uij + dimU] = uGuess[dimU];
+                    }
                 }
-                else if (v < offXU && i < offXUTotal && sz(problem->uStart) == problem->sizeU) {
-                    x[i] = problem->uStart[v - offX];  // starting for controls is uStart if enough args where given
-                }
-                else if (i >= offXUTotal && sz(problem->pStart) == problem->sizeP) {
-                    x[i] = problem->pStart[i - offXUTotal];  // starting for parameters is pStart if enough args where given
-                }
-                else {
-                    x[i] = 0;   // default fallback, if not enough args where given for the specific variable
+            }
+            for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
+                x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
+            }
+            break;
+
+        case InitVars::SOLVE:
+            // optional (given initial values for u(t), p or a given function) -> solve x' = f(x, u, p, t), x(0) = x0
+            // to obtain a, at least in terms of the ode, feasible solution
+            break;
+
+        case InitVars::SOLVE_EXPLICIT:
+            // explicit solution, will be easier to implement for the start, not jac and linear system needed!
+            for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
+                x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
+            }
+
+            for (int i = 0; i < mesh.intervals; i++) {
+                for (int j = 0; j < rk.steps; j++) {
+                    const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
+                    const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                    const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+                    for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                        x[xij + dimX] = x[xij - offXU + dimX];
+                    }
+                    std::vector<double> uGuess = problem->uInitialGuess(tij);
+                    for (int dimU = 0; dimU < problem->sizeU; dimU++) {
+                        x[uij + dimU] = uGuess[dimU];
+                    }
                 }
             }
             break;
+
         case InitVars::CALLBACK:
             for (int i = 0; i < n; i++) {
                 x[i] = x_cb[i];

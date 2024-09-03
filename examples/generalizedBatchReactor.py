@@ -16,7 +16,7 @@ for v in range(N):
     else:
         x.append(model.addState(symbol=f"x{v}", start=1/(N-1)))
 
-u = model.addInput(symbol="u", lb=0, ub=5, start=1)
+u = model.addInput(symbol="u", lb=0, ub=5, guess=1.5 - t)
 
 energy = model.addState(symbol="energy", start=0) # total energy consumed by the control
 
@@ -24,18 +24,18 @@ EXP_E = model.addRuntimeParameter(default=4, symbol="EXPONENT_ENERGY")
 DEPL = model.addRuntimeParameter(default=35, symbol="DEPLETION_COEFF")
 
 coeffs = []
-for origin in range(N):
+for x1 in range(N):
     oList = []
-    for target in range(N):
-        if target <= origin or target - origin > 5:
+    for x2 in range(N):
+        if x2 <= x1 or x2 - x1 > 5:
             oList.append(0)
         else:
             oList.append(random.uniform(0, 1))
     coeffs.append(oList)
 
-for origin in range(N):
-    for target in range(origin):
-        coeffs[origin][origin] -= coeffs[target][origin]
+for x1 in range(N):
+    for x2 in range(x1):
+        coeffs[x1][x1] -= coeffs[x2][x1]
 
 for v in range(N):
     if v == 0:

@@ -92,6 +92,10 @@ private:
 };
 
 
+std::vector<double> uInitialGuess(double t) {
+	 return {0};
+};
+
 Problem createProblem_vanDerPol() {
 
     std::vector<std::unique_ptr<Expression>> F;
@@ -112,7 +116,7 @@ Problem createProblem_vanDerPol() {
             {0, 1},  // x0
             {MINUS_INFINITY, MINUS_INFINITY},  // lb x
             {PLUS_INFINITY, PLUS_INFINITY},  // ub x
-            {0},  // u0 initial guesses for optimization
+            &uInitialGuess,  // u0 initial guesses for optimization
             {MINUS_INFINITY},  // lb u
             {0.8},  // ub u
             {},  // p0 initial guesses for optimization

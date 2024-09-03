@@ -54,17 +54,17 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0.468626387712207*u[0]*x[1] + 0.136548656087503*u[0]*x[2] + 0.0139353590234034*u[0]*x[3] + 0.356477747573193*u[0]*x[4] + 0.515097894100223*u[0]*x[5] - pow(u[0], 2)*x[0]*DEPLETION_COEFF_VALUE;
+		return 0.8552241295636*u[0]*x[1] + 0.292864672862223*u[0]*x[2] + 0.342951321558795*u[0]*x[3] + 0.11005832421052*u[0]*x[4] + 0.311601109024375*u[0]*x[5] - pow(u[0], 2)*x[0]*DEPLETION_COEFF_VALUE;
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-pow(u[0], 2)*DEPLETION_COEFF_VALUE, 0.468626387712207*u[0], 0.136548656087503*u[0], 0.0139353590234034*u[0], 0.356477747573193*u[0], 0.515097894100223*u[0]}, {0.468626387712207*x[1] + 0.136548656087503*x[2] + 0.0139353590234034*x[3] + 0.356477747573193*x[4] + 0.515097894100223*x[5] - 2*u[0]*x[0]*DEPLETION_COEFF_VALUE}, {}};
+		return {std::vector<double>{-pow(u[0], 2)*DEPLETION_COEFF_VALUE, 0.8552241295636*u[0], 0.292864672862223*u[0], 0.342951321558795*u[0], 0.11005832421052*u[0], 0.311601109024375*u[0]}, {0.8552241295636*x[1] + 0.292864672862223*x[2] + 0.342951321558795*x[3] + 0.11005832421052*x[4] + 0.311601109024375*x[5] - 2*u[0]*x[0]*DEPLETION_COEFF_VALUE}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
         const double x0 = 2*DEPLETION_COEFF_VALUE;
         const double x1 = -x0*u[0];
-		return {std::vector<double>{}, {x1, 0.468626387712207, 0.136548656087503, 0.0139353590234034, 0.356477747573193, 0.515097894100223}, {-x0*x[0]}, {}, {}, {}};
+		return {std::vector<double>{}, {x1, 0.8552241295636, 0.292864672862223, 0.342951321558795, 0.11005832421052, 0.311601109024375}, {-x0*x[0]}, {}, {}, {}};
 	}
 private:
 	F0generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -80,15 +80,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -0.468626387712207*u[0]*x[1] + 0.00701438597494297*u[0]*x[2] + 0.253673105694702*u[0]*x[3] + 0.339182778727429*u[0]*x[4] + 0.901804331590947*u[0]*x[5] + 0.634022260001245*u[0]*x[6];
+		return -0.8552241295636*u[0]*x[1] + 0.453291327685434*u[0]*x[2] + 0.962012695622935*u[0]*x[3] + 0.659136923379733*u[0]*x[4] + 0.616813662433078*u[0]*x[5] + 0.490811454960079*u[0]*x[6];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-0.468626387712207*u[0], 0.00701438597494297*u[0], 0.253673105694702*u[0], 0.339182778727429*u[0], 0.901804331590947*u[0], 0.634022260001245*u[0]}, {-0.468626387712207*x[1] + 0.00701438597494297*x[2] + 0.253673105694702*x[3] + 0.339182778727429*x[4] + 0.901804331590947*x[5] + 0.634022260001245*x[6]}, {}};
+		return {std::vector<double>{-0.8552241295636*u[0], 0.453291327685434*u[0], 0.962012695622935*u[0], 0.659136923379733*u[0], 0.616813662433078*u[0], 0.490811454960079*u[0]}, {-0.8552241295636*x[1] + 0.453291327685434*x[2] + 0.962012695622935*x[3] + 0.659136923379733*x[4] + 0.616813662433078*x[5] + 0.490811454960079*x[6]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-0.468626387712207, 0.00701438597494297, 0.253673105694702, 0.339182778727429, 0.901804331590947, 0.634022260001245}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-0.8552241295636, 0.453291327685434, 0.962012695622935, 0.659136923379733, 0.616813662433078, 0.490811454960079}, {}, {}, {}, {}};
 	}
 private:
 	F1generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -104,15 +104,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -0.143563042062446*u[0]*x[2] + 0.902993845468682*u[0]*x[3] + 0.630259341968257*u[0]*x[4] + 0.339487012156792*u[0]*x[5] + 0.505216709540402*u[0]*x[6] + 0.72263736822388*u[0]*x[7];
+		return -0.746156000547657*u[0]*x[2] + 0.456953645030287*u[0]*x[3] + 0.705827793744213*u[0]*x[4] + 0.372838217499846*u[0]*x[5] + 0.960078238377733*u[0]*x[6] + 0.938710138954149*u[0]*x[7];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-0.143563042062446*u[0], 0.902993845468682*u[0], 0.630259341968257*u[0], 0.339487012156792*u[0], 0.505216709540402*u[0], 0.72263736822388*u[0]}, {-0.143563042062446*x[2] + 0.902993845468682*x[3] + 0.630259341968257*x[4] + 0.339487012156792*x[5] + 0.505216709540402*x[6] + 0.72263736822388*x[7]}, {}};
+		return {std::vector<double>{-0.746156000547657*u[0], 0.456953645030287*u[0], 0.705827793744213*u[0], 0.372838217499846*u[0], 0.960078238377733*u[0], 0.938710138954149*u[0]}, {-0.746156000547657*x[2] + 0.456953645030287*x[3] + 0.705827793744213*x[4] + 0.372838217499846*x[5] + 0.960078238377733*x[6] + 0.938710138954149*x[7]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-0.143563042062446, 0.902993845468682, 0.630259341968257, 0.339487012156792, 0.505216709540402, 0.72263736822388}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-0.746156000547657, 0.456953645030287, 0.705827793744213, 0.372838217499846, 0.960078238377733, 0.938710138954149}, {}, {}, {}, {}};
 	}
 private:
 	F2generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -128,15 +128,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -1.17060231018679*u[0]*x[3] + 0.650678950681845*u[0]*x[4] + 0.138731058137815*u[0]*x[5] + 0.214337498464053*u[0]*x[6] + 0.310717650919698*u[0]*x[7] + 0.0604732888684647*u[0]*x[8];
+		return -1.76191766221202*u[0]*x[3] + 0.203505927974201*u[0]*x[4] + 0.671139779294799*u[0]*x[5] + 0.166092254776028*u[0]*x[6] + 0.653581553338871*u[0]*x[7] + 0.657998985282944*u[0]*x[8];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-1.17060231018679*u[0], 0.650678950681845*u[0], 0.138731058137815*u[0], 0.214337498464053*u[0], 0.310717650919698*u[0], 0.0604732888684647*u[0]}, {-1.17060231018679*x[3] + 0.650678950681845*x[4] + 0.138731058137815*x[5] + 0.214337498464053*x[6] + 0.310717650919698*x[7] + 0.0604732888684647*x[8]}, {}};
+		return {std::vector<double>{-1.76191766221202*u[0], 0.203505927974201*u[0], 0.671139779294799*u[0], 0.166092254776028*u[0], 0.653581553338871*u[0], 0.657998985282944*u[0]}, {-1.76191766221202*x[3] + 0.203505927974201*x[4] + 0.671139779294799*x[5] + 0.166092254776028*x[6] + 0.653581553338871*x[7] + 0.657998985282944*x[8]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-1.17060231018679, 0.650678950681845, 0.138731058137815, 0.214337498464053, 0.310717650919698, 0.0604732888684647}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-1.76191766221202, 0.203505927974201, 0.671139779294799, 0.166092254776028, 0.653581553338871, 0.657998985282944}, {}, {}, {}, {}};
 	}
 private:
 	F3generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -152,15 +152,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -1.97659881895072*u[0]*x[4] + 0.569712563480458*u[0]*x[5] + 0.610981910215908*u[0]*x[6] + 0.230121239588827*u[0]*x[7] + 0.688226293032254*u[0]*x[8] + 0.0778287945787205*u[0]*x[9];
+		return -1.67852896930867*u[0]*x[4] + 0.926087218355965*u[0]*x[5] + 0.525113317807733*u[0]*x[6] + 0.0270696841378247*u[0]*x[7] + 0.693649834784741*u[0]*x[8] + 0.476861308321223*u[0]*x[9];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-1.97659881895072*u[0], 0.569712563480458*u[0], 0.610981910215908*u[0], 0.230121239588827*u[0], 0.688226293032254*u[0], 0.0778287945787205*u[0]}, {-1.97659881895072*x[4] + 0.569712563480458*x[5] + 0.610981910215908*x[6] + 0.230121239588827*x[7] + 0.688226293032254*x[8] + 0.0778287945787205*x[9]}, {}};
+		return {std::vector<double>{-1.67852896930867*u[0], 0.926087218355965*u[0], 0.525113317807733*u[0], 0.0270696841378247*u[0], 0.693649834784741*u[0], 0.476861308321223*u[0]}, {-1.67852896930867*x[4] + 0.926087218355965*x[5] + 0.525113317807733*x[6] + 0.0270696841378247*x[7] + 0.693649834784741*x[8] + 0.476861308321223*x[9]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-1.97659881895072, 0.569712563480458, 0.610981910215908, 0.230121239588827, 0.688226293032254, 0.0778287945787205}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-1.67852896930867, 0.926087218355965, 0.525113317807733, 0.0270696841378247, 0.693649834784741, 0.476861308321223}, {}, {}, {}, {}};
 	}
 private:
 	F4generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -176,15 +176,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0.606201074129241*u[0]*x[10] - 2.46483285946623*u[0]*x[5] + 0.0581594677766095*u[0]*x[6] + 0.848721089452619*u[0]*x[7] + 0.3014397181145*u[0]*x[8] + 0.875160059335475*u[0]*x[9];
+		return 0.886782915330311*u[0]*x[10] - 2.89847998660806*u[0]*x[5] + 0.662749072714428*u[0]*x[6] + 0.828640761528211*u[0]*x[7] + 0.758165838937764*u[0]*x[8] + 0.732629293026911*u[0]*x[9];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-2.46483285946623*u[0], 0.0581594677766095*u[0], 0.848721089452619*u[0], 0.3014397181145*u[0], 0.875160059335475*u[0], 0.606201074129241*u[0]}, {0.606201074129241*x[10] - 2.46483285946623*x[5] + 0.0581594677766095*x[6] + 0.848721089452619*x[7] + 0.3014397181145*x[8] + 0.875160059335475*x[9]}, {}};
+		return {std::vector<double>{-2.89847998660806*u[0], 0.662749072714428*u[0], 0.828640761528211*u[0], 0.758165838937764*u[0], 0.732629293026911*u[0], 0.886782915330311*u[0]}, {0.886782915330311*x[10] - 2.89847998660806*x[5] + 0.662749072714428*x[6] + 0.828640761528211*x[7] + 0.758165838937764*x[8] + 0.732629293026911*x[9]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-2.46483285946623, 0.0581594677766095, 0.848721089452619, 0.3014397181145, 0.875160059335475, 0.606201074129241}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-2.89847998660806, 0.662749072714428, 0.828640761528211, 0.758165838937764, 0.732629293026911, 0.886782915330311}, {}, {}, {}, {}};
 	}
 private:
 	F5generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -200,15 +200,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0.835561269311991*u[0]*x[10] + 0.690469791423505*u[0]*x[11] - 2.02271784599822*u[0]*x[6] + 0.977156835213313*u[0]*x[7] + 0.461396259354151*u[0]*x[8] + 0.177943652377825*u[0]*x[9];
+		return 0.595095939995323*u[0]*x[10] + 0.00452751637940219*u[0]*x[11] - 2.804844338636*u[0]*x[6] + 0.837096950885916*u[0]*x[7] + 0.658096821640587*u[0]*x[8] + 0.538460202958348*u[0]*x[9];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-2.02271784599822*u[0], 0.977156835213313*u[0], 0.461396259354151*u[0], 0.177943652377825*u[0], 0.835561269311991*u[0], 0.690469791423505*u[0]}, {0.835561269311991*x[10] + 0.690469791423505*x[11] - 2.02271784599822*x[6] + 0.977156835213313*x[7] + 0.461396259354151*x[8] + 0.177943652377825*x[9]}, {}};
+		return {std::vector<double>{-2.804844338636*u[0], 0.837096950885916*u[0], 0.658096821640587*u[0], 0.538460202958348*u[0], 0.595095939995323*u[0], 0.00452751637940219*u[0]}, {0.595095939995323*x[10] + 0.00452751637940219*x[11] - 2.804844338636*x[6] + 0.837096950885916*x[7] + 0.658096821640587*x[8] + 0.538460202958348*x[9]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-2.02271784599822, 0.977156835213313, 0.461396259354151, 0.177943652377825, 0.835561269311991, 0.690469791423505}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-2.804844338636, 0.837096950885916, 0.658096821640587, 0.538460202958348, 0.595095939995323, 0.00452751637940219}, {}, {}, {}, {}};
 	}
 private:
 	F6generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -224,15 +224,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0.148841260522142*u[0]*x[10] + 0.486515266758492*u[0]*x[11] + 0.907201671316369*u[0]*x[12] - 3.08935418339834*u[0]*x[7] + 0.999308576469669*u[0]*x[8] + 0.552293164508093*u[0]*x[9];
+		return 0.892504982402579*u[0]*x[10] + 0.0898400313811519*u[0]*x[11] + 0.456327961909505*u[0]*x[12] - 3.28509908884497*u[0]*x[7] + 0.0323502921590433*u[0]*x[8] + 0.499867503130388*u[0]*x[9];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-3.08935418339834*u[0], 0.999308576469669*u[0], 0.552293164508093*u[0], 0.148841260522142*u[0], 0.486515266758492*u[0], 0.907201671316369*u[0]}, {0.148841260522142*x[10] + 0.486515266758492*x[11] + 0.907201671316369*x[12] - 3.08935418339834*x[7] + 0.999308576469669*x[8] + 0.552293164508093*x[9]}, {}};
+		return {std::vector<double>{-3.28509908884497*u[0], 0.0323502921590433*u[0], 0.499867503130388*u[0], 0.892504982402579*u[0], 0.0898400313811519*u[0], 0.456327961909505*u[0]}, {0.892504982402579*x[10] + 0.0898400313811519*x[11] + 0.456327961909505*x[12] - 3.28509908884497*x[7] + 0.0323502921590433*x[8] + 0.499867503130388*x[9]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-3.08935418339834, 0.999308576469669, 0.552293164508093, 0.148841260522142, 0.486515266758492, 0.907201671316369}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-3.28509908884497, 0.0323502921590433, 0.499867503130388, 0.892504982402579, 0.0898400313811519, 0.456327961909505}, {}, {}, {}, {}};
 	}
 private:
 	F7generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -248,15 +248,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0.352068089300232*u[0]*x[10] + 0.709214561130748*u[0]*x[11] + 0.72286994391235*u[0]*x[12] + 0.755925612287257*u[0]*x[13] - 2.51084413583904*u[0]*x[8] + 0.638905629452865*u[0]*x[9];
+		return 0.0166139035604809*u[0]*x[10] + 0.352274002993723*u[0]*x[11] + 0.960845220231029*u[0]*x[12] + 0.742077528972963*u[0]*x[13] - 2.80026177280508*u[0]*x[8] + 0.889290646797178*u[0]*x[9];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-2.51084413583904*u[0], 0.638905629452865*u[0], 0.352068089300232*u[0], 0.709214561130748*u[0], 0.72286994391235*u[0], 0.755925612287257*u[0]}, {0.352068089300232*x[10] + 0.709214561130748*x[11] + 0.72286994391235*x[12] + 0.755925612287257*x[13] - 2.51084413583904*x[8] + 0.638905629452865*x[9]}, {}};
+		return {std::vector<double>{-2.80026177280508*u[0], 0.889290646797178*u[0], 0.0166139035604809*u[0], 0.352274002993723*u[0], 0.960845220231029*u[0], 0.742077528972963*u[0]}, {0.0166139035604809*x[10] + 0.352274002993723*x[11] + 0.960845220231029*x[12] + 0.742077528972963*x[13] - 2.80026177280508*x[8] + 0.889290646797178*x[9]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-2.51084413583904, 0.638905629452865, 0.352068089300232, 0.709214561130748, 0.72286994391235, 0.755925612287257}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-2.80026177280508, 0.889290646797178, 0.0166139035604809, 0.352274002993723, 0.960845220231029, 0.742077528972963}, {}, {}, {}, {}};
 	}
 private:
 	F8generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -272,15 +272,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return 0.926368764953382*u[0]*x[10] + 0.87103924839005*u[0]*x[11] + 0.25537115819334*u[0]*x[12] + 0.691679981048153*u[0]*x[13] + 0.383857512926589*u[0]*x[14] - 2.32213130025298*u[0]*x[9];
+		return 0.302107579323058*u[0]*x[10] + 0.387416630575024*u[0]*x[11] + 0.655872767844423*u[0]*x[12] + 0.164857802428697*u[0]*x[13] + 0.82847780190645*u[0]*x[14] - 3.13710895423405*u[0]*x[9];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-2.32213130025298*u[0], 0.926368764953382*u[0], 0.87103924839005*u[0], 0.25537115819334*u[0], 0.691679981048153*u[0], 0.383857512926589*u[0]}, {0.926368764953382*x[10] + 0.87103924839005*x[11] + 0.25537115819334*x[12] + 0.691679981048153*x[13] + 0.383857512926589*x[14] - 2.32213130025298*x[9]}, {}};
+		return {std::vector<double>{-3.13710895423405*u[0], 0.302107579323058*u[0], 0.387416630575024*u[0], 0.655872767844423*u[0], 0.164857802428697*u[0], 0.82847780190645*u[0]}, {0.302107579323058*x[10] + 0.387416630575024*x[11] + 0.655872767844423*x[12] + 0.164857802428697*x[13] + 0.82847780190645*x[14] - 3.13710895423405*x[9]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-2.32213130025298, 0.926368764953382, 0.87103924839005, 0.25537115819334, 0.691679981048153, 0.383857512926589}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-3.13710895423405, 0.302107579323058, 0.387416630575024, 0.655872767844423, 0.164857802428697, 0.82847780190645}, {}, {}, {}, {}};
 	}
 private:
 	F9generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -296,15 +296,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -2.86904045821699*u[0]*x[10] + 0.149120491032765*u[0]*x[11] + 0.484456198031775*u[0]*x[12] + 0.955945156972338*u[0]*x[13] + 0.559974704400233*u[0]*x[14];
+		return -2.69310532061175*u[0]*x[10] + 0.985372000161767*u[0]*x[11] + 0.766013677675046*u[0]*x[12] + 0.482682241153235*u[0]*x[13] + 0.643629829888353*u[0]*x[14];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-2.86904045821699*u[0], 0.149120491032765*u[0], 0.484456198031775*u[0], 0.955945156972338*u[0], 0.559974704400233*u[0]}, {-2.86904045821699*x[10] + 0.149120491032765*x[11] + 0.484456198031775*x[12] + 0.955945156972338*x[13] + 0.559974704400233*x[14]}, {}};
+		return {std::vector<double>{-2.69310532061175*u[0], 0.985372000161767*u[0], 0.766013677675046*u[0], 0.482682241153235*u[0], 0.643629829888353*u[0]}, {-2.69310532061175*x[10] + 0.985372000161767*x[11] + 0.766013677675046*x[12] + 0.482682241153235*x[13] + 0.643629829888353*x[14]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-2.86904045821699, 0.149120491032765, 0.484456198031775, 0.955945156972338, 0.559974704400233}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-2.69310532061175, 0.985372000161767, 0.766013677675046, 0.482682241153235, 0.643629829888353}, {}, {}, {}, {}};
 	}
 private:
 	F10generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -320,15 +320,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -2.90635935873556*u[0]*x[11] + 0.518678830913885*u[0]*x[12] + 0.89471883491316*u[0]*x[13] + 0.214765545524678*u[0]*x[14];
+		return -1.81943018149107*u[0]*x[11] + 0.31177572374159*u[0]*x[12] + 0.917145607057463*u[0]*x[13] + 0.380363765970804*u[0]*x[14];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-2.90635935873556*u[0], 0.518678830913885*u[0], 0.89471883491316*u[0], 0.214765545524678*u[0]}, {-2.90635935873556*x[11] + 0.518678830913885*x[12] + 0.89471883491316*x[13] + 0.214765545524678*x[14]}, {}};
+		return {std::vector<double>{-1.81943018149107*u[0], 0.31177572374159*u[0], 0.917145607057463*u[0], 0.380363765970804*u[0]}, {-1.81943018149107*x[11] + 0.31177572374159*x[12] + 0.917145607057463*x[13] + 0.380363765970804*x[14]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-2.90635935873556, 0.518678830913885, 0.89471883491316, 0.214765545524678}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-1.81943018149107, 0.31177572374159, 0.917145607057463, 0.380363765970804}, {}, {}, {}, {}};
 	}
 private:
 	F11generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -344,15 +344,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -2.88857780236772*u[0]*x[12] + 0.896095933755998*u[0]*x[13] + 0.28741826294945*u[0]*x[14];
+		return -3.15083535140159*u[0]*x[12] + 0.607927627506543*u[0]*x[13] + 0.238500319786097*u[0]*x[14];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-2.88857780236772*u[0], 0.896095933755998*u[0], 0.28741826294945*u[0]}, {-2.88857780236772*x[12] + 0.896095933755998*x[13] + 0.28741826294945*x[14]}, {}};
+		return {std::vector<double>{-3.15083535140159*u[0], 0.607927627506543*u[0], 0.238500319786097*u[0]}, {-3.15083535140159*x[12] + 0.607927627506543*x[13] + 0.238500319786097*x[14]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-2.88857780236772, 0.896095933755998, 0.28741826294945}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-3.15083535140159, 0.607927627506543, 0.238500319786097}, {}, {}, {}, {}};
 	}
 private:
 	F12generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -368,15 +368,15 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -4.19436551897691*u[0]*x[13] + 0.72385370267454*u[0]*x[14];
+		return -2.9146908071189*u[0]*x[13] + 0.85772698137391*u[0]*x[14];
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{-4.19436551897691*u[0], 0.72385370267454*u[0]}, {-4.19436551897691*x[13] + 0.72385370267454*x[14]}, {}};
+		return {std::vector<double>{-2.9146908071189*u[0], 0.85772698137391*u[0]}, {-2.9146908071189*x[13] + 0.85772698137391*x[14]}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{}, {-4.19436551897691, 0.72385370267454}, {}, {}, {}, {}};
+		return {std::vector<double>{}, {-2.9146908071189, 0.85772698137391}, {}, {}, {}, {}};
 	}
 private:
 	F13generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -392,17 +392,17 @@ public:
 	}
 
 	double eval(const double *x, const double *u, const double *p, double t) override {
-		return -2.16986972847549*u[0]*x[14] + pow(u[0], 2)*x[0]*DEPLETION_COEFF_VALUE;
+		return -2.94869869892561*u[0]*x[14] + pow(u[0], 2)*x[0]*DEPLETION_COEFF_VALUE;
 	}
 
 	std::array<std::vector<double>, 3> evalDiff(const double *x, const double *u, const double *p, double t) override {
-		return {std::vector<double>{pow(u[0], 2)*DEPLETION_COEFF_VALUE, -2.16986972847549*u[0]}, {-2.16986972847549*x[14] + 2*u[0]*x[0]*DEPLETION_COEFF_VALUE}, {}};
+		return {std::vector<double>{pow(u[0], 2)*DEPLETION_COEFF_VALUE, -2.94869869892561*u[0]}, {-2.94869869892561*x[14] + 2*u[0]*x[0]*DEPLETION_COEFF_VALUE}, {}};
 	}
 
 	std::array<std::vector<double>, 6> evalDiff2(const double *x, const double *u, const double *p, double t) override {
         const double x0 = 2*DEPLETION_COEFF_VALUE;
         const double x1 = x0*u[0];
-		return {std::vector<double>{}, {x1, -2.16986972847549}, {x0*x[0]}, {}, {}, {}};
+		return {std::vector<double>{}, {x1, -2.94869869892561}, {x0*x[0]}, {}, {}, {}};
 	}
 private:
 	F14generalizedBatchReactor(Adjacency adj, AdjacencyDiff adjDiff) : Expression(std::move(adj), std::move(adjDiff)) {}
@@ -458,6 +458,10 @@ private:
 };
 
 
+std::vector<double> uInitialGuess(double t) {
+	 return {1.5 - t};
+};
+
 Problem createProblem_generalizedBatchReactor() {
 
     std::vector<std::unique_ptr<Expression>> F;
@@ -492,7 +496,7 @@ Problem createProblem_generalizedBatchReactor() {
             {0, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0.0714285714285714, 0},  // x0
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
             {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
-            {1},  // u0 initial guesses for optimization
+            &uInitialGuess,  // u0 initial guesses for optimization
             {0},  // lb u
             {5},  // ub u
             {},  // p0 initial guesses for optimization

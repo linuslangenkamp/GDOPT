@@ -119,6 +119,10 @@ private:
 };
 
 
+std::vector<double> uInitialGuess(double t) {
+	 return {2*t};
+};
+
 Problem createProblem_batchReactor() {
 
     std::vector<std::unique_ptr<Expression>> F;
@@ -140,7 +144,7 @@ Problem createProblem_batchReactor() {
             {1, 0, 0},  // x0
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
             {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
-            {0},  // u0 initial guesses for optimization
+            &uInitialGuess,  // u0 initial guesses for optimization
             {0},  // lb u
             {5},  // ub u
             {},  // p0 initial guesses for optimization

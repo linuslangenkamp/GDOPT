@@ -5,7 +5,7 @@
 #include "solver.h"
 
 int main() {
-    auto problem = std::make_shared<const Problem>(createProblem_trivalBangBang());
+    auto problem = std::make_shared<const Problem>(createProblem_batchReactor());
     InitVars initVars = InitVars::CONST;
     Integrator rk = Integrator::radauIIA(IntegratorSteps::Steps3);
     Mesh mesh = Mesh::createEquidistantMesh(100, 0.5);

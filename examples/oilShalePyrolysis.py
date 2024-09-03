@@ -7,7 +7,7 @@ x2 = model.addState(start = 0, symbol="bitumen")
 x3 = model.addState(start = 0, symbol="oil")
 x4 = model.addState(start = 0, symbol="carbon")
 
-T = model.addInput(start = 700, lb = 698.15, ub = 748.15, symbol="temperature")
+T = model.addInput(guess = 700, lb = 698.15, ub = 748.15, symbol="temperature")
 
 k1 = exp(8.86 - (20300/1.9872)/T)
 k2 = exp(24.25 - (37400/1.9872)/T)

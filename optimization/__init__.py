@@ -64,54 +64,54 @@ class Model:
         self.xVars.append(variable)
         return variable
     
-    def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf"), start=0):
+    def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0):
         
         # adds an input / control u for optimization
         # specify lb or ub, start/initialGuess if needed
 
-        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=start)
+        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess)
         variable = Symbol(f'u[{info.id}]')
         varInfo[variable] = info
         self.uVars.append(variable)
         return variable
 
-    def addBinaryInput(self, lb=0, ub=1, symbol=None, start=None):
+    def addBinaryInput(self, lb=0, ub=1, symbol=None, guess=None):
 
         # dangerous, might break the code
         # adds an input / control u for optimization
         # specify lb or ub, start/initialGuess if needed
         # to ensure the binary type, adds a parametric equation (u - lb) * (u - ub) == 0 to the model
 
-        if start is None:
-            start = (lb + ub) / 2
-        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=start)
+        if guess is None:
+            guess = (lb + ub) / 2
+        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess)
         variable = Symbol(f'u[{info.id}]')
         varInfo[variable] = info
         self.uVars.append(variable)
         self.addPath(variable**2 - variable * (lb + ub) + lb * ub, eq=0)    # forces binary type
         return variable
         
-    def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf"), start=0):
+    def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0):
         
         # adds a parameter p for optimization
         # specify lb or ub if needed, start/initialGuess if needed
 
-        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=start)
+        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess)
         variable = Symbol(f'p[{info.id}]')
         varInfo[variable] = info
         self.pVars.append(variable)
         return variable
 
-    def addBinaryParameter(self, lb=0, ub=1, symbol=None, start=None):
+    def addBinaryParameter(self, lb=0, ub=1, symbol=None, guess=None):
 
         # dangerous, might break the code
         # adds a binary parameter p for optimization
         # specify lb or ub, start/initialGuess if needed
         # to ensure the binary type, adds a parametric equation (p - lb) * (p - ub) == 0 to the model
 
-        if start is None:
-            start = (lb + ub) / 2
-        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=start)
+        if guess is None:
+            guess = (lb + ub) / 2
+        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess)
         variable = Symbol(f'p[{info.id}]')
         varInfo[variable] = info
         self.pVars.append(variable)
@@ -278,6 +278,12 @@ class Model:
         if "meshSigma" in meshFlags:
             self.setMeshSigma(meshFlags["meshSigma"])
 
+    def uInitialGuessCodegen(self):
+        out = "std::vector<double> uInitialGuess(double t) {\n"
+        out += f"\t return {{{', '.join(str(toCode(varInfo[u].initialGuess)) for u in self.uVars)}}};"
+        out += "\n};\n\n"
+        return out
+
     def generate(self):
 
         # does the entire code generation of the model
@@ -356,7 +362,9 @@ class Model:
         for n, a in enumerate(self.A):
             OUTPUT += a.codegen("A" + str(n) + self.name)
             print(f"Parametric constraints {n}: codegen done.\n")
-            
+
+        OUTPUT += self.uInitialGuessCodegen()
+
         pushF = "\n    ".join("F.push_back(" + "F" + str(n) + self.name + "::create());" for n in range(len(self.F)))
         pushG = "\n    ".join("G.push_back(" + "G" + str(n) + self.name + "::create());" for n in range(len(self.G)))
         pushR = "\n    ".join("R.push_back(" + "R" + str(n) + self.name + "::create());" for n in range(len(self.R)))
@@ -381,7 +389,7 @@ class Model:
             {{{', '.join(str(toCode(varInfo[x].start)) for x in self.xVars)}}},  // x0
             {{{', '.join(str(toCode(varInfo[x].lb) if varInfo[x].lb != -float('inf') else "MINUS_INFINITY") for x in self.xVars)}}},  // lb x
             {{{', '.join(str(toCode(varInfo[x].ub) if varInfo[x].ub != float('inf') else "PLUS_INFINITY") for x in self.xVars)}}},  // ub x
-            {{{', '.join(str(toCode(varInfo[u].initialGuess)) for u in self.uVars)}}},  // u0 initial guesses for optimization
+            &uInitialGuess,  // u0 initial guesses for optimization
             {{{', '.join(str(toCode(varInfo[u].lb) if varInfo[u].lb != -float('inf') else "MINUS_INFINITY") for u in self.uVars)}}},  // lb u
             {{{', '.join(str(toCode(varInfo[u].ub) if varInfo[u].ub != float('inf') else "PLUS_INFINITY") for u in self.uVars)}}},  // ub u
             {{{', '.join(str(toCode(varInfo[p].initialGuess)) for p in self.pVars)}}},  // p0 initial guesses for optimization

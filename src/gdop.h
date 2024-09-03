@@ -12,6 +12,8 @@
 
 enum class InitVars {
     CONST,
+    SOLVE,
+    SOLVE_EXPLICIT,
     CALLBACK
 };
 

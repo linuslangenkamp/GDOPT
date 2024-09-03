@@ -13,8 +13,8 @@ x1 = model.addState(start=0)
 
 u1 = model.addInput(lb=-1, ub=1)
 
-p1 = model.addParameter(start=0.5)
-p2 = model.addParameter(start=0.5)
+p1 = model.addParameter(guess=0.5)
+p2 = model.addParameter(guess=0.5)
 
 # x1' = 2t * p1, x1(0) = 0 => x1 = p1 * t^2
 model.addDynamic(x1, 2*t * p1)
