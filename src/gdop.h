@@ -13,7 +13,7 @@
 enum class InitVars {
     CONST,
     SOLVE,
-    SOLVE_EXPLICIT,
+    SOLVE_EXPLICIT_EULER,
     CALLBACK
 };
 

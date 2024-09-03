@@ -9,6 +9,11 @@ class InvalidMatrix(Exception):
     pass
 
 
+class InitVars(Enum):
+    CONST = 1
+    SOLVE = 2
+    SOLVE_EXPLICIT_EULER = 3
+
 class Objective(Enum):
     MINIMIZE = 1
     MAXIMIZE = 2

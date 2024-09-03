@@ -114,11 +114,12 @@ model.addLagrange(dot_m_f)
 
 model.generate()
 
-model.optimize(steps=60, rksteps=3, tf=0.5,
+model.optimize(steps=1000, rksteps=3, tf=0.5,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MUMPS,
+                      "initVars": InitVars.SOLVE_EXPLICIT_EULER,
                       "tolerance": 1e-14},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-                          "meshIterations": 6})
+                          "meshIterations": 0})
 
 model.plotInputs(dots=True)

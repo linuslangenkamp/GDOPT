@@ -35,6 +35,7 @@ class Model:
         self.steps = None
         self.rksteps = None
         self.outputFilePath = None
+        self.initVars = InitVars.CONST
         self.linearSolver = LinearSolver.MUMPS
         self.meshAlgorithm = MeshAlgorithm.NONE
         self.meshIterations = 0
@@ -224,6 +225,9 @@ class Model:
     def setLinearSolver(self, solver):
         self.linearSolver = solver
 
+    def setInitVars(self, initVars):
+        self.initVars = initVars
+
     def setTolerance(self, tolerance):
         self.tolerance = tolerance
     
@@ -265,6 +269,8 @@ class Model:
             self.setExportHessianPath(flags["exportHessianPath"])
         if "exportJacobianPath" in flags:
             self.setExportJacobianPath(flags["exportJacobianPath"])
+        if "initVars" in flags:
+            self.setInitVars(flags["initVars"])
 
     def setMeshFlags(self, meshFlags):
         if "meshAlgorithm" in meshFlags:
@@ -490,7 +496,7 @@ int main() {{
         ### main codegen
         filename = self.name + "Generated"
         OUTPUT = "//defines\n\n"
-        OUTPUT += "#define INIT_VARS InitVars::CONST\n"
+        OUTPUT += f"#define INIT_VARS InitVars::{self.initVars.name}\n"
         OUTPUT += f"#define RADAU_INTEGRATOR IntegratorSteps::Steps{self.rksteps}\n"
         OUTPUT += f"#define INTERVALS {self.steps}\n"
         OUTPUT += f"#define FINAL_TIME {self.tf}\n"

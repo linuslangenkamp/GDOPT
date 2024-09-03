@@ -317,9 +317,11 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
                     const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
                     const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
                     const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+
                     for (int dimX = 0; dimX < problem->sizeX; dimX++) {
                         x[xij + dimX] = problem->x0[dimX];
                     }
+
                     std::vector<double> uGuess = problem->uInitialGuess(tij);
                     for (int dimU = 0; dimU < problem->sizeU; dimU++) {
                         x[uij + dimU] = uGuess[dimU];
@@ -336,24 +338,38 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
             // to obtain a, at least in terms of the ode, feasible solution
             break;
 
-        case InitVars::SOLVE_EXPLICIT:
+        case InitVars::SOLVE_EXPLICIT_EULER:
             // explicit solution, will be easier to implement for the start, not jac and linear system needed!
             for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
                 x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
             }
 
+            double tijOld;
+            tijOld = 0;
+
             for (int i = 0; i < mesh.intervals; i++) {
                 for (int j = 0; j < rk.steps; j++) {
                     const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
+                    const double dt = tij - tijOld;
                     const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
                     const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+
                     for (int dimX = 0; dimX < problem->sizeX; dimX++) {
-                        x[xij + dimX] = x[xij - offXU + dimX];
+                        if (i == 0 && j == 0) {
+                            x[xij + dimX] = problem->x0[dimX];
+                        }
+                        else {
+                            x[xij + dimX] = x[xij - offXU + dimX] + dt * problem->F[dimX]->eval(&x[xij - offXU], &x[uij - offXU], &x[offXUTotal], tijOld);
+                        }
+
                     }
-                    std::vector<double> uGuess = problem->uInitialGuess(tij);
+
+                    const std::vector<double> uGuess = problem->uInitialGuess(tij);
                     for (int dimU = 0; dimU < problem->sizeU; dimU++) {
                         x[uij + dimU] = uGuess[dimU];
                     }
+
+                    tijOld = tij;
                 }
             }
             break;
