@@ -888,7 +888,7 @@ private:
 
 
 std::vector<double> uInitialGuess(double t) {
-	 return {0, 0};
+	 return {0.1, 0.1};
 };
 
 Problem createProblem_dieselMotor() {

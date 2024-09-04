@@ -310,75 +310,86 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
     //  * SOLVE(.) -> given u(t), p guesses and x0: simulate the dynamic with given scheme, newton iteration, linear system
     //  * genetic / bionic algorithm
     assert(n == numberVars);
-    switch (initVars) {
-        case InitVars::CONST:
-            for (int i = 0; i < mesh.intervals; i++) {
-                for (int j = 0; j < rk.steps; j++) {
-                    const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
-                    const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
-                    const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+    if (init_x) {
+        switch (initVars) {
+            case InitVars::CONST:
+                for (int i = 0; i < mesh.intervals; i++) {
+                    for (int j = 0; j < rk.steps; j++) {
+                        const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
+                        const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                        const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
-                    for (int dimX = 0; dimX < problem->sizeX; dimX++) {
-                        x[xij + dimX] = problem->x0[dimX];
-                    }
-
-                    std::vector<double> uGuess = problem->uInitialGuess(tij);
-                    for (int dimU = 0; dimU < problem->sizeU; dimU++) {
-                        x[uij + dimU] = uGuess[dimU];
-                    }
-                }
-            }
-            for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
-                x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
-            }
-            break;
-
-        case InitVars::SOLVE:
-            // optional (given initial values for u(t), p or a given function) -> solve x' = f(x, u, p, t), x(0) = x0
-            // to obtain a, at least in terms of the ode, feasible solution
-            break;
-
-        case InitVars::SOLVE_EXPLICIT_EULER:
-            // explicit solution, will be easier to implement for the start, not jac and linear system needed!
-            for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
-                x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
-            }
-
-            double tijOld;
-            tijOld = 0;
-
-            for (int i = 0; i < mesh.intervals; i++) {
-                for (int j = 0; j < rk.steps; j++) {
-                    const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
-                    const double dt = tij - tijOld;
-                    const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
-                    const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
-
-                    for (int dimX = 0; dimX < problem->sizeX; dimX++) {
-                        if (i == 0 && j == 0) {
+                        for (int dimX = 0; dimX < problem->sizeX; dimX++) {
                             x[xij + dimX] = problem->x0[dimX];
                         }
+
+                        std::vector<double> uGuess = problem->uInitialGuess(tij);
+                        for (int dimU = 0; dimU < problem->sizeU; dimU++) {
+                            x[uij + dimU] = uGuess[dimU];
+                        }
+                    }
+                }
+                for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
+                    x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
+                }
+                break;
+
+            case InitVars::SOLVE:
+                // optional (given initial values for u(t), p or a given function) -> solve x' = f(x, u, p, t), x(0) = x0
+                // to obtain a, at least in terms of the ode, feasible solution
+                break;
+
+            case InitVars::SOLVE_EXPLICIT_EULER:
+                // explicit solution, will be easier to implement for the start, not jac and linear system needed!
+                for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
+                    x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
+                }
+
+                double tijOld;
+                tijOld = 0;
+
+                for (int i = 0; i < mesh.intervals; i++) {
+                    for (int j = 0; j < rk.steps; j++) {
+                        const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
+                        const double dt = tij - tijOld;
+                        const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                        const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+
+                        if (i == 0 && j == 0) {
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                x[xij + dimX] = problem->x0[dimX];
+                            }
+                        }
                         else {
-                            x[xij + dimX] = x[xij - offXU + dimX] + dt * problem->F[dimX]->eval(&x[xij - offXU], &x[uij - offXU], &x[offXUTotal], tijOld);
+                            double k1X[problem->sizeX];
+
+                            // k1
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                k1X[dimX] = problem->F[dimX]->eval(&x[xij - offXU], &x[uij - offXU], &x[offXUTotal], tijOld);
+                            }
+
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                x[xij + dimX] = x[xij - offXU + dimX] + dt * (k1X[dimX]);
+                            }
+
                         }
 
-                    }
+                        const std::vector<double> uGuess = problem->uInitialGuess(tij); // TODO: make uGuess a double[] -> cleaner input in rk scheme
+                        for (int dimU = 0; dimU < problem->sizeU; dimU++) {
+                            x[uij + dimU] = uGuess[dimU];
+                        }
 
-                    const std::vector<double> uGuess = problem->uInitialGuess(tij);
-                    for (int dimU = 0; dimU < problem->sizeU; dimU++) {
-                        x[uij + dimU] = uGuess[dimU];
+                        tijOld = tij;
                     }
-
-                    tijOld = tij;
                 }
-            }
-            break;
+                break;
 
-        case InitVars::CALLBACK:
-            for (int i = 0; i < n; i++) {
-                x[i] = x_cb[i];
-            }
-            break;
+            case InitVars::CALLBACK:
+                for (int i = 0; i < n; i++) {
+                    x[i] = x_cb[i];
+                }
+                break;
+        }
     }
     return true;
 }

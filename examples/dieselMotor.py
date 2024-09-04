@@ -59,8 +59,8 @@ p_im = model.addState(start=5.0614999999999999e-01, lb=0.8*p_amb/state_norm2, ub
 p_em = model.addState(start=3.3926666666666666e-01, lb=p_amb/state_norm3, ub=3*p_amb/state_norm3, symbol="p_em")
 w_tc = model.addState(start=6.8099999999999994e-02, lb=300/state_norm4, ub=10000/state_norm4, symbol="w_tc")
 
-u_f = model.addInput(lb=0, ub=250/control_norm1, symbol="u_f")
-u_wg = model.addInput(lb=0, ub=1, symbol="u_wg")
+u_f = model.addInput(lb=0, ub=250/control_norm1, symbol="u_f",guess=25/control_norm1)
+u_wg = model.addInput(lb=0, ub=1, symbol="u_wg", guess=0.1)
 
 W_ICE = state_norm1*w_ice
 P_IM = state_norm2*p_im
@@ -114,12 +114,12 @@ model.addLagrange(dot_m_f)
 
 model.generate()
 
-model.optimize(steps=1000, rksteps=3, tf=0.5,
+model.optimize(steps=60, rksteps=3, tf=0.5,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MUMPS,
                       "initVars": InitVars.SOLVE_EXPLICIT_EULER,
                       "tolerance": 1e-14},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-                          "meshIterations": 0})
+                          "meshIterations": 5})
 
 model.plotInputs(dots=True)

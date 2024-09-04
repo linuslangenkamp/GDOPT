@@ -31,7 +31,7 @@ x1 = model.addState(symbol="Reactant", start=1)
 depl = model.addState(symbol="deplReactant", start=0)
 x2 = model.addState(symbol="objProduct", start=0)
 
-u = model.addInput(symbol="u", lb=0, ub=5)
+u = model.addInput(symbol="u", lb=0, ub=5, guess=1)
 
 R_v = model.addRuntimeParameter(default=1, symbol="REACT_SPEED")
 D_v = model.addRuntimeParameter(default=1, symbol="DEPLETION_SPEED")
@@ -44,10 +44,10 @@ model.addDynamic(x2, u * x1 * R_v)
 
 model.generate()
 
-model.optimize(tf=1, steps=60000, rksteps=3,
+model.optimize(tf=1, steps=100, rksteps=3,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MA57,
-                      "initVars": InitVars.CONST,
+                      "initVars": InitVars.SOLVE_EXPLICIT_EULER,
                       "exportJacobianPath": "/tmp"},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 0})

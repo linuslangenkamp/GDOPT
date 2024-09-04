@@ -14,6 +14,7 @@ enum class InitVars {
     CONST,
     SOLVE,
     SOLVE_EXPLICIT_EULER,
+    FROM_FILE,
     CALLBACK
 };
 

@@ -1,8 +1,8 @@
 //defines
 
-#define INIT_VARS InitVars::CONST
+#define INIT_VARS InitVars::SOLVE_EXPLICIT_EULER
 #define RADAU_INTEGRATOR IntegratorSteps::Steps3
-#define INTERVALS 60000
+#define INTERVALS 100
 #define FINAL_TIME 1
 #define LINEAR_SOLVER LinearSolver::MA57
 #define MESH_ALGORITHM MeshAlgorithm::L2_BOUNDARY_NORM

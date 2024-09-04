@@ -5,7 +5,7 @@
 
 /* BIG TODOS: TYPE | IMPORTANCE | EFFORT from 1 to 5
  * TODO:
-    1 add, construct, test more mesh refinement algorithms              4, 3
+    1 add, construct, test more mesh refinement algorithms              4, 4
     2 OpenModelica interface                                            4, 5
     3 tf as free variable                                               2, 4.5
     4 vectorized equation, derivatives with local substitutions         2, 4
@@ -14,7 +14,8 @@
     6 creation of local jacobian structure (contained in 4?)            0, 1
     7 better initial guess, e.g. solve(.), evolutionary algorithms      3, 3
     8 test framework for huge examples / industry relevant              3, 2
-    9 add nominal, linear, quadratic, const hessian detection           2, 2
+    9 add nominal, linear, quadratic, const hessian detection           2, 3
+    10 play with setting in ipopt / pivoting etc.                       2, 3
 */
 
 void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver);
@@ -431,6 +432,10 @@ void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver)  {
 
     app->Options()->SetStringValue("linear_solver", getLinearSolverName(solver.linearSolver));
     app->Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
+
+    // options for initial feasible point
+    app->Options()->SetNumericValue("bound_push", 1e-10);
+    app->Options()->SetNumericValue("bound_frac", 1e-10);
 
     // app->Options()->SetStringValue("hessian_constant", "yes");
     // app->Options()->SetStringValue("output_file", "ipopt.out");
