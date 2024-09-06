@@ -12,7 +12,8 @@ class InvalidMatrix(Exception):
 class InitVars(Enum):
     CONST = 1
     SOLVE = 2
-    SOLVE_EXPLICIT_EULER = 3
+    SOLVE_EXPLICIT = 3
+    SOLVE_EXPLICIT_EULER = 4
 
 class Objective(Enum):
     MINIMIZE = 1

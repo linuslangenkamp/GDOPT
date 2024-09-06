@@ -434,8 +434,8 @@ void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver)  {
     app->Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
 
     // options for initial feasible point
-    app->Options()->SetNumericValue("bound_push", 1e-10);
-    app->Options()->SetNumericValue("bound_frac", 1e-10);
+    app->Options()->SetNumericValue("bound_push", 1e-16);
+    app->Options()->SetNumericValue("bound_frac", 1e-16);
 
     // app->Options()->SetStringValue("hessian_constant", "yes");
     // app->Options()->SetStringValue("output_file", "ipopt.out");

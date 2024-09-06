@@ -340,7 +340,7 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
                 break;
 
             case InitVars::SOLVE_EXPLICIT_EULER:
-                // explicit solution, will be easier to implement for the start, not jac and linear system needed!
+                // explicit Euler for initial guess of states (on each subinterval [t_ij, t_{i, j+1}])
                 for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
                     x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
                 }
@@ -361,15 +361,95 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
                             }
                         }
                         else {
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                x[xij + dimX] = x[xij - offXU + dimX] + dt * problem->F[dimX]->eval(&x[xij - offXU], &x[uij - offXU], &x[offXUTotal], tijOld);
+                            }
+
+                        }
+
+                        const std::vector<double> uGuess = problem->uInitialGuess(tij); // TODO: make uGuess a double[] -> cleaner input in rk scheme
+                        for (int dimU = 0; dimU < problem->sizeU; dimU++) {
+                            x[uij + dimU] = uGuess[dimU];
+                        }
+
+                        tijOld = tij;
+                    }
+                }
+                break;
+
+            case InitVars::SOLVE_EXPLICIT:
+                // classic Runge-Kutta scheme for initial guess of states (on each subinterval [t_ij, t_{i, j+1}])
+                for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
+                    x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
+                }
+
+                tijOld = 0;
+
+                for (int i = 0; i < mesh.intervals; i++) {
+                    for (int j = 0; j < rk.steps; j++) {
+                        const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
+                        const double dt = tij - tijOld;
+                        const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                        const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+
+                        if (i == 0 && j == 0) {
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                x[xij + dimX] = problem->x0[dimX];
+                            }
+                        }
+                        else {
                             double k1X[problem->sizeX];
+                            double k2X[problem->sizeX];
+                            double k3X[problem->sizeX];
+                            double k4X[problem->sizeX];
 
                             // k1
                             for (int dimX = 0; dimX < problem->sizeX; dimX++) {
                                 k1X[dimX] = problem->F[dimX]->eval(&x[xij - offXU], &x[uij - offXU], &x[offXUTotal], tijOld);
                             }
 
+                            const double t2 = tijOld + 0.5 * dt;
+                            std::vector<double> uGuess2 = problem->uInitialGuess(t2);
+
+                            std::vector<double> xTemp(&x[xij - offXU], &x[xij - offXU] + problem->sizeX);
+
+                            // x_i + 0.5 * dt * k1
                             for (int dimX = 0; dimX < problem->sizeX; dimX++) {
-                                x[xij + dimX] = x[xij - offXU + dimX] + dt * (k1X[dimX]);
+                                xTemp[dimX] += 0.5 * dt * k1X[dimX];
+                            }
+
+                            // k2
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                k2X[dimX] = problem->F[dimX]->eval(xTemp.data(), uGuess2.data(), &x[offXUTotal], t2);
+                            }
+
+                            std::vector<double> uGuess3 = problem->uInitialGuess(t2);
+
+                            // x_i + 0.5 * dt * k2
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                xTemp[dimX] = x[xij - offXU + dimX] + 0.5 * dt * k2X[dimX];
+                            }
+
+                            // k3
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                k3X[dimX] = problem->F[dimX]->eval(xTemp.data(), uGuess3.data(), &x[offXUTotal], t2);
+                            }
+
+                            std::vector<double> uGuess4 = problem->uInitialGuess(tij);
+
+                            // x_i + dt * k3
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                xTemp[dimX] = x[xij - offXU + dimX] + dt * k3X[dimX];
+                            }
+
+                            // k4
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                k4X[dimX] = problem->F[dimX]->eval(xTemp.data(), uGuess4.data(), &x[offXUTotal], tij);
+                            }
+
+                            // x_{i+1} = x_i + dt/6 * (k1 + 2*k2 + 2*k3 + k4)
+                            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                                x[xij + dimX] = x[xij - offXU + dimX] + dt / 6.0 * (k1X[dimX] + 2.0 * (k2X[dimX] + k3X[dimX]) + k4X[dimX]);
                             }
 
                         }
@@ -385,6 +465,7 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
                 break;
 
             case InitVars::CALLBACK:
+                // strict callback case, optimizer will set initVars to Callback, if a mesh refinement is executed
                 for (int i = 0; i < n; i++) {
                     x[i] = x_cb[i];
                 }

@@ -120,7 +120,7 @@ private:
 
 
 std::vector<double> uInitialGuess(double t) {
-	 return {1};
+	 return {0.5 + 4*pow(t, 2)};
 };
 
 Problem createProblem_batchReactor() {
