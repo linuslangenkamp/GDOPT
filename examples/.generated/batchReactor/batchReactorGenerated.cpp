@@ -120,7 +120,7 @@ private:
 
 
 std::vector<double> uInitialGuess(double t) {
-	 return {0.5 + 4*pow(t, 2)};
+	 return {1};
 };
 
 Problem createProblem_batchReactor() {
@@ -157,6 +157,11 @@ Problem createProblem_batchReactor() {
             std::move(R),
             std::move(A),
             "batchReactor");
+            
+    #ifdef INITIAL_STATES_PATH
+    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
+    #endif
+    
     return problem;
 };
 

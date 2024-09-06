@@ -5,17 +5,17 @@
 
 /* BIG TODOS: TYPE | IMPORTANCE | EFFORT from 1 to 5
  * TODO:
-    1 add, construct, test more mesh refinement algorithms              4, 4
+    1 add, construct, test more mesh refinement algorithms!             4, 4
     2 OpenModelica interface                                            4, 5
     3 tf as free variable                                               2, 4.5
     4 vectorized equation, derivatives with local substitutions         2, 4
     -> define vec(f,g), vec(r), vec(a(p))
     5 saving of local hessian and jacobian structures (contained in 4?) 1, 1
     6 creation of local jacobian structure (contained in 4?)            0, 1
-    7 better initial guess, e.g. solve(.), evolutionary algorithms      3, 3
+    7 better initial guess evolutionary algorithms / solve in code      1, 3
     8 test framework for huge examples / industry relevant              3, 2
-    9 add nominal, linear, quadratic, const hessian detection           2, 3
-    10 play with setting in ipopt / pivoting etc.                       2, 3
+    9 add nominal, linear, quadratic, const hessian detection!          2, 3
+    10 play with setting in ipopt / pivoting etc.!                      2, 3
 */
 
 void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver);
@@ -434,8 +434,8 @@ void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver)  {
     app->Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
 
     // options for initial feasible point
-    app->Options()->SetNumericValue("bound_push", 1e-16);
-    app->Options()->SetNumericValue("bound_frac", 1e-16);
+    app->Options()->SetNumericValue("bound_push", 1e-3);
+    app->Options()->SetNumericValue("bound_frac", 1e-3);
 
     // app->Options()->SetStringValue("hessian_constant", "yes");
     // app->Options()->SetStringValue("output_file", "ipopt.out");

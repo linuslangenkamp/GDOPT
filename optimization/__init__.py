@@ -2,6 +2,8 @@ import os
 from optimization.variables import *
 from optimization.expressions import *
 from optimization.structures import *
+from optimization.radauHandling import *
+from scipy.integrate import solve_ivp
 import time as timer
 import pandas as pd
 import numpy as np
@@ -35,13 +37,15 @@ class Model:
         self.steps = None
         self.rksteps = None
         self.outputFilePath = None
-        self.initVars = InitVars.CONST
+        self.initVars = InitVars.SOLVE
         self.linearSolver = LinearSolver.MUMPS
         self.meshAlgorithm = MeshAlgorithm.NONE
         self.meshIterations = 0
         self.tolerance = 1e-14
         self.exportHessianPath = None
         self.exportJacobianPath = None
+        self.initialStatesPath = "/tmp"
+        self.ivpSolver = "Radau"
         self.meshLevel = None
         self.meshCTol = None
         self.meshSigma = None
@@ -69,6 +73,7 @@ class Model:
         
         # adds an input / control u for optimization
         # specify lb or ub, start/initialGuess if needed
+        # only provide a guess if you are certain that it will benefit
 
         info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess)
         variable = Symbol(f'u[{info.id}]')
@@ -209,7 +214,25 @@ class Model:
         x = self.addState(start=0)
         self.addDynamic(x, 0)
         self.addedDummy = True
-    
+
+    def solveDynamic(self):
+        rhs = [Lambdify([t] + [x for x in self.xVars] + [u for u in self.uVars] + [p for p in self.pVars] + [rp for rp in self.rpVars],
+                        self.F[eq].expr) for eq in range(len(self.F))]
+        uFuncs = [Lambdify([t], varInfo[u].initialGuess) for u in self.uVars]
+
+        def ode(T, x):
+            return [r(*([T] + [elem for elem in x] + [uFuncs[i](T) for i in range(len(self.uVars))]
+                        + [varInfo[pVar].initialGuess for pVar in self.pVars] + [varInfo[rpVar].value for rpVar in self.rpVars]))
+                    for r in rhs]
+
+        x0 = [varInfo[x].start for x in self.xVars]
+        timeHorizon = [0, self.tf]
+
+        solution = solve_ivp(ode, timeHorizon, x0, method=self.ivpSolver, dense_output=True, rtol=1e-8)
+        timeVals = generate_radau_knots(timeHorizon, self.steps, self.rksteps)
+        stateVals = solution.sol(timeVals)
+        return timeVals, stateVals
+
     def setFinalTime(self, tf):
         self.tf = tf
     
@@ -236,7 +259,17 @@ class Model:
         
     def setExportJacobianPath(self, path):
         self.exportJacobianPath = path
-    
+
+    def setInitialStatesPath(self, path):
+        self.initialStatesPath = path
+
+    def setIVPSolver(self, solver):
+
+        # set IVP Solver for initial guess of states. (see scipy.solve_ivp)
+        # default = "Radau" (should be best), others: "BDF", "LSODA", "RK45", "DOP853", "RK23"
+
+        self.ivpSolver = solver
+
     def setMeshAlgorithm(self, meshAlgorithm):
         self.meshAlgorithm = meshAlgorithm
     
@@ -269,6 +302,10 @@ class Model:
             self.setExportHessianPath(flags["exportHessianPath"])
         if "exportJacobianPath" in flags:
             self.setExportJacobianPath(flags["exportJacobianPath"])
+        if "initialStatesPath" in flags:
+            self.setInitialStatesPath(flags["initialStatesPath"])
+        if "ivpSolver" in flags:
+            self.setIVPSolver(flags["ivpSolver"])
         if "initVars" in flags:
             self.setInitVars(flags["initVars"])
 
@@ -293,7 +330,7 @@ class Model:
     def generate(self):
 
         # does the entire code generation of the model
-        
+
         if len(self.F) != len(self.xVars):
             raise InvalidModel("#states != #differential equations") 
         elif len(self.xVars) == 0:
@@ -408,6 +445,11 @@ class Model:
             std::move(R),
             std::move(A),
             "{self.name}");
+            
+    #ifdef INITIAL_STATES_PATH
+    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
+    #endif
+    
     return problem;
 }};\n"""
 
@@ -493,6 +535,22 @@ int main() {{
         else:
             self.resultHistory = {}     # clear result history for new optimization
 
+
+        if self.initVars == InitVars.SOLVE:
+            print("Solving IVP for initial state guesses...")
+
+            timeVals, stateVals = self.solveDynamic()
+
+            print(f"\nWriting guesses to {self.initialStatesPath + '/initialValues.csv'}...")
+            with open(self.initialStatesPath + '/initialValues.csv', 'w') as file:
+                for i in range(len(timeVals)):
+                    row = [str(timeVals[i])]
+                    for dim in range(len(self.xVars)):
+                        row.append(str(stateVals[dim][i]))
+
+                    file.write(','.join(row) + '\n')
+            print("\nInitial guesses done.\n")
+
         ### main codegen
         filename = self.name + "Generated"
         OUTPUT = "//defines\n\n"
@@ -511,6 +569,10 @@ int main() {{
             OUTPUT += f'#define EXPORT_HESSIAN_PATH "{self.exportHessianPath}"\n'
         if self.exportJacobianPath:
             OUTPUT += f'#define EXPORT_JACOBIAN_PATH "{self.exportJacobianPath}"\n'
+
+        if self.initVars == InitVars.SOLVE and self.initialStatesPath:
+                OUTPUT += f'#define INITIAL_STATES_PATH "{self.initialStatesPath}"\n'
+
 
         if self.meshSigma:
             OUTPUT += f'#define SIGMA {self.meshSigma}\n'

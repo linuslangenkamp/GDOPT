@@ -255,6 +255,11 @@ Problem createProblem_invertedPendulum() {
             std::move(R),
             std::move(A),
             "invertedPendulum");
+            
+    #ifdef INITIAL_STATES_PATH
+    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
+    #endif
+    
     return problem;
 };
 

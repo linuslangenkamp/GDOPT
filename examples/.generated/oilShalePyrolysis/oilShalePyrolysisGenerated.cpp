@@ -208,7 +208,7 @@ private:
 
 
 std::vector<double> uInitialGuess(double t) {
-	 return {700};
+	 return {0};
 };
 
 Problem createProblem_oilShalePyrolysis() {
@@ -246,6 +246,11 @@ Problem createProblem_oilShalePyrolysis() {
             std::move(R),
             std::move(A),
             "oilShalePyrolysis");
+            
+    #ifdef INITIAL_STATES_PATH
+    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
+    #endif
+    
     return problem;
 };
 

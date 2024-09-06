@@ -7,7 +7,7 @@ x2 = model.addState(start=-1)
 x3 = model.addState(start=-sqrt(5))
 x4 = model.addState(start=0)
 
-u = model.addInput(lb=-4, ub=10, start=10)
+u = model.addInput(lb=-4, ub=10, guess=7.5)
 
 model.addDynamic(x1, x2)
 model.addDynamic(x2, -x3 * u + 16 * t - 8)

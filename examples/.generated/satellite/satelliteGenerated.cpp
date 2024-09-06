@@ -278,6 +278,11 @@ Problem createProblem_satellite() {
             std::move(R),
             std::move(A),
             "satellite");
+            
+    #ifdef INITIAL_STATES_PATH
+    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
+    #endif
+    
     return problem;
 };
 

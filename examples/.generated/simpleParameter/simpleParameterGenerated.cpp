@@ -128,6 +128,11 @@ Problem createProblem_simpleParameter() {
             std::move(R),
             std::move(A),
             "simpleParameter");
+            
+    #ifdef INITIAL_STATES_PATH
+    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
+    #endif
+    
     return problem;
 };
 

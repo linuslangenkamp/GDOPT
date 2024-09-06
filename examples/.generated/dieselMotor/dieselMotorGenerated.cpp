@@ -926,6 +926,11 @@ Problem createProblem_dieselMotor() {
             std::move(R),
             std::move(A),
             "dieselMotor");
+            
+    #ifdef INITIAL_STATES_PATH
+    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
+    #endif
+    
     return problem;
 };
 

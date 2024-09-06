@@ -128,6 +128,11 @@ Problem createProblem_hypersensitive() {
             std::move(R),
             std::move(A),
             "hypersensitive");
+            
+    #ifdef INITIAL_STATES_PATH
+    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
+    #endif
+    
     return problem;
 };
 

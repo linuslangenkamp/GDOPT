@@ -43,6 +43,7 @@ public:
     std::vector<std::unique_ptr<ParamConstraint>> A;            // algebraic constraints for parameters only:
 
     std::string name;
+    std::string initialStatesPath;
 };
 
 #endif //IPOPT_DO_PROBLEM_H

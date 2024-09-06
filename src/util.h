@@ -73,4 +73,37 @@ inline double calculateStdDev(const std::vector<double>& vec, double mean) {
     return std::sqrt(sum / sz(vec));
 }
 
+// functions to read in the initial state guesses
+inline std::vector<double> split(const std::string& line, char delimiter) {
+    std::vector<double> result;
+    std::stringstream stream(line);
+    std::string item;
+
+    while (std::getline(stream, item, delimiter)) {
+        result.push_back(std::stod(item));
+    }
+    return result;
+}
+
+inline std::vector<std::vector<double>> readInitialValues(const std::string& filePath) {
+    std::ifstream file(filePath);
+    std::string line;
+    std::vector<std::vector<double>> trajectories;
+
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file " << filePath << std::endl;
+        return trajectories;
+    }
+
+    while (std::getline(file, line)) {
+        if (!line.empty()) {
+            std::vector<double> row = split(line, ',');
+            trajectories.push_back(row);
+        }
+    }
+
+    file.close();
+    return trajectories;
+}
+
 #endif //IPOPT_DO_UTIL_H

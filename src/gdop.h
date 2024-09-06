@@ -11,12 +11,11 @@
 #include "integrator.h"
 
 enum class InitVars {
-    CONST,
-    SOLVE,
-    SOLVE_EXPLICIT,
-    SOLVE_EXPLICIT_EULER,
-    FROM_FILE,
-    CALLBACK
+    CONST,                  // states will be constant globally
+    SOLVE,                  // solving the ode with the given RadauIIA scheme
+    SOLVE_EXPLICIT,         // solving the ode with the classic Runge-Kutta method
+    SOLVE_EXPLICIT_EULER,   // solving the ode with the explicit Euler method
+    CALLBACK                // callback case for recursive calls (only called from Solver)
 };
 
 class GDOP;

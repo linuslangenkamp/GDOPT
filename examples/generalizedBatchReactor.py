@@ -7,7 +7,7 @@ import random
 
 model = Model("generalizedBatchReactor")
 
-N = 15
+N = 50
 
 x = []
 for v in range(N):
@@ -53,10 +53,12 @@ model.addMayer(x[0], Objective.MAXIMIZE)
 
 model.generate()
 
-model.optimize(tf=1, steps=50, rksteps=3,
+model.optimize(tf=1, steps=25, rksteps=3,
                flags={"outputPath": "/tmp",
-                      "linearSolver": LinearSolver.MA57},
+                      "linearSolver": LinearSolver.MA57,
+                      "exportJacobianPath": "/tmp"},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 5})
 
 model.plot(specifCols=["obj", "u", "energy"])
+model.plotSparseMatrix(MatrixType.JACOBIAN)

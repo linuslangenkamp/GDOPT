@@ -1,6 +1,6 @@
 //defines
 
-#define INIT_VARS InitVars::CONST
+#define INIT_VARS InitVars::SOLVE
 #define RADAU_INTEGRATOR IntegratorSteps::Steps1
 #define INTERVALS 5000
 #define FINAL_TIME 1
@@ -10,3 +10,4 @@
 #define TOLERANCE 1e-12
 #define EXPORT_OPTIMUM_PATH "/tmp"
 #define EXPORT_JACOBIAN_PATH "/tmp"
+#define INITIAL_STATES_PATH "/tmp"

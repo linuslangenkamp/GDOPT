@@ -178,6 +178,11 @@ Problem createProblem_bangBang() {
             std::move(R),
             std::move(A),
             "bangBang");
+            
+    #ifdef INITIAL_STATES_PATH
+    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
+    #endif
+    
     return problem;
 };
 

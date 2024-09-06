@@ -1,6 +1,6 @@
 //defines
 
-#define INIT_VARS InitVars::CONST
+#define INIT_VARS InitVars::SOLVE
 #define RADAU_INTEGRATOR IntegratorSteps::Steps9
 #define INTERVALS 30
 #define FINAL_TIME 10000
@@ -9,3 +9,4 @@
 #define MESH_ITERATIONS 20
 #define TOLERANCE 1e-14
 #define EXPORT_OPTIMUM_PATH "/tmp"
+#define INITIAL_STATES_PATH "/tmp"

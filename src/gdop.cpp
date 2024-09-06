@@ -311,8 +311,13 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
     //  * genetic / bionic algorithm
     assert(n == numberVars);
     if (init_x) {
+
+        std::vector<std::vector<double>> initialStates;
+        double tijOld;
+
         switch (initVars) {
             case InitVars::CONST:
+                // states will be constant globally
                 for (int i = 0; i < mesh.intervals; i++) {
                     for (int j = 0; j < rk.steps; j++) {
                         const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
@@ -334,18 +339,45 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
                 }
                 break;
 
-            case InitVars::SOLVE:
-                // optional (given initial values for u(t), p or a given function) -> solve x' = f(x, u, p, t), x(0) = x0
-                // to obtain a, at least in terms of the ode, feasible solution
-                break;
+            // TODO: implement SOLVE with given implicit RadauIIA from scratch (lots of work, not really useful)
+            // optional (given initial values for u(t), p or a given function) -> solve x' = f(x, u, p, t), x(0) = x0
+            // to obtain a, at least in terms of the ode, feasible solution
 
-            case InitVars::SOLVE_EXPLICIT_EULER:
-                // explicit Euler for initial guess of states (on each subinterval [t_ij, t_{i, j+1}])
+
+            case InitVars::SOLVE:
+                // currently reading in a solution from the frontend (solved by scipy with Radau5 or BDF)
+
+                initialStates = readInitialValues(problem->initialStatesPath);
+
+                for (int i = 0; i < mesh.intervals; i++) {
+                    for (int j = 0; j < rk.steps; j++) {
+                        const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
+                        const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                        const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+
+                        for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                            x[xij + dimX] = initialStates[rk.steps * i + j][dimX + 1];
+                        }
+
+                        std::vector<double> uGuess = problem->uInitialGuess(tij);
+                        for (int dimU = 0; dimU < problem->sizeU; dimU++) {
+                            x[uij + dimU] = uGuess[dimU];
+                        }
+                    }
+                }
+
                 for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
                     x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
                 }
 
-                double tijOld;
+                break;
+
+            case InitVars::SOLVE_EXPLICIT_EULER:
+                // explicit Euler for initial guess of states (on each sub-interval [t_ij, t_{i, j+1}])
+                for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
+                    x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
+                }
+
                 tijOld = 0;
 
                 for (int i = 0; i < mesh.intervals; i++) {
@@ -367,7 +399,7 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
 
                         }
 
-                        const std::vector<double> uGuess = problem->uInitialGuess(tij); // TODO: make uGuess a double[] -> cleaner input in rk scheme
+                        const std::vector<double> uGuess = problem->uInitialGuess(tij);
                         for (int dimU = 0; dimU < problem->sizeU; dimU++) {
                             x[uij + dimU] = uGuess[dimU];
                         }
@@ -378,7 +410,7 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
                 break;
 
             case InitVars::SOLVE_EXPLICIT:
-                // classic Runge-Kutta scheme for initial guess of states (on each subinterval [t_ij, t_{i, j+1}])
+                // classic Runge-Kutta scheme for initial guess of states (on each sub-interval [t_ij, t_{i, j+1}])
                 for (int dimP = 0; dimP < problem-> sizeP; dimP++) {
                     x[offXUTotal + dimP] = problem->pInitialGuess[dimP];
                 }
@@ -454,7 +486,7 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
 
                         }
 
-                        const std::vector<double> uGuess = problem->uInitialGuess(tij); // TODO: make uGuess a double[] -> cleaner input in rk scheme
+                        const std::vector<double> uGuess = problem->uInitialGuess(tij);
                         for (int dimU = 0; dimU < problem->sizeU; dimU++) {
                             x[uij + dimU] = uGuess[dimU];
                         }

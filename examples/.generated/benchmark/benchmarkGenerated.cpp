@@ -145,6 +145,10 @@ private:
 };
 
 
+std::vector<double> uInitialGuess(double t) {
+	 return {7.5};
+};
+
 Problem createProblem_benchmark() {
 
     std::vector<std::unique_ptr<Expression>> F;
@@ -167,7 +171,7 @@ Problem createProblem_benchmark() {
             {0, -1, -sqrt(5), 0},  // x0
             {MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY, MINUS_INFINITY},  // lb x
             {PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY, PLUS_INFINITY},  // ub x
-            {10},  // u0 initial guesses for optimization
+            &uInitialGuess,  // u0 initial guesses for optimization
             {-4},  // lb u
             {10},  // ub u
             {},  // p0 initial guesses for optimization
@@ -180,6 +184,11 @@ Problem createProblem_benchmark() {
             std::move(R),
             std::move(A),
             "benchmark");
+            
+    #ifdef INITIAL_STATES_PATH
+    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
+    #endif
+    
     return problem;
 };
 
