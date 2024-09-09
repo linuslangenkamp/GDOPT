@@ -21,5 +21,5 @@ model.optimize(tf=10000, steps=30, rksteps=9,
                           "meshIterations": 20,
                           "meshLevel": 0})
 
-model.plotInputs(interval=[9980, 10000], dots=True)
+model.plotInputs(interval=[9980, 10000], dots=Dots.ALL)
 model.plotPointDifferenceCount(interval=[9980, 10000], meshIteration="all")

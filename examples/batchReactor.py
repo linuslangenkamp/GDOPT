@@ -44,7 +44,7 @@ model.addDynamic(x2, u * x1 * R_v)
 
 model.generate()
 
-model.optimize(tf=1, steps=100, rksteps=3,
+model.optimize(tf=1, steps=50, rksteps=3,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MA57,
                       "initVars": InitVars.SOLVE,
@@ -52,7 +52,7 @@ model.optimize(tf=1, steps=100, rksteps=3,
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 5})
 
-model.plotInputs(dots=True)
+model.plotInputs(dots=Dots.BASE)
 model.plotSparseMatrix(MatrixType.JACOBIAN)
 model.printResults()
 model.plotPointDifferenceCount(meshIteration="all")

@@ -32,4 +32,4 @@ model.optimize(tf=10000, steps=100, rksteps=9,
                           "meshIterations": 20,
                           "meshLevel": 0})
 
-model.plot(interval=[9980, 10000], dots=True)
+model.plot(interval=[9980, 10000], dots=Dots.ALL)

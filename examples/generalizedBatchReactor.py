@@ -60,5 +60,5 @@ model.optimize(tf=1, steps=25, rksteps=3,
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 5})
 
-model.plot(specifCols=["obj", "u", "energy"])
-model.plotSparseMatrix(MatrixType.JACOBIAN)
+model.plot(specifCols=["obj", "u", "energy"], dots=Dots.ALL)
+#model.plotSparseMatrix(MatrixType.JACOBIAN)

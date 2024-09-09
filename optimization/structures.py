@@ -15,6 +15,7 @@ class InitVars(Enum):
     SOLVE_EXPLICIT = 3
     SOLVE_EXPLICIT_EULER = 4
 
+
 class Objective(Enum):
     MINIMIZE = 1
     MAXIMIZE = 2
@@ -42,3 +43,19 @@ class MatrixType(Enum):
     DEFAULT = 1
     JACOBIAN = 2
     HESSIAN = 3
+
+
+class Dots(Enum):
+    OFF = 1
+    ALL = 2
+    BASE = 3
+
+
+class IVPSolver(Enum):
+    Radau = 1
+    BDF = 2
+    LSODA = 3
+    RK45 = 4
+    DOP853 = 5
+    RK23 = 6
+    RADAU = Radau

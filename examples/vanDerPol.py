@@ -24,9 +24,9 @@ model.optimize(tf=10, steps=20, rksteps=3,
                           "meshLevel": -0.5,
                           "meshCTol": 0.5})
 
-model.parametricPlot(x1, x2, dots=True)
+model.parametricPlot(x1, x2, dots=Dots.ALL)
 
 model.setValue(rp, 0.1)
 
 model.optimize(resimulate=True)
-model.plot(dots=True)
+model.plot(dots=Dots.ALL)

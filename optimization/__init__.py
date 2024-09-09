@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # set global precision
-pd.set_option('display.precision', 16)
+pd.set_option('display.precision', 8)
 
 # add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
 # or with colored jacobian
@@ -45,7 +45,7 @@ class Model:
         self.exportHessianPath = None
         self.exportJacobianPath = None
         self.initialStatesPath = "/tmp"
-        self.ivpSolver = "Radau"
+        self.ivpSolver = IVPSolver.Radau
         self.meshLevel = None
         self.meshCTol = None
         self.meshSigma = None
@@ -216,19 +216,25 @@ class Model:
         self.addedDummy = True
 
     def solveDynamic(self):
+
+        # solves the dynamic system with the given initial u(t), p, x0
+
+        # define the rhs, uCallback function
         rhs = [Lambdify([t] + [x for x in self.xVars] + [u for u in self.uVars] + [p for p in self.pVars] + [rp for rp in self.rpVars],
                         self.F[eq].expr) for eq in range(len(self.F))]
         uFuncs = [Lambdify([t], varInfo[u].initialGuess) for u in self.uVars]
 
-        def ode(T, x):
-            return [r(*([T] + [elem for elem in x] + [uFuncs[i](T) for i in range(len(self.uVars))]
-                        + [varInfo[pVar].initialGuess for pVar in self.pVars] + [varInfo[rpVar].value for rpVar in self.rpVars]))
-                    for r in rhs]
+        # define rhs as an actual function
+        ode = lambda T, x: [r(*([T] + [elem for elem in x] + [uFuncs[i](T) for i in range(len(self.uVars))]
+                                    + [varInfo[pVar].initialGuess for pVar in self.pVars] +
+                                      [varInfo[rpVar].value for rpVar in self.rpVars])) for r in rhs]
 
         x0 = [varInfo[x].start for x in self.xVars]
         timeHorizon = [0, self.tf]
+        # scipy.solve_ivp
+        solution = solve_ivp(ode, timeHorizon, x0, method=self.ivpSolver.name, dense_output=True, rtol=1e-8)
 
-        solution = solve_ivp(ode, timeHorizon, x0, method=self.ivpSolver, dense_output=True, rtol=1e-8)
+        # get solution at the RadauIIA knots (based on self.rksteps)
         timeVals = generate_radau_knots(timeHorizon, self.steps, self.rksteps)
         stateVals = solution.sol(timeVals)
         return timeVals, stateVals
@@ -266,7 +272,7 @@ class Model:
     def setIVPSolver(self, solver):
 
         # set IVP Solver for initial guess of states. (see scipy.solve_ivp)
-        # default = "Radau" (should be best), others: "BDF", "LSODA", "RK45", "DOP853", "RK23"
+        # default = IVPSolver.Radau (should be best), others: BDF, LSODA, RK45, DOP853, RK23
 
         self.ivpSolver = solver
 
@@ -326,6 +332,15 @@ class Model:
         out += f"\t return {{{', '.join(str(toCode(varInfo[u].initialGuess)) for u in self.uVars)}}};"
         out += "\n};\n\n"
         return out
+
+    def initAnalysis(self):
+        with open('/tmp/modelinfo.txt', 'r') as file:
+            for line in file:
+                line = line.strip()
+                key, value = line.split(',')
+                key = key.strip()
+                value = value.strip()
+                self.modelInfo[key] = int(value)
 
     def generate(self):
 
@@ -539,7 +554,9 @@ int main() {{
         if self.initVars == InitVars.SOLVE:
             print("Solving IVP for initial state guesses...")
 
+            solveStart = timer.time()
             timeVals, stateVals = self.solveDynamic()
+            print(f"\nSolving the IVP took {round(timer.time() - solveStart, 4)} seconds.")
 
             print(f"\nWriting guesses to {self.initialStatesPath + '/initialValues.csv'}...")
             with open(self.initialStatesPath + '/initialValues.csv', 'w') as file:
@@ -569,20 +586,14 @@ int main() {{
             OUTPUT += f'#define EXPORT_HESSIAN_PATH "{self.exportHessianPath}"\n'
         if self.exportJacobianPath:
             OUTPUT += f'#define EXPORT_JACOBIAN_PATH "{self.exportJacobianPath}"\n'
-
         if self.initVars == InitVars.SOLVE and self.initialStatesPath:
                 OUTPUT += f'#define INITIAL_STATES_PATH "{self.initialStatesPath}"\n'
-
-
         if self.meshSigma:
             OUTPUT += f'#define SIGMA {self.meshSigma}\n'
-
         if self.meshLevel:
             OUTPUT += f'#define LEVEL {self.meshLevel}\n'
-
         if self.meshCTol:
             OUTPUT += f'#define C_TOL {self.meshCTol}\n'
-
         if self.rpVars:
             OUTPUT += "\n// values for runtime parameters\n"
 
@@ -605,15 +616,6 @@ int main() {{
 
         return 0
 
-    def initAnalysis(self):
-        with open('/tmp/modelinfo.txt', 'r') as file:
-            for line in file:
-                line = line.strip()
-                key, value = line.split(',')
-                key = key.strip()
-                value = value.strip()
-                self.modelInfo[key] = int(value)
-
     def checkMeshIteration(self, meshIteration):
         maxMeshIteration = self.modelInfo["maxMeshIteration"]
         if meshIteration is None:
@@ -624,15 +626,15 @@ int main() {{
                 meshIteration = maxMeshIteration
         return meshIteration
 
-    def plotStates(self, meshIteration=None, interval=None, dots=False):
+    def plotStates(self, meshIteration=None, interval=None, dots=Dots.OFF):
         self.initVarNames()
         self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.xVarNames)
 
-    def plotInputs(self, meshIteration=None, interval=None, dots=False):
+    def plotInputs(self, meshIteration=None, interval=None, dots=Dots.OFF):
         self.initVarNames()
         self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.uVarNames)
 
-    def plot(self, meshIteration=None, interval=None, specifCols=None, dots=False):
+    def plot(self, meshIteration=None, interval=None, specifCols=None, dots=Dots.OFF):
         meshIteration = self.checkMeshIteration(meshIteration)
         if interval is None:
             interval = [0, self.tf]
@@ -668,8 +670,12 @@ int main() {{
         for idx, column in enumerate(columns_to_plot):
             ax = axs[idx]
             ax.plot(self.resultHistory[meshIteration]['time'], self.resultHistory[meshIteration][column], label=column, linewidth=2, linestyle='-', color='steelblue')
-            if dots:
+            if dots == Dots.ALL:
                 ax.scatter(self.resultHistory[meshIteration]['time'], self.resultHistory[meshIteration][column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+            elif dots == Dots.BASE:
+                ax.scatter([x for i, x in enumerate(self.resultHistory[meshIteration]['time']) if i % self.rksteps == 0],
+                           [x for i, x in enumerate(self.resultHistory[meshIteration][column]) if i % self.rksteps == 0],
+                           color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
             ax.set_xlabel('time')
             ax.set_ylabel(column)
             ax.set_xlim(interval[0], interval[1])
@@ -680,7 +686,7 @@ int main() {{
         plt.tight_layout()
         plt.show()
 
-    def parametricPlot(self, varX, varY, meshIteration=None, interval=None, dots=False):
+    def parametricPlot(self, varX, varY, meshIteration=None, interval=None, dots=Dots.OFF):
         meshIteration = self.checkMeshIteration(meshIteration)
         if interval is None:
             interval = [0, self.tf]
@@ -710,8 +716,12 @@ int main() {{
 
         plt.plot(x_data[timeFiltered], y_data[timeFiltered])
 
-        if dots:
+        if dots == Dots.ALL:
             plt.scatter(x_data[timeFiltered], y_data[timeFiltered], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+        elif dots == Dots.BASE:
+            plt.scatter([x for i, x in enumerate(x_data[timeFiltered]) if i % self.rksteps == 0],
+                        [x for i, x in enumerate(y_data[timeFiltered]) if i % self.rksteps == 0],
+                        color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
 
         plt.title(f'{name1} vs {name2}')
         plt.xlabel(name1)

@@ -4,16 +4,13 @@ RADAU_C = [[1.0], [0.3333333333333333, 1.0], [0.1550510257216822, 0.644948974278
 
 def generate_radau_knots(timeHorizon, steps, scheme):
     base_grid_points = np.linspace(timeHorizon[0], timeHorizon[1], steps + 1)
-
+    RADAU_SCHEME = np.array(RADAU_C[scheme - 1])
     all_knots = []
 
     for i in range(len(base_grid_points) - 1):
         t0 = base_grid_points[i]
         t1 = base_grid_points[i + 1]
-
-        scaled_radau_nodes = t0 + (t1 - t0) * np.array(RADAU_C[scheme - 1])
-
+        scaled_radau_nodes = t0 + (t1 - t0) * RADAU_SCHEME
         all_knots.extend(scaled_radau_nodes)
 
-
-    return np.array(all_knots)
+    return np.array(all_knots)#

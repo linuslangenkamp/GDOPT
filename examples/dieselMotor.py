@@ -114,13 +114,13 @@ model.addLagrange(dot_m_f)
 
 model.generate()
 
-model.optimize(steps=60, rksteps=3, tf=0.5,
+model.optimize(steps=100, rksteps=3, tf=0.5,
                flags={"outputPath": "/tmp",
                       "linearSolver": LinearSolver.MUMPS,
-                      "ivpSolver": "Radau",
+                      "ivpSolver": IVPSolver.RADAU,
                       "initVars": InitVars.SOLVE,
                       "tolerance": 1e-14},
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 5})
 
-model.plotInputs(dots=True)
+model.plotInputs(dots=Dots.BASE)
