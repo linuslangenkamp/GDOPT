@@ -8,6 +8,7 @@ import random
 model = Model("generalizedBatchReactor")
 
 N = 50
+CHAIN_SIZE = 15
 
 x = []
 for v in range(N):
@@ -21,13 +22,13 @@ u = model.addInput(symbol="u", lb=0, ub=5, guess=1.5 - t)
 energy = model.addState(symbol="energy", start=0) # total energy consumed by the control
 
 EXP_E = model.addRuntimeParameter(default=4, symbol="EXPONENT_ENERGY")
-DEPL = model.addRuntimeParameter(default=35, symbol="DEPLETION_COEFF")
+DEPL = model.addRuntimeParameter(default=50, symbol="DEPLETION_COEFF")
 
 coeffs = []
 for x1 in range(N):
     oList = []
     for x2 in range(N):
-        if x2 <= x1 or x2 - x1 > 5:
+        if x2 <= x1 or x2 - x1 > CHAIN_SIZE:
             oList.append(0)
         else:
             oList.append(random.uniform(0, 1))
