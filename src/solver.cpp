@@ -16,6 +16,7 @@
     8 test framework for huge examples / industry relevant              3, 2
     9 add nominal, linear, quadratic, const hessian detection!          2, 3
     10 play with setting in ipopt / pivoting etc.!                      2, 3
+    11 check long double to double cast in evals?!                      1, 2
 */
 
 void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver);
@@ -186,7 +187,7 @@ std::vector<int> Solver::l2BoundaryNorm() const {
             // (int_0^1 (d^{1,2}/dt^{1,2} p_u(t))^2 dt)^0.5 - L2 norm of the (1st, 2nd) diff
             double L2Diff1 = std::sqrt(_priv->gdop->rk.integrate(sq_p_uDiff));
             double L2Diff2 = std::sqrt(_priv->gdop->rk.integrate(sq_p_uDiff2));
-            // std::cout << "i: " << i << ", L2Diff1: " << L2Diff1 << std::endl;
+
             // difference in derivatives from polynomial of adjacent intervals must not exceed some eps
             // using p1 (+1) error; basically isclose(.) in numpy bib
             double p1ErrorDiff = std::abs(p_uDiff[0]  - lastDiffs[u][0]) / (1 + std::max({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])}));
@@ -413,6 +414,8 @@ void Solver::printMeshStats() const {
 }
 
 void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver)  {
+    
+    // TODO: datatypes cast from long double to double for better stability?
 
     // numeric jacobian and hessian
     // app->Options()->SetStringValue("hessian_approximation", "limited-memory");
@@ -424,7 +427,7 @@ void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver)  {
     app->Options()->SetNumericValue("tol", solver.tolerance);
     app->Options()->SetNumericValue("acceptable_tol", solver.tolerance * 1e3);
     app->Options()->SetStringValue("mu_strategy", "adaptive");
-    // app->Options()->SetStringValue("nlp_scaling_method", "nlp_scaling_max_gradient");
+    app->Options()->SetStringValue("nlp_scaling_method", "gradient-based");
     app->Options()->SetIntegerValue("max_iter", 100000);
 
     app->Options()->SetIntegerValue("print_level", 5);
