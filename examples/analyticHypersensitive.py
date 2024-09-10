@@ -23,6 +23,9 @@ model.addDynamic(x, -x + u)
 model.addFinal(1. - x, eq=0)
 model.addLagrange(0.5 * (x**2 + u**2))
 
+model.isQuadraticObjective()
+model.areLinearConstraints()
+
 model.generate()
 
 model.optimize(tf=10000, steps=100, rksteps=9,

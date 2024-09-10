@@ -53,7 +53,7 @@ int Solver::solve() {
 
     // create IPOPT application, set linear solver, tolerances, etc.
     SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
-    setSolverFlags(app, *this);
+    setSolverFlags(*app);
     ApplicationReturnStatus status = app->Initialize();
 
     // initial optimization
@@ -413,7 +413,7 @@ void Solver::printMeshStats() const {
     std::cout << "Final:" << std::setw(9) << _priv->gdop->mesh.intervals << std::endl;
 }
 
-void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver)  {
+void Solver::setSolverFlags(IpoptApplication& app)  {
     
     // TODO: datatypes cast from long double to double for better stability?
 
@@ -424,24 +424,35 @@ void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver)  {
     // test derivatives
     // app->Options()->SetStringValue("derivative_test", "second-order");
 
-    app->Options()->SetNumericValue("tol", solver.tolerance);
-    app->Options()->SetNumericValue("acceptable_tol", solver.tolerance * 1e3);
-    app->Options()->SetStringValue("mu_strategy", "adaptive");
-    app->Options()->SetStringValue("nlp_scaling_method", "gradient-based");
-    app->Options()->SetIntegerValue("max_iter", 100000);
+    app.Options()->SetNumericValue("tol", tolerance);
+    app.Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
+    app.Options()->SetIntegerValue("max_iter", 100000);
 
-    app->Options()->SetIntegerValue("print_level", 5);
-    app->Options()->SetStringValue("timing_statistics", "yes");
+    //app.Options()->SetStringValue("mu_strategy", "adaptive");
+    //app.Options()->SetStringValue("nlp_scaling_method", "user-scaling");
+    app.Options()->SetStringValue("nlp_scaling_method", "gradient-based");
 
-    app->Options()->SetStringValue("linear_solver", getLinearSolverName(solver.linearSolver));
-    app->Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
+    app.Options()->SetIntegerValue("print_level", 5);
+    app.Options()->SetStringValue("timing_statistics", "yes");
+
+    app.Options()->SetStringValue("linear_solver", getLinearSolverName(linearSolver));
+    app.Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
 
     // options for initial feasible point
-    app->Options()->SetNumericValue("bound_push", 1e-3);
-    app->Options()->SetNumericValue("bound_frac", 1e-3);
+    app.Options()->SetNumericValue("bound_push", 1e-3);
+    app.Options()->SetNumericValue("bound_frac", 1e-3);
 
-    // app->Options()->SetStringValue("hessian_constant", "yes");
-    // app->Options()->SetStringValue("output_file", "ipopt.out");
+    if (_priv->gdop->problem->quadratic_obj_linear_constraints) {
+        app.Options()->SetStringValue("hessian_constant", "yes");
+        std::cout << "CONSTANT HESSIAN" << std::endl;
+    }
+    if (_priv->gdop->problem->linear_objective) {
+        app.Options()->SetStringValue("grad_f_constant", "yes");
+    }
+    if (_priv->gdop->problem->linear_constraints) {
+        app.Options()->SetStringValue("jac_c_constant", "yes");
+        app.Options()->SetStringValue("jac_d_constant", "yes");
+    }
 }
 
 void Solver::setMeshParameter(const std::string& field, double value) {

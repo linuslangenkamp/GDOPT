@@ -509,6 +509,24 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
     return true;
 }
 
+bool GDOP::get_scaling_parameters(Number& obj_scaling, bool& use_x_scaling, Index n, Number* x_scaling, bool& use_g_scaling,
+                            Index m, Number* g_scaling) {
+    obj_scaling = 1;
+
+    use_x_scaling = true;
+    for (int var = 0; var < n; var++) {
+        x_scaling[var] = 1;
+    }
+
+    use_g_scaling = true;
+    for (int eq = 0; eq < m; eq++) {
+        g_scaling[eq] = 1;
+    }
+
+    return true;
+}
+
+
 bool GDOP::eval_f(Index n, const Number *x, bool new_x, Number &obj_value) {
     double MAY = 0;
     double LAG = 0;

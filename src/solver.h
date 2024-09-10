@@ -3,7 +3,6 @@
 
 #include <chrono>
 #include <unordered_map>
-
 #include "gdop.h"
 
 enum class LinearSolver {
@@ -23,6 +22,10 @@ enum class MeshAlgorithm {
 };
 
 struct SolverPrivate;
+namespace Ipopt {
+    class IpoptApplication;
+}
+
 
 class Solver {
 public:
@@ -71,6 +74,7 @@ public:
     void setl2BoundaryNorm();
     void setBasicStrategy();
     void setMeshParameter(const std::string& field, double value);
+    void setSolverFlags(Ipopt::IpoptApplication& app);
 
     // basicStrategy parameters
     double basicStrategySigma = 2.5;

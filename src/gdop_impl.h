@@ -78,6 +78,9 @@ public:
     bool get_starting_point(Index n, bool init_x, Number *x, bool init_z, Number *z_L, Number *z_U, Index m,
                             bool init_lambda, Number *lambda) override;
 
+    bool get_scaling_parameters(Number& obj_scaling, bool& use_x_scaling,Index n, Number* x_scaling, bool& use_g_scaling,
+            Index m, Number* g_scaling) override;
+
     bool eval_f(Index n, const Number *x, bool new_x, Number &obj_value) override;
 
     bool eval_grad_f(Index n, const Number *x, bool new_x, Number *grad_f) override;

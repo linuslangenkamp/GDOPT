@@ -42,6 +42,8 @@ model.addDynamic(depl, u**2 / 2 * D_v * x1)
 model.addDynamic(x1, -(u * R_v + u**2 / 2 * D_v) * x1)
 model.addDynamic(x2, u * x1 * R_v)
 
+model.isLinearObjective()
+
 model.generate()
 
 model.optimize(tf=1, steps=2000, rksteps=3,

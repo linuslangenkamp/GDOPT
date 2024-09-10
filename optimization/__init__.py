@@ -49,6 +49,9 @@ class Model:
         self.meshLevel = None
         self.meshCTol = None
         self.meshSigma = None
+        self.quadraticObjective = False
+        self.linearObjective = False
+        self.linearConstraints = False
 
         # stuff for analyzing the results
         self.resultHistory = {}
@@ -291,6 +294,24 @@ class Model:
     def setMeshSigma(self, meshSigma):
         self.meshSigma = meshSigma
 
+    def isLinearObjective(self):
+
+        # set this if both Mayer and Lagrange are linear
+
+        self.linearObjective = True
+
+    def isQuadraticObjective(self):
+
+        # set this if both Mayer and Lagrange are quadratic
+
+        self.quadraticObjective = True
+
+    def areLinearConstraints(self):
+
+        # set this if all constraints, i.e. f, g, r and a are linear
+
+        self.linearConstraints = True
+
     def setExpressionSimplification(self, simp):
 
         # turn initial simplification of expression at generation on / off, standard = off, good for large models
@@ -331,6 +352,16 @@ class Model:
         out = "std::vector<double> uInitialGuess(double t) {\n"
         out += f"\t return {{{', '.join(str(toCode(varInfo[u].initialGuess)) for u in self.uVars)}}};"
         out += "\n};\n\n"
+        return out
+
+    def generateProblemCondition(self):
+        lines = ["\tproblem.linear_objective = true;" if self.linearObjective else "",
+                 "\tproblem.linear_constraints = true;" if self.linearConstraints else "",
+                 "\tproblem.quadratic_obj_linear_constraints = true;"
+                 if (self.linearObjective or self.quadraticObjective) and self.linearConstraints else ""]
+        out = '\n'.join(line for line in lines if line)
+        if out != "":
+            out = "\n" + out + "\n"
         return out
 
     def initAnalysis(self):
@@ -464,7 +495,7 @@ class Model:
     #ifdef INITIAL_STATES_PATH
     problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
     #endif
-    
+    {self.generateProblemCondition()}
     return problem;
 }};\n"""
 

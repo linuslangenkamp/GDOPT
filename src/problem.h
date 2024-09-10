@@ -44,6 +44,10 @@ public:
 
     std::string name;
     std::string initialStatesPath;
+
+    bool linear_objective = false;                              // true if M and L are linear
+    bool linear_constraints = false;                            // true if f, g, r and a are all linear
+    bool quadratic_obj_linear_constraints = false;              // true if f, g, r and a are all linear and M and L are at most quadratic
 };
 
 #endif //IPOPT_DO_PROBLEM_H
