@@ -377,7 +377,6 @@ class Model:
         return out
 
     def generateProblemCondition(self):
-        # TODO: auto detect constant jacobians, hessians, gradients
         lines = ["\tproblem.linearObjective = true;" if self.linearObjective else "",
                  "\tproblem.linearConstraints = true;" if self.linearConstraints else "",
                  "\tproblem.quadraticObjLinearConstraints = true;"

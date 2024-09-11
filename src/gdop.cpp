@@ -312,7 +312,6 @@ bool GDOP::get_bounds_info(Index n, Number *x_l, Number *x_u, Index m, Number *g
 bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Number *z_L, Number *z_U, Index m,
                               bool init_lambda, Number *lambda) {
     // TODO: implement different strategies:
-    //  * SOLVE(.) -> given u(t), p guesses and x0: simulate the dynamic with given scheme, newton iteration, linear system
     //  * genetic / bionic algorithm
     assert(n == numberVars);
     if (init_x) {

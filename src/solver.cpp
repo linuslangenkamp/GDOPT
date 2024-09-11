@@ -10,16 +10,14 @@
     3 tf as free variable                                               2, 4.5
     4 vectorized equation, derivatives with local substitutions         2, 4
     -> define vec(f,g), vec(r), vec(a(p))
-    5 saving of local hessian and jacobian structures (contained in 4?) 1, 1
+    5 saving of local hessian and jacobian structures (contained in 4?) 0, 1
     6 creation of local jacobian structure (contained in 4?)            0, 1
-    7 better initial guess evolutionary algorithms / solve in code      1, 3
+    7 better initial guess evolutionary algorithms                      1, 3
     8 test framework for huge examples / industry relevant              3, 2
-    9 add nominal, linear, quadratic, const hessian detection!          2, 3
-    10 play with setting in ipopt / pivoting etc.!                      2, 3
+    9 detection for nominal, linear, quadratic, const hessian           1, 2
+    10 play with setting in ipopt / pivoting etc.                       2, 3
     11 check long double to double cast in evals?!                      1, 2
 */
-
-void setSolverFlags(const SmartPtr<IpoptApplication>& app, Solver & solver);
 
 struct SolverPrivate {
     SmartPtr<GDOP> gdop;
@@ -414,9 +412,6 @@ void Solver::printMeshStats() const {
 }
 
 void Solver::setSolverFlags(IpoptApplication& app)  {
-    
-    // TODO: datatypes cast from long double to double for better stability?
-
     // numeric jacobian and hessian
     // app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     // app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
@@ -429,6 +424,7 @@ void Solver::setSolverFlags(IpoptApplication& app)  {
     app.Options()->SetIntegerValue("max_iter", 100000);
 
     app.Options()->SetStringValue("mu_strategy", "adaptive");
+
     if (userScaling) {
         app.Options()->SetStringValue("nlp_scaling_method", "user-scaling");
     }
@@ -448,7 +444,6 @@ void Solver::setSolverFlags(IpoptApplication& app)  {
 
     if (_priv->gdop->problem->quadraticObjLinearConstraints) {
         app.Options()->SetStringValue("hessian_constant", "yes");
-        std::cout << "CONSTANT HESSIAN" << std::endl;
     }
     if (_priv->gdop->problem->linearObjective) {
         app.Options()->SetStringValue("grad_f_constant", "yes");

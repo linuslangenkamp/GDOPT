@@ -5,7 +5,6 @@
 #include <vector>
 #include <array>
 
-// TODO?: add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2? or with colored jacobian
 struct Adjacency {
     const std::vector<int> indX;    // Indices X
     const std::vector<int> indU;    // Indices U
