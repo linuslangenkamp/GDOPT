@@ -1,5 +1,7 @@
 #include <cassert>
 #include <algorithm>
+#include <exception>
+#include <utility>
 #include "gdop.h"
 #include "gdop_impl.h"
 #include "util.h"
@@ -511,21 +513,59 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number *x, bool init_z, Numb
 
 bool GDOP::get_scaling_parameters(Number& obj_scaling, bool& use_x_scaling, Index n, Number* x_scaling, bool& use_g_scaling,
                             Index m, Number* g_scaling) {
-    obj_scaling = 1;
-
     use_x_scaling = true;
-    for (int var = 0; var < n; var++) {
-        x_scaling[var] = 1;
+    use_g_scaling = true;
+
+    // objective scaling
+    obj_scaling = checkNominalValue(problem->nominalObjective);
+
+    // variable scaling
+    for (int i = 0; i < mesh.intervals; i++) {
+        for (int j = 0; j < rk.steps; j++) {
+            const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+            const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
+            for (int dimX = 0; dimX < problem->sizeX; dimX++) {
+                x_scaling[xij + dimX] = checkNominalValue(problem->nominalsX[dimX]);
+            }
+
+            for (int dimU = 0; dimU < problem->sizeU; dimU++) {
+                x_scaling[uij + dimU] = checkNominalValue(problem->nominalsU[dimU]);
+            }
+        }
+    }
+    for (int dimP = 0; dimP < problem->sizeP; dimP++) {
+        x_scaling[offXUTotal + dimP] = checkNominalValue(problem->nominalsP[dimP]);
     }
 
-    use_g_scaling = true;
-    for (int eq = 0; eq < m; eq++) {
-        g_scaling[eq] = 1;
+    // constraint scaling
+    int eq = 0;
+    for (int i = 0; i < mesh.intervals; i++) {
+        for (int j = 0; j < rk.steps; j++) {
+            for (int d = 0; d < sz(problem->F); d++) {
+                g_scaling[eq] = checkNominalValue(problem->nominalsF[d]);
+                eq++;
+            }
+
+            for (int d = 0; d < sz(problem->G); d++) {
+                g_scaling[eq] = checkNominalValue(problem->nominalsG[d]);
+                eq++;
+            }
+        }
     }
+
+    for (int d = 0; d < sz(problem->R); d++) {
+        g_scaling[eq] = checkNominalValue(problem->nominalsR[d]);
+        eq++;
+    }
+
+    for (int d = 0; d < sz(problem->A); d++) {
+        g_scaling[eq] = checkNominalValue(problem->nominalsA[d]);
+        eq++;
+    }
+    assert(m == eq);
 
     return true;
 }
-
 
 bool GDOP::eval_f(Index n, const Number *x, bool new_x, Number &obj_value) {
     double MAY = 0;

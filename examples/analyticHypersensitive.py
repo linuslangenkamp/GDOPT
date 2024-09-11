@@ -23,8 +23,8 @@ model.addDynamic(x, -x + u)
 model.addFinal(1. - x, eq=0)
 model.addLagrange(0.5 * (x**2 + u**2))
 
-model.isQuadraticObjective()
-model.areLinearConstraints()
+model.hasQuadraticObjective()
+model.hasLinearConstraints()
 
 model.generate()
 

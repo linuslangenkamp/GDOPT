@@ -1,3 +1,5 @@
+from pickle import FALSE
+
 from optimization import *
 
 model = Model("satellite")
@@ -23,9 +25,9 @@ x5 = model.addState(start=0.01)
 x6 = model.addState(start=0.005)
 x7 = model.addState(start=0.001)
 
-u1 = model.addInput()
-u2 = model.addInput()
-u3 = model.addInput()
+u1 = model.addInput(nominal=0.005)
+u2 = model.addInput(nominal=0.00005)
+u3 = model.addInput(nominal=0.005)
 
 model.addDynamic(x1, 0.5 * (x5 * x4 - x6 * x3 + x7 * x2))
 model.addDynamic(x2, 0.5 * (x5 * x3 + x6 * x4 - x7 * x1))

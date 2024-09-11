@@ -45,6 +45,7 @@ public:
     std::vector<int> detect() const;
     void refine(std::vector<int>& markedIntervals);
     void finalizeOptimization();
+    void postOptimization();
 
     // detection methods
     std::vector<int> basicStrategy() const;
@@ -55,13 +56,14 @@ public:
     int initialIntervals = -1;
     std::chrono::_V2::system_clock::time_point solveStartTime;
     std::chrono::duration<double> timedeltaIO{0}; // time in IO operations
-    void postOptimization();
     std::string exportOptimumPath;
     bool exportOptimum = false;
     std::string exportHessianPath;
     bool exportHessian = false;
     std::string exportJacobianPath;
     bool exportJacobian = false;
+    bool userScaling = true;     // use nlp scaling provided by the user, otherwise use gradient-based
+
     void printObjectiveHistory();
     void printMeshStats() const;
     void createModelInfo() const;

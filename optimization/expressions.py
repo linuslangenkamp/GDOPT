@@ -7,12 +7,13 @@ varInfo = {}
 class Expression:
     simplification = False
 
-    def __init__(self, expr):
+    def __init__(self, expr, nominal=None):
         if Expression.simplification:
             self.expr = expr.simplify()
         else:
             self.expr = expr
 
+        self.nominal = nominal
         self.adj = []
         try:
             for sym in expr.free_symbols:
@@ -162,15 +163,15 @@ class Expression:
 
 class DynExpression(Expression):
 
-    def __init__(self, diffVar, expr):
-        super().__init__(expr)
+    def __init__(self, diffVar, expr, nominal=None):
+        super().__init__(expr, nominal=nominal)
         self.diffVar = diffVar
 
 
 class Constraint(Expression):
 
-    def __init__(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
-        super().__init__(expr)
+    def __init__(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
+        super().__init__(expr, nominal=nominal)
         if eq is not None:
             self.lb = eq
             self.ub = eq
@@ -320,8 +321,8 @@ class Constraint(Expression):
 
 class ParametricConstraint(Expression):
 
-    def __init__(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
-        super().__init__(expr)
+    def __init__(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
+        super().__init__(expr, nominal=nominal)
         if eq is not None:
             self.lb = eq
             self.ub = eq

@@ -106,4 +106,14 @@ inline std::vector<std::vector<double>> readInitialValues(const std::string& fil
     return trajectories;
 }
 
+inline double checkNominalValue(const double value) {
+    double nom = std::abs(value);
+    if (nom > 1e-18 and nom < 1e18) {
+        return 1 / nom;
+    }
+    else {
+        throw;  // TODO: proper exceptions
+    }
+}
+
 #endif //IPOPT_DO_UTIL_H

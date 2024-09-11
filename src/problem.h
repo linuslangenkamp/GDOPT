@@ -35,6 +35,10 @@ public:
     std::vector<double> lbP;                                    // global lower bound on parameters
     std::vector<double> ubP;                                    // global upper bound on parameters
 
+    std::vector<double> nominalsX = {};                         // nominal values for the states
+    std::vector<double> nominalsU = {};                         // nominal values for the inputs
+    std::vector<double> nominalsP = {};                         // nominal values for the parameters
+
     std::unique_ptr<Expression> M;                              // mayer term
     std::unique_ptr<Expression> L;                              // lagrange term
     std::vector<std::unique_ptr<Expression>> F;                 // state dynamics, RHS of ODE
@@ -42,12 +46,18 @@ public:
     std::vector<std::unique_ptr<Constraint>> R;                 // algebraic final constraints
     std::vector<std::unique_ptr<ParamConstraint>> A;            // algebraic constraints for parameters only:
 
+    double nominalObjective = 1;                                // nominal value for the objective
+    std::vector<double> nominalsF = {};                         // nominal values for the state dynamics
+    std::vector<double> nominalsG = {};                         // nominal values for the path constraints
+    std::vector<double> nominalsR = {};                         // nominal values for the final constraints
+    std::vector<double> nominalsA = {};                         // nominal values for the parametric constraints
+
     std::string name;
     std::string initialStatesPath;
 
-    bool linear_objective = false;                              // true if M and L are linear
-    bool linear_constraints = false;                            // true if f, g, r and a are all linear
-    bool quadratic_obj_linear_constraints = false;              // true if f, g, r and a are all linear and M and L are at most quadratic
+    bool linearObjective = false;                               // true if M and L are linear
+    bool linearConstraints = false;                             // true if f, g, r and a are all linear
+    bool quadraticObjLinearConstraints = false;                 // true if f, g, r and a are all linear and M and L are at most quadratic
 };
 
 #endif //IPOPT_DO_PROBLEM_H

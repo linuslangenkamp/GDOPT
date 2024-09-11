@@ -12,8 +12,6 @@ import matplotlib.pyplot as plt
 # set global precision
 pd.set_option('display.precision', 8)
 
-# add vectorized eval of RHS = [f, g]^T, vectorized evalDiff, evalDiff2?
-# or with colored jacobian
 
 class Model:
 
@@ -37,6 +35,7 @@ class Model:
         self.steps = None
         self.rksteps = None
         self.outputFilePath = None
+        self.ivpSolver = IVPSolver.Radau
         self.initVars = InitVars.SOLVE
         self.linearSolver = LinearSolver.MUMPS
         self.meshAlgorithm = MeshAlgorithm.NONE
@@ -45,13 +44,14 @@ class Model:
         self.exportHessianPath = None
         self.exportJacobianPath = None
         self.initialStatesPath = "/tmp"
-        self.ivpSolver = IVPSolver.Radau
         self.meshLevel = None
         self.meshCTol = None
         self.meshSigma = None
         self.quadraticObjective = False
         self.linearObjective = False
         self.linearConstraints = False
+        self.autoVariableNominals = False  # TODO: not in use: automatically scale variables and equations that dont have a nominal value
+        self.userScaling = False
 
         # stuff for analyzing the results
         self.resultHistory = {}
@@ -61,30 +61,32 @@ class Model:
         self.pVarNames = []
         self.rpVarNames = []
 
-    def addState(self, start, symbol=None, lb=-float("inf"), ub=float("inf")):
+    def addState(self, start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None):
         
         # adds a state x for optimization, must a have starting value
         # specify lb or ub if needed
 
-        info = StateStruct(start, symbol=symbol, lb=lb, ub=ub)
+        info = StateStruct(start, symbol=symbol, lb=lb, ub=ub, nominal=nominal)
         variable = Symbol(f'x[{info.id}]')
         varInfo[variable] = info
         self.xVars.append(variable)
+        self.checkNominalNone(nominal)
         return variable
     
-    def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0):
+    def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
         
         # adds an input / control u for optimization
         # specify lb or ub, start/initialGuess if needed
         # only provide a guess if you are certain that it will benefit
 
-        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess)
+        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
         variable = Symbol(f'u[{info.id}]')
         varInfo[variable] = info
         self.uVars.append(variable)
+        self.checkNominalNone(nominal)
         return variable
 
-    def addBinaryInput(self, lb=0, ub=1, symbol=None, guess=None):
+    def addBinaryInput(self, lb=0, ub=1, symbol=None, guess=None, nominal=None):
 
         # dangerous, might break the code
         # adds an input / control u for optimization
@@ -93,25 +95,27 @@ class Model:
 
         if guess is None:
             guess = (lb + ub) / 2
-        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess)
+        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
         variable = Symbol(f'u[{info.id}]')
         varInfo[variable] = info
         self.uVars.append(variable)
         self.addPath(variable**2 - variable * (lb + ub) + lb * ub, eq=0)    # forces binary type
+        self.checkNominalNone(nominal)
         return variable
         
-    def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0):
+    def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
         
         # adds a parameter p for optimization
         # specify lb or ub if needed, start/initialGuess if needed
 
-        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess)
+        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
         variable = Symbol(f'p[{info.id}]')
         varInfo[variable] = info
         self.pVars.append(variable)
+        self.checkNominalNone(nominal)
         return variable
 
-    def addBinaryParameter(self, lb=0, ub=1, symbol=None, guess=None):
+    def addBinaryParameter(self, lb=0, ub=1, symbol=None, guess=None, nominal=None):
 
         # dangerous, might break the code
         # adds a binary parameter p for optimization
@@ -120,11 +124,12 @@ class Model:
 
         if guess is None:
             guess = (lb + ub) / 2
-        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess)
+        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
         variable = Symbol(f'p[{info.id}]')
         varInfo[variable] = info
         self.pVars.append(variable)
         self.addParametric(variable**2 - variable * (lb + ub) + lb * ub, eq=0)     # forces binary type
+        self.checkNominalNone(nominal)
         return variable
 
     def addRuntimeParameter(self, default, symbol):
@@ -145,37 +150,45 @@ class Model:
 
         varInfo[runtimeParameter].value = value
 
-    def addObjective(self, mayer, lagrange, obj=Objective.MINIMIZE):
-        self.addMayer(mayer, obj)
-        self.addLagrange(lagrange, obj)
+    def addObjective(self, mayer, lagrange, obj=Objective.MINIMIZE, nominal=None):
 
-    def addMayer(self, expr, obj=Objective.MINIMIZE):
+        # adds the mayer and lagrange term
+        # if mayer and lagrange have a nominal -> sum is used as nominal value
+
+        self.addMayer(mayer, obj, nominal=nominal)
+        self.addLagrange(lagrange, obj, nominal=nominal)
+
+    def addMayer(self, expr, obj=Objective.MINIMIZE, nominal=None):
         
         # adds the mayer term: min/max expr(tf)
+        # if mayer and lagrange have a nominal -> sum is used as nominal value
         
         if self.M:
             raise InvalidModel("Mayer term already set")
         else:
             if obj == Objective.MAXIMIZE:
-                self.M = Expression(-1 * expr)
+                self.M = Expression(-1 * expr, nominal=nominal)
                 print("Setting Mayer term as -1 * mayer, since maximization is chosen.\n")
             else:
-                self.M = Expression(expr)
+                self.M = Expression(expr, nominal=nominal)
+        self.checkNominalNone(nominal)
                 
-    def addLagrange(self, expr, obj=Objective.MINIMIZE):
+    def addLagrange(self, expr, obj=Objective.MINIMIZE, nominal=None):
         
         # adds the lagrange term: min/max integral_0_tf expr dt
-        
+        # if mayer and lagrange have a nominal -> sum is used as nominal value
+
         if self.L:
             raise InvalidModel("Lagrange term already set")
         else:
             if obj == Objective.MAXIMIZE:
-                self.L = Expression(-1 * expr)
+                self.L = Expression(-1 * expr, nominal=nominal)
                 print("Setting Lagrange term as -1 * lagrange, since maximization is chosen.\n")
             else:
-                self.L = Expression(expr)
+                self.L = Expression(expr, nominal=nominal)
+        self.checkNominalNone(nominal)
     
-    def addDynamic(self, diffVar, expr):
+    def addDynamic(self, diffVar, expr, nominal=None):
         
         # adds a dynamic constraint: diffVar' = expr
         
@@ -183,32 +196,36 @@ class Model:
             if diffVar == f.diffVar:
                 fail = f"Equation for diff({diffVar}) has been added already"
                 raise InvalidModel(fail)
-        self.F.append(DynExpression(diffVar, expr))
+        self.F.append(DynExpression(diffVar, expr, nominal=nominal))
+        self.checkNominalNone(nominal)
     
-    def addPath(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
+    def addPath(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
         
         # adds a path constraint: lb <= g(.(t)) <= ub or g(.(t)) == eq
         
         if eq is not None and (lb != -float("inf") or ub != float("inf")):
             raise InvalidModel("Can't set eq and lb or ub.")
-        self.G.append(Constraint(expr, lb=lb, ub=ub, eq=eq))
+        self.G.append(Constraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
+        self.checkNominalNone(nominal)
     
-    def addFinal(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
+    def addFinal(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
         
         # adds a final constraint: lb <= r(.(tf)) <= ub or r(.(tf)) == eq
         
         if eq is not None and (lb != -float("inf") or ub != float("inf")):
             raise InvalidModel("Can't set eq and lb or ub.")
-        self.R.append(Constraint(expr, lb=lb, ub=ub, eq=eq))
+        self.R.append(Constraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
+        self.checkNominalNone(nominal)
         
-    def addParametric(self, expr, lb=-float("inf"), ub=float("inf"), eq=None):
+    def addParametric(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
         
         # adds a parametric constraint: lb <= a(p) <= ub or a(p) == eq
         
         if set(self.pVars).issuperset(expr.free_symbols):
-            self.A.append(ParametricConstraint(expr, lb=lb, ub=ub, eq=eq))
+            self.A.append(ParametricConstraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
         else:
             raise InvalidModel("Parametric constraints only allow parametric variables")
+        self.checkNominalNone(nominal)
             
     def _addDummy(self):
         
@@ -242,71 +259,74 @@ class Model:
         stateVals = solution.sol(timeVals)
         return timeVals, stateVals
 
-    def setFinalTime(self, tf):
+    def setFinalTime(self, tf : float):
         self.tf = tf
     
-    def setSteps(self, steps):
+    def setSteps(self, steps : int):
         self.steps = steps
     
-    def setRkSteps(self, rksteps):
+    def setRkSteps(self, rksteps : int):
         self.rksteps = rksteps
     
-    def setOutputPath(self, path):
+    def setOutputPath(self, path: str):
         self.outputFilePath = path
     
-    def setLinearSolver(self, solver):
+    def setLinearSolver(self, solver : LinearSolver):
         self.linearSolver = solver
 
-    def setInitVars(self, initVars):
+    def setInitVars(self, initVars : InitVars):
         self.initVars = initVars
 
-    def setTolerance(self, tolerance):
+    def setTolerance(self, tolerance : float):
         self.tolerance = tolerance
     
-    def setExportHessianPath(self, path):
+    def setExportHessianPath(self, path : str):
         self.exportHessianPath = path
         
-    def setExportJacobianPath(self, path):
+    def setExportJacobianPath(self, path : str):
         self.exportJacobianPath = path
 
-    def setInitialStatesPath(self, path):
+    def setInitialStatesPath(self, path : str):
         self.initialStatesPath = path
 
-    def setIVPSolver(self, solver):
+    def setIVPSolver(self, solver : IVPSolver):
 
         # set IVP Solver for initial guess of states. (see scipy.solve_ivp)
         # default = IVPSolver.Radau (should be best), others: BDF, LSODA, RK45, DOP853, RK23
 
         self.ivpSolver = solver
 
-    def setMeshAlgorithm(self, meshAlgorithm):
+    def setMeshAlgorithm(self, meshAlgorithm : MeshAlgorithm):
         self.meshAlgorithm = meshAlgorithm
     
-    def setMeshIterations(self, meshIterations):
+    def setMeshIterations(self, meshIterations : int):
         self.meshIterations = meshIterations
     
-    def setMeshLevel(self, meshLevel):
+    def setMeshLevel(self, meshLevel : float):
         self.meshLevel = meshLevel
     
-    def setMeshCTol(self, meshCTol):
+    def setMeshCTol(self, meshCTol : float):
         self.meshCTol = meshCTol
     
-    def setMeshSigma(self, meshSigma):
+    def setMeshSigma(self, meshSigma : float):
         self.meshSigma = meshSigma
 
-    def isLinearObjective(self):
+    def setUserScaling(self, userScaling : bool):
+        self.userScaling = userScaling
+
+    def hasLinearObjective(self):
 
         # set this if both Mayer and Lagrange are linear
 
         self.linearObjective = True
 
-    def isQuadraticObjective(self):
+    def hasQuadraticObjective(self):
 
         # set this if both Mayer and Lagrange are quadratic
 
         self.quadraticObjective = True
 
-    def areLinearConstraints(self):
+    def hasLinearConstraints(self):
 
         # set this if all constraints, i.e. f, g, r and a are linear
 
@@ -335,6 +355,8 @@ class Model:
             self.setIVPSolver(flags["ivpSolver"])
         if "initVars" in flags:
             self.setInitVars(flags["initVars"])
+        if "userScaling" in flags:
+            self.setUserScaling(flags["userScaling"])
 
     def setMeshFlags(self, meshFlags):
         if "meshAlgorithm" in meshFlags:
@@ -355,14 +377,37 @@ class Model:
         return out
 
     def generateProblemCondition(self):
-        lines = ["\tproblem.linear_objective = true;" if self.linearObjective else "",
-                 "\tproblem.linear_constraints = true;" if self.linearConstraints else "",
-                 "\tproblem.quadratic_obj_linear_constraints = true;"
+        # TODO: auto detect constant jacobians, hessians, gradients
+        lines = ["\tproblem.linearObjective = true;" if self.linearObjective else "",
+                 "\tproblem.linearConstraints = true;" if self.linearConstraints else "",
+                 "\tproblem.quadraticObjLinearConstraints = true;"
                  if (self.linearObjective or self.quadraticObjective) and self.linearConstraints else ""]
         out = '\n'.join(line for line in lines if line)
         if out != "":
             out = "\n" + out + "\n"
         return out
+
+    def objectiveNominal(self):
+        if self.M and self.L:
+            if self.M.nominal is not None and self.L.nominal is not None:
+                return self.M.nominal + self.L.nominal
+            elif self.M.nominal is not None:
+                return self.M.nominal
+            elif self.L.nominal is not None:
+                return self.L.nominal
+            else:
+                return 1
+        elif self.M:
+            return self.M.nominal if self.M.nominal is not None else 1
+        elif self.L:
+            return self.L.nominal if self.L.nominal is not None else 1
+        else:
+            return 1
+
+    def checkNominalNone(self, nominal):
+        # forces userScaling to True, if a single nominal is provided in the model -> else its False
+        if nominal is not None:
+            self.userScaling = True
 
     def initAnalysis(self):
         with open('/tmp/modelinfo.txt', 'r') as file:
@@ -391,7 +436,7 @@ class Model:
         filename = self.name + "Generated"
 
         print("Starting .cpp codegen...\n")
-        
+
         OUTPUT = f'''
 // CODEGEN FOR MODEL "{self.name}"\n
 // includes
@@ -491,7 +536,19 @@ class Model:
             std::move(R),
             std::move(A),
             "{self.name}");
-            
+    
+    #ifdef USER_SCALING
+    problem.nominalsX = {{{', '.join(str(toCode("1" if varInfo[x].nominal is None else varInfo[x].nominal)) for x in self.xVars)}}};  // nominal states
+    problem.nominalsU = {{{', '.join(str(toCode("1" if varInfo[u].nominal is None else varInfo[u].nominal)) for u in self.uVars)}}};  // nominal inputs
+    problem.nominalsP = {{{', '.join(str(toCode("1" if varInfo[p].nominal is None else varInfo[p].nominal)) for p in self.pVars)}}};  // nominal inputs
+    
+    problem.nominalObjective = {self.objectiveNominal()};  // nominal objective
+    problem.nominalsF = {{{', '.join(str(toCode("1" if f.nominal is None else f.nominal)) for f in self.F)}}};  // nominal dynamic
+    problem.nominalsG = {{{', '.join(str(toCode("1" if g.nominal is None else g.nominal)) for g in self.G)}}};  // nominal path
+    problem.nominalsR = {{{', '.join(str(toCode("1" if r.nominal is None else r.nominal)) for r in self.R)}}};  // nominal final
+    problem.nominalsA = {{{', '.join(str(toCode("1" if a.nominal is None else a.nominal)) for a in self.A)}}};  // nominal parametric
+    #endif
+    
     #ifdef INITIAL_STATES_PATH
     problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
     #endif
@@ -539,6 +596,10 @@ int main() {{
     
     #ifdef SIGMA
     solver.setMeshParameter("sigma", SIGMA);
+    #endif
+    
+    #ifdef USER_SCALING
+    solver.userScaling = USER_SCALING;
     #endif
     
     // optimize
@@ -610,6 +671,7 @@ int main() {{
         OUTPUT += f"#define MESH_ALGORITHM MeshAlgorithm::{self.meshAlgorithm.name}\n"
         OUTPUT += f"#define MESH_ITERATIONS {self.meshIterations}\n"
         OUTPUT += f"#define TOLERANCE {self.tolerance}\n"
+        OUTPUT += f"#define USER_SCALING {'true' if self.userScaling else 'false'}\n"
 
         if self.outputFilePath:
             OUTPUT += f'#define EXPORT_OPTIMUM_PATH "{self.outputFilePath}"\n'

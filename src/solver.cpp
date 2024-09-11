@@ -428,9 +428,13 @@ void Solver::setSolverFlags(IpoptApplication& app)  {
     app.Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
     app.Options()->SetIntegerValue("max_iter", 100000);
 
-    //app.Options()->SetStringValue("mu_strategy", "adaptive");
-    //app.Options()->SetStringValue("nlp_scaling_method", "user-scaling");
-    app.Options()->SetStringValue("nlp_scaling_method", "gradient-based");
+    app.Options()->SetStringValue("mu_strategy", "adaptive");
+    if (userScaling) {
+        app.Options()->SetStringValue("nlp_scaling_method", "user-scaling");
+    }
+    else {
+        app.Options()->SetStringValue("nlp_scaling_method", "gradient-based");
+    }
 
     app.Options()->SetIntegerValue("print_level", 5);
     app.Options()->SetStringValue("timing_statistics", "yes");
@@ -442,14 +446,14 @@ void Solver::setSolverFlags(IpoptApplication& app)  {
     app.Options()->SetNumericValue("bound_push", 1e-3);
     app.Options()->SetNumericValue("bound_frac", 1e-3);
 
-    if (_priv->gdop->problem->quadratic_obj_linear_constraints) {
+    if (_priv->gdop->problem->quadraticObjLinearConstraints) {
         app.Options()->SetStringValue("hessian_constant", "yes");
         std::cout << "CONSTANT HESSIAN" << std::endl;
     }
-    if (_priv->gdop->problem->linear_objective) {
+    if (_priv->gdop->problem->linearObjective) {
         app.Options()->SetStringValue("grad_f_constant", "yes");
     }
-    if (_priv->gdop->problem->linear_constraints) {
+    if (_priv->gdop->problem->linearConstraints) {
         app.Options()->SetStringValue("jac_c_constant", "yes");
         app.Options()->SetStringValue("jac_d_constant", "yes");
     }

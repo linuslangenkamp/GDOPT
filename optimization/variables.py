@@ -1,19 +1,20 @@
 class VariableStruct:
     id_counter = 0
 
-    def __init__(self, symbol, lb=-float("inf"), ub=float("inf")):
+    def __init__(self, symbol, lb=-float("inf"), ub=float("inf"), nominal=None):
         self.symbol = symbol
         self.lb = lb
         self.ub = ub
         self.id = VariableStruct.id_counter
+        self.nominal = nominal
         VariableStruct.id_counter += 1
 
 
 class StateStruct(VariableStruct):
     id_counter = 0
 
-    def __init__(self, start, symbol=None, lb=-float("inf"), ub=float("inf")):
-        super().__init__(symbol, lb, ub)
+    def __init__(self, start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None):
+        super().__init__(symbol, lb, ub, nominal=nominal)
         self.start = start
         self.symbol = symbol if symbol is not None else f'x[{StateStruct.id_counter}]'
         self.id = StateStruct.id_counter
@@ -23,8 +24,8 @@ class StateStruct(VariableStruct):
 class InputStruct(VariableStruct):
     id_counter = 0
 
-    def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf"), initialGuess=0):
-        super().__init__(symbol, lb, ub)
+    def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf"), initialGuess=0, nominal=None):
+        super().__init__(symbol, lb, ub, nominal=nominal)
         self.initialGuess = initialGuess
         self.symbol = symbol if symbol is not None else f'u[{InputStruct.id_counter}]'
         self.id = InputStruct.id_counter
@@ -34,8 +35,8 @@ class InputStruct(VariableStruct):
 class ParameterStruct(VariableStruct):
     id_counter = 0
 
-    def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf"), initialGuess=0):
-        super().__init__(symbol, lb, ub)
+    def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf"), initialGuess=0, nominal=None):
+        super().__init__(symbol, lb, ub, nominal=nominal)
         self.initialGuess = initialGuess
         self.symbol = symbol if symbol is not None else f'p[{ParameterStruct.id_counter}]'
         self.id = ParameterStruct.id_counter

@@ -123,4 +123,4 @@ model.optimize(steps=100, rksteps=3, tf=0.5,
                meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
                           "meshIterations": 5})
 
-model.plotInputs(dots=Dots.BASE)
+model.plot(dots=Dots.BASE)
