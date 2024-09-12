@@ -109,7 +109,8 @@ inline double checkNominalValue(const double value) {
     double nom = std::abs(value);
     if (nom >= 1e-18 and 1e18 >= nom) {
         return 1 / nom;
-    } else {
+    }
+    else {
         std::cerr << "The program will be terminated, since the nominal value abs(" << value
                   << ") "
                      "is not in the range"

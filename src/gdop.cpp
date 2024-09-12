@@ -380,7 +380,8 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Numb
                             for (int dimX = 0; dimX < problem->sizeX; dimX++) {
                                 x[xij + dimX] = problem->x0[dimX];
                             }
-                        } else {
+                        }
+                        else {
                             for (int dimX = 0; dimX < problem->sizeX; dimX++) {
                                 x[xij + dimX] = x[xij - offXU + dimX] + dt * problem->F[dimX]->eval(&x[xij - offXU], &x[uij - offXU], &x[offXUTotal], tijOld);
                             }
@@ -416,7 +417,8 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Numb
                             for (int dimX = 0; dimX < problem->sizeX; dimX++) {
                                 x[xij + dimX] = problem->x0[dimX];
                             }
-                        } else {
+                        }
+                        else {
                             double k1X[problem->sizeX];
                             double k2X[problem->sizeX];
                             double k3X[problem->sizeX];
@@ -640,7 +642,8 @@ bool GDOP::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g) {
                     const int xik = i * offXUBlock + k * offXU; // first index (dim=0) of x_{ik}
                     if (i == 0) {
                         rkLinearComb += rk.Ainv[j][k] * (x[xik + d] - problem->x0[d]);
-                    } else {
+                    }
+                    else {
                         rkLinearComb += rk.Ainv[j][k] * (x[xik + d] - x[xi1_m + d]);
                     }
                 }
@@ -829,7 +832,8 @@ void GDOP::get_jac_values(const Number* x, Number* values) {
                     if (idx != d) {
                         values[it] = -mesh.deltaT[i] * diffF[0][v];
                         it++;
-                    } else {
+                    }
+                    else {
                         values[containedIdx] -= mesh.deltaT[i] * diffF[0][v];
                     }
                 }
@@ -922,7 +926,8 @@ bool GDOP::eval_jac_g(Index n, const Number* x, bool new_x, Index m, Index nele_
             exportSparsity(iRow, jCol, nele_jac, {m, n}, exportJacobianPath + "/" + problem->name + "_jacobian.csv");
         }
         assert(eq == m);
-    } else {
+    }
+    else {
         std::fill(values, values + nele_jac, 0);
         get_jac_values(x, values);
     }
@@ -1189,7 +1194,8 @@ bool GDOP::eval_h(Index n, const Number* x, bool new_x, Number obj_factor, Index
         if (exportHessian) {
             exportSparsity(iRow, jCol, nele_hess, {n, n}, exportHessianPath + "/" + problem->name + "_hessian.csv");
         }
-    } else {
+    }
+    else {
         std::fill(values, values + nele_hess, 0);
         int eq = get_h_values(x, values, obj_factor, lambda);
         assert(eq == m); // same as before eq index over lambda must be equal to #constrs

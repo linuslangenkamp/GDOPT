@@ -53,7 +53,6 @@ std::string getLinearSolverName(LinearSolver solver) {
 }
 
 int Solver::solve() {
-
     // init solving, pre optimization
     initSolvingProcess();
 
@@ -67,7 +66,6 @@ int Solver::solve() {
     postOptimization();
 
     while (meshIteration <= maxMeshIterations) {
-
         // detect intervals that have to be refined
         auto markedIntervals = detect();
 
@@ -79,8 +77,9 @@ int Solver::solve() {
         // interpolate x and u, update the mesh
         refine(markedIntervals);
 
-        // small overhead because of the reinitializing of the GDOP, but thus all variables are initialized correctly
-        // and invariant constants during each optimization remain constant
+        // small overhead because of the reinitializing of the GDOP, but thus all
+        // variables are initialized correctly and invariant constants during each
+        // optimization remain constant
         _priv->gdop = new GDOP(_priv->gdop->problem, _priv->gdop->mesh, _priv->gdop->rk, InitVars::CALLBACK);
 
         // set new starting values
@@ -144,10 +143,12 @@ std::vector<int> Solver::l2BoundaryNorm() const {
                 if (i == 0 && j == 0) {
                     maxU.push_back(_priv->gdop->optimum[u + _priv->gdop->offX]);
                     minU.push_back(_priv->gdop->optimum[u + _priv->gdop->offX]);
-                } else {
+                }
+                else {
                     if (_priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU] > maxU[u]) {
                         maxU[u] = _priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU];
-                    } else if (_priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU] < minU[u]) {
+                    }
+                    else if (_priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU] < minU[u]) {
                         minU[u] = _priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU];
                     }
                 }
@@ -176,8 +177,8 @@ std::vector<int> Solver::l2BoundaryNorm() const {
                     uCoeffs.push_back(_priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
                 }
                 uCoeffs.insert(uCoeffs.begin(), Integrator::evalLagrange(_priv->gdop->rk.c, uCoeffs, 0.0));
-
-            } else {
+            }
+            else {
                 for (int j = -1; j < _priv->gdop->rk.steps; j++) {
                     uCoeffs.push_back(_priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
                 }
@@ -198,24 +199,40 @@ std::vector<int> Solver::l2BoundaryNorm() const {
             // (int_0^1 (d^{1,2}/dt^{1,2} p_u(t))^2 dt)^0.5 - L2 norm of the (1st, 2nd) diff
             double L2Diff1 = std::sqrt(_priv->gdop->rk.integrate(sq_p_uDiff));
             double L2Diff2 = std::sqrt(_priv->gdop->rk.integrate(sq_p_uDiff2));
+            if (i > 0) {
+                // difference in derivatives from polynomial of adjacent intervals
+                // must not exceed some eps using p1 (+1) error; basically
+                // isclose(.) in numpy bib
+                double p1ErrorDiff = std::abs(p_uDiff[0] - lastDiffs[u][0]) / (1 + std::max({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])}));
+                double p1ErrorDiff2 = std::abs(p_uDiff2[0] - lastDiffs[u][1]) / (1 + std::max({std::abs(p_uDiff2[0]), std::abs(lastDiffs[u][1])}));
 
-            // difference in derivatives from polynomial of adjacent intervals must not exceed some eps
-            // using p1 (+1) error; basically isclose(.) in numpy bib
-            double p1ErrorDiff = std::abs(p_uDiff[0] - lastDiffs[u][0]) / (1 + std::max({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])}));
-            double p1ErrorDiff2 = std::abs(p_uDiff2[0] - lastDiffs[u][1]) / (1 + std::max({std::abs(p_uDiff2[0]), std::abs(lastDiffs[u][1])}));
-
-            if (p1ErrorDiff > L2CornerTol || p1ErrorDiff2 > L2CornerTol) {
-                intervalInserted = true;
+                if (p1ErrorDiff > L2CornerTol || p1ErrorDiff2 > L2CornerTol) {
+                    intervalInserted = true;
+                }
             }
             lastDiffs[u] = {p_uDiff[sz(_priv->gdop->rk.c)], p_uDiff2[sz(_priv->gdop->rk.c)]};
 
-            // detection if "i" has to be inserted; TODO: investigate behavior if i-1, i+1 are not inserted, const regions are removed
-            if (intervalInserted || L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u]) {
-                if (i >= 1)
-                    markerSet.insert(i - 1);
+            // detection which intervals should be bisected
+            if (L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u] || intervalInserted) {
+
+                // splitting the interval itself
                 markerSet.insert(i);
-                if (i <= _priv->gdop->mesh.intervals - 2)
-                    markerSet.insert(i + 1);
+
+                // on interval / L2 criterium -> forces adjacent intervals to be split aswell
+                if (L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u]) {
+                    if (i >= 1) {
+                        markerSet.insert(i - 1);
+                    }
+                    if (i <= _priv->gdop->mesh.intervals - 2) {
+                        markerSet.insert(i + 1);
+                    }
+                }
+
+                // corner criterium (only exists for i > 0) -> forces left adjacent interval split
+                if (intervalInserted) {
+                    markerSet.insert(i - 1);
+                }
+
                 break;
             }
         }
@@ -239,7 +256,8 @@ std::vector<int> Solver::basicStrategy() const {
                     double u2 = _priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU];
                     if (u1 > u2) {
                         sum += u1 - u2;
-                    } else {
+                    }
+                    else {
                         sum += u2 - u1;
                     }
                 }
@@ -288,7 +306,8 @@ void Solver::refine(std::vector<int>& markedIntervals) {
                     for (int k = 0; k < sz(polyVals); k++) {
                         cbValues[v + (i + index) * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = polyVals[k];
                     }
-                } else {
+                }
+                else {
                     // 0-th interval cases
                     if (v < _priv->gdop->offX) {
                         localVars.push_back(_priv->gdop->problem->x0[v]);
@@ -299,8 +318,10 @@ void Solver::refine(std::vector<int>& markedIntervals) {
                                 cbValues[v + i * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = polyVals[k];
                             }
                         }
-                    } else {
-                        // 0-th control -> interpolate with order one less (only not rk.steps points, not rk.steps + 1)
+                    }
+                    else {
+                        // 0-th control -> interpolate with order one less (only
+                        // not rk.steps points, not rk.steps + 1)
                         for (int j = 0; j < _priv->gdop->rk.steps; j++) {
                             localVars.push_back(_priv->gdop->optimum[v + j * _priv->gdop->offXU]);
                         }
@@ -382,8 +403,8 @@ void Solver::printObjectiveHistory() {
 }
 
 void Solver::createModelInfo() const {
-    // writes a tmp file that contains all relevant information of the model like the last mesh iteration and so on
-    // contains the metadata of the model
+    // writes a tmp file that contains all relevant information of the model like
+    // the last mesh iteration and so on contains the metadata of the model
     std::ofstream outFile("/tmp/modelinfo.txt");
     if (!outFile) {
         std::cerr << "Error opening file for writing: " << "/tmp/modelinfo.txt" << std::endl;
@@ -424,7 +445,8 @@ void Solver::printMeshStats() const {
 void Solver::setSolverFlags(IpoptApplication& app) {
     // numeric jacobian and hessian
     // app->Options()->SetStringValue("hessian_approximation", "limited-memory");
-    // app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
+    // app->Options()->SetStringValue("jacobian_approximation",
+    // "finite-difference-values");
 
     // test derivatives
     // app->Options()->SetStringValue("derivative_test", "second-order");
@@ -437,7 +459,8 @@ void Solver::setSolverFlags(IpoptApplication& app) {
 
     if (userScaling) {
         app.Options()->SetStringValue("nlp_scaling_method", "user-scaling");
-    } else {
+    }
+    else {
         app.Options()->SetStringValue("nlp_scaling_method", "gradient-based");
     }
 
