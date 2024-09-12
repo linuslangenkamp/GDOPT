@@ -6,17 +6,26 @@ a_{s,s} = 1/s^2 and ainv_{s,s} = 1/2 (1 + s^2) hold.
 */
 
 #include "integrator.h"
+
 #include "util.h"
 
 Integrator::Integrator(const std::vector<double>& c, const std::vector<std::vector<double>>& A, const std::vector<std::vector<double>>& Ainv,
                        const std::vector<double>& invRowSum, int steps)
-    : c(c), A(A), Ainv(Ainv), b(A.back()), invRowSum(invRowSum), steps(steps), c0([&c]() {
+    : c(c),
+      A(A),
+      Ainv(Ainv),
+      b(A.back()),
+      invRowSum(invRowSum),
+      steps(steps),
+      c0([&c]() {
           std::vector<double> temp(1, 0.0);
           temp.insert(temp.end(), c.begin(), c.end());
           return temp;
       }()),
-      interpolationFirstLagrangeBasis(interpolationFirstBasisPolynomial()), interpolationLagrangeBasis(interpolationBasisPolynomial()),
-      lagrangeBasisDiff(basisPolynomialDiff()), lagrangeBasisDiff2(basisPolynomialDiff2()) {
+      interpolationFirstLagrangeBasis(interpolationFirstBasisPolynomial()),
+      interpolationLagrangeBasis(interpolationBasisPolynomial()),
+      lagrangeBasisDiff(basisPolynomialDiff()),
+      lagrangeBasisDiff2(basisPolynomialDiff2()) {
 }
 
 // First and second derivative of the Lagrange interpolating polynomial on the nominal interval [0, 1]
@@ -233,7 +242,6 @@ Integrator Integrator::testIntegrator(const double a) {
 }
 
 Integrator Integrator::radauIIA(IntegratorSteps steps) {
-
     /*
     Schema has to be of the following structure:
         c_1 | a_11, ..., a_1m
@@ -17869,7 +17877,7 @@ Integrator Integrator::radauIIA(IntegratorSteps steps) {
                      14.53361459116465432898635062078329101882306028042239,  -36.0},
                     36};
 
-        default: // implicit Euler as fallback
+        default:  // implicit Euler as fallback
             return {{1.0}, {{1.0}}, {{1.0}}, {1.0}, 1};
     }
 }

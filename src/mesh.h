@@ -5,7 +5,7 @@
 #include <vector>
 
 class Mesh {
-  public:
+public:
     Mesh(int intervals, double tf, std::vector<double> grid, std::vector<double> deltaT)
         : intervals(intervals), tf(tf), grid(std::move(grid)), deltaT(std::move(deltaT)) {
     }
@@ -19,4 +19,4 @@ class Mesh {
     void update(std::vector<int>&);
 };
 
-#endif // IPOPT_DO_MESH_H
+#endif  // IPOPT_DO_MESH_H

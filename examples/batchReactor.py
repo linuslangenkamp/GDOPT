@@ -51,7 +51,7 @@ model.optimize(
     steps=100,
     rksteps=3,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE, "exportJacobianPath": "/tmp"},
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 5},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 2},
 )
 
 model.plotInputs(dots=Dots.BASE)

@@ -1,8 +1,9 @@
+#include <chrono>
+
 #include "gdop.h"
 #include "integrator.h"
 #include "mesh.h"
 #include "solver.h"
-#include <chrono>
 
 int main() {
     auto problem = std::make_shared<const Problem>(createProblem_batchReactor());

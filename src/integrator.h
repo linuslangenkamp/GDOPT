@@ -43,11 +43,11 @@ enum class IntegratorSteps {
 };
 
 class Integrator {
-  public:
+public:
     static Integrator radauIIA(IntegratorSteps steps);
     static Integrator testIntegrator(const double a);
     const std::vector<double> c;
-    const std::vector<double> c0; // c including 0 point, i.e. [0, c1, c2, ..., cm]
+    const std::vector<double> c0;  // c including 0 point, i.e. [0, c1, c2, ..., cm]
     const std::vector<std::vector<double>> A;
     const std::vector<std::vector<double>> Ainv;
     const std::vector<double> invRowSum;
@@ -60,8 +60,8 @@ class Integrator {
     static double evalLagrange(std::vector<double>, std::vector<double>&, double);
 
     // interpolation stuff, lagrange basis at c_j/2, c_j/2 + 1/2 for j=0...m
-    std::vector<std::vector<double>> interpolationFirstBasisPolynomial(); // inner basis poly, needed for 1st interval of u
-    std::vector<std::vector<double>> interpolationBasisPolynomial();      // standard collocation polynomial
+    std::vector<std::vector<double>> interpolationFirstBasisPolynomial();  // inner basis poly, needed for 1st interval of u
+    std::vector<std::vector<double>> interpolationBasisPolynomial();       // standard collocation polynomial
     std::vector<double> interpolateFirstControl(std::vector<double>& uValues);
     std::vector<double> interpolate(std::vector<double>&);
     const std::vector<std::vector<double>> interpolationFirstLagrangeBasis;
@@ -75,9 +75,9 @@ class Integrator {
     const std::vector<std::vector<double>> lagrangeBasisDiff;
     const std::vector<std::vector<double>> lagrangeBasisDiff2;
 
-  private:
+private:
     Integrator(const std::vector<double>& c, const std::vector<std::vector<double>>& A, const std::vector<std::vector<double>>& Ainv,
                const std::vector<double>& invRowSum, int steps);
 };
 
-#endif // IPOPT_DO_INTEGRATOR_H
+#endif  // IPOPT_DO_INTEGRATOR_H

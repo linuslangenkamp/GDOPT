@@ -1,23 +1,23 @@
 #ifndef IPOPT_DO_SOLVER_H
 #define IPOPT_DO_SOLVER_H
 
-#include "gdop.h"
 #include <chrono>
 #include <set>
 #include <unordered_map>
+
+#include "gdop.h"
 
 enum class LinearSolver { MUMPS, MA27, MA57, MA77, MA86, MA97, PARDISO };
 
 /*
  * NONE: no mesh algorithm
  * BASIC: basic strategy based on deviation to the mean of control vars
- * L2_BOUNDARY_NORM: estimates the steepness by evaluating the L2 norm of the 1st and 2nd diff of the interpolating poly for each control on each subinterval
- * and calculates the steepness difference between adjacent intervals. If these indentifier are above some eps -> insert the interval + the adjacent intervals
- * L2_BOUNDARY_NORM_SI: L2_BOUNDARY_NORM + intervals that get inserted because of a 'neighbor' can only be bisected once (single insertion, SI)
+ * L2_BOUNDARY_NORM: estimates the steepness by evaluating the L2 norm of the 1st and 2nd diff of the interpolating poly for each control on each sub-interval
+ * and calculates the steepness difference between adjacent intervals. If these identifier are above some eps -> insert the interval + the adjacent intervals
  */
 
 // TODO: add L2BN variants: quadsection, non bisective -> blurry split, remove consts
-enum class MeshAlgorithm { NONE, BASIC, L2_BOUNDARY_NORM, L2_BOUNDARY_NORM_SI };
+enum class MeshAlgorithm { NONE, BASIC, L2_BOUNDARY_NORM };
 
 struct SolverPrivate;
 namespace Ipopt {
@@ -25,7 +25,7 @@ class IpoptApplication;
 }
 
 class Solver {
-  public:
+public:
     Solver(GDOP* gdop, int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm);
     ~Solver();
 
@@ -34,12 +34,12 @@ class Solver {
     int meshIteration = 0;
     const int maxMeshIterations;
     double tolerance = 1e-12;
-    std::vector<double> cbValues; // starting values after refinement
+    std::vector<double> cbValues;  // starting values after refinement
     std::unordered_map<std::string, double> meshParameters;
 
     // important methods
     int solve();
-    std::vector<int> detect();
+    std::vector<int> detect() const;
     void refine(std::vector<int>& markedIntervals);
     void finalizeOptimization();
     void postOptimization();
@@ -47,20 +47,19 @@ class Solver {
     // detection methods
     std::vector<int> basicStrategy() const;
     std::vector<int> l2BoundaryNorm() const;
-    std::vector<int> l2BoundaryNormSI();
 
     // additional / optional flags, printouts, ...
     std::vector<double> objectiveHistory;
     int initialIntervals = -1;
     std::chrono::_V2::system_clock::time_point solveStartTime;
-    std::chrono::duration<double> timedeltaIO{0}; // time in IO operations
+    std::chrono::duration<double> timedeltaIO{0};  // time in IO operations
     std::string exportOptimumPath;
     bool exportOptimum = false;
     std::string exportHessianPath;
     bool exportHessian = false;
     std::string exportJacobianPath;
     bool exportJacobian = false;
-    bool userScaling = true; // use nlp scaling provided by the user, otherwise use gradient-based
+    bool userScaling = true;  // use nlp scaling provided by the user, otherwise use gradient-based
 
     void printObjectiveHistory();
     void printMeshStats() const;
@@ -82,10 +81,9 @@ class Solver {
     // L2 norm / boundary parameters
     double L2Level = 0;
     double L2CornerTol = 0.2;
-    std::set<int> L2InsertedNeighbors = {};
 
-  private:
+private:
     std::unique_ptr<SolverPrivate> _priv;
 };
 
-#endif // IPOPT_DO_SOLVER_H
+#endif  // IPOPT_DO_SOLVER_H

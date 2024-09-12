@@ -141,7 +141,7 @@ model.addLagrange(dot_m_f)
 model.generate()
 
 model.optimize(
-    steps=100,
+    steps=60,
     rksteps=3,
     tf=0.5,
     flags={
@@ -151,7 +151,7 @@ model.optimize(
         "initVars": InitVars.SOLVE,
         "tolerance": 1e-14,
     },
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM_SI, "meshIterations": 5},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 8},
 )
 
 model.plot(dots=Dots.BASE)

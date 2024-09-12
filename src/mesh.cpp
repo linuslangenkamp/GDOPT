@@ -1,4 +1,5 @@
 #include "mesh.h"
+
 #include "util.h"
 
 Mesh Mesh::createEquidistantMesh(int intervals, double tf) {

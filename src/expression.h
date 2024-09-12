@@ -6,24 +6,24 @@
 #include <vector>
 
 struct Adjacency {
-    const std::vector<int> indX; // Indices X
-    const std::vector<int> indU; // Indices U
-    const std::vector<int> indP; // Indices P
+    const std::vector<int> indX;  // Indices X
+    const std::vector<int> indU;  // Indices U
+    const std::vector<int> indP;  // Indices P
 };
 
 // firstly diff w.r.t. 1st index, after that w.r.t. 2nd index
 // only need lower triangular hessian. thus 1st idx >= 2nd idx for diff xx, diff uu, diff pp
 struct AdjacencyDiff {
-    const std::vector<std::tuple<int, int>> indXX; // Indices X, X :: x1 >= x2 must hold
-    const std::vector<std::tuple<int, int>> indUX; // Indices U, X
-    const std::vector<std::tuple<int, int>> indUU; // Indices U, U :: u1 >= u2 must hold
-    const std::vector<std::tuple<int, int>> indPX; // Indices P, X
-    const std::vector<std::tuple<int, int>> indPU; // Indices P, U
-    const std::vector<std::tuple<int, int>> indPP; // Indices P, P :: p1 >= p2 must hold
+    const std::vector<std::tuple<int, int>> indXX;  // Indices X, X :: x1 >= x2 must hold
+    const std::vector<std::tuple<int, int>> indUX;  // Indices U, X
+    const std::vector<std::tuple<int, int>> indUU;  // Indices U, U :: u1 >= u2 must hold
+    const std::vector<std::tuple<int, int>> indPX;  // Indices P, X
+    const std::vector<std::tuple<int, int>> indPU;  // Indices P, U
+    const std::vector<std::tuple<int, int>> indPP;  // Indices P, P :: p1 >= p2 must hold
 };
 
 class Expression {
-  public:
+public:
     explicit Expression(Adjacency adj, AdjacencyDiff adjDiff) : adj{std::move(adj)}, adjDiff{std::move(adjDiff)} {
     }
 
@@ -42,15 +42,15 @@ class Expression {
 
 // similar version of adj, expr and constraints for purely parametric expression
 struct ParamAdjacency {
-    const std::vector<int> indP; // Indices P
+    const std::vector<int> indP;  // Indices P
 };
 
 struct ParamAdjacencyDiff {
-    const std::vector<std::tuple<int, int>> indPP; // Indices P, P
+    const std::vector<std::tuple<int, int>> indPP;  // Indices P, P
 };
 
 class ParamExpression {
-  public:
+public:
     explicit ParamExpression(ParamAdjacency adj, ParamAdjacencyDiff adjDiff) : adj{std::move(adj)}, adjDiff{std::move(adjDiff)} {
     }
 
@@ -66,4 +66,4 @@ class ParamExpression {
     const ParamAdjacencyDiff adjDiff;
 };
 
-#endif // IPOPT_DO_EXPRESSION_H
+#endif  // IPOPT_DO_EXPRESSION_H

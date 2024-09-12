@@ -1,17 +1,18 @@
 #ifndef IPOPT_DO_GDOP_IMPL_H
 #define IPOPT_DO_GDOP_IMPL_H
 
+#include <IpTNLP.hpp>
+
 #include "gdop.h"
 #include "integrator.h"
 #include "mesh.h"
 #include "problem.h"
 #include "util.h"
-#include <IpTNLP.hpp>
 
 using namespace Ipopt;
 
 class GDOP : public TNLP {
-  public:
+public:
     GDOP(const std::shared_ptr<const Problem>& problem, Mesh& mesh, Integrator& rk, InitVars initVars);
 
     std::shared_ptr<const Problem> problem;
@@ -19,9 +20,9 @@ class GDOP : public TNLP {
     Integrator rk;
     InitVars initVars;
 
-    std::vector<double> optimum; // optimal solution - variables
-    double objective{};          // optimal solution - objective
-    std::vector<double> x_cb;    // optimal solution (interpolated after refinement)
+    std::vector<double> optimum;  // optimal solution - variables
+    double objective{};           // optimal solution - objective
+    std::vector<double> x_cb;     // optimal solution (interpolated after refinement)
 
     bool exportSolution = false;
     std::string exportPath;
@@ -33,9 +34,9 @@ class GDOP : public TNLP {
     const int offX = problem->sizeX;
     const int offU = problem->sizeU;
     const int offP = problem->sizeP;
-    const int offXU = problem->sizeX + problem->sizeU;                                    // number of vars for one collocation grid point
-    const int offXUBlock = (problem->sizeX + problem->sizeU) * rk.steps;                  // number of vars in one interval
-    const int offXUTotal = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals; // first parameter variable
+    const int offXU = problem->sizeX + problem->sizeU;                                     // number of vars for one collocation grid point
+    const int offXUBlock = (problem->sizeX + problem->sizeU) * rk.steps;                   // number of vars in one interval
+    const int offXUTotal = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals;  // first parameter variable
     const int numberVars = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals + problem->sizeP;
 
     // block hessians as sparse map: (i,j) -> it, it-th index in COO format, (i,j) var indices
@@ -52,8 +53,8 @@ class GDOP : public TNLP {
       p     S1    ...   S1 S1t  S2
     **/
 
-    int lengthS0 = 0;                       // length of one S0 block
-    std::vector<int> rowLengthS1Block = {}; // length of the i-th row of one S1 block
+    int lengthS0 = 0;                        // length of one S0 block
+    std::vector<int> rowLengthS1Block = {};  // length of the i-th row of one S1 block
 
     // upper left corner of entire hessian, xu block
     std::unordered_map<std::tuple<int, int>, int, n2hash> S0{};
@@ -123,4 +124,4 @@ class GDOP : public TNLP {
     void exportOptimum(const std::string&) const;
 };
 
-#endif // IPOPT_DO_GDOP_IMPL_H
+#endif  // IPOPT_DO_GDOP_IMPL_H

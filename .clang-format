@@ -1,9 +1,8 @@
----
 Language:        Cpp
-BasedOnStyle:    LLVM
+BasedOnStyle:    Google
 IndentWidth:     4
 TabWidth:        4
-UseTab:          Never
+UseTab:          Never  # Use spaces instead of tabs
 ColumnLimit:     160
 BreakBeforeBraces: Custom
 BraceWrapping:
@@ -18,6 +17,7 @@ SpacesInParentheses: false
 SpaceBeforeParens: ControlStatements
 SpaceAfterCStyleCast: false
 IndentCaseLabels: true
-IndentSwitchCaseLabels: true
+IndentAccessModifiers: false
 SpaceBeforeCaseColon: false
 PointerAlignment: Left
+AccessModifierOffset: -4

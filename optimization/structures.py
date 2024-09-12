@@ -37,7 +37,6 @@ class MeshAlgorithm(Enum):
     NONE = 1
     BASIC = 2
     L2_BOUNDARY_NORM = 3
-    L2_BOUNDARY_NORM_SI = 4
 
 
 class MatrixType(Enum):

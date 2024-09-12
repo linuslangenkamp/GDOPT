@@ -1,10 +1,12 @@
 #include "gdop.h"
-#include "gdop_impl.h"
-#include "util.h"
+
 #include <algorithm>
 #include <cassert>
 #include <exception>
 #include <utility>
+
+#include "gdop_impl.h"
+#include "util.h"
 
 // TODO?: recheck derivatives, indices
 
@@ -32,7 +34,7 @@ void GDOP::init_jac(Index& nnz_jac_g) {
 
     // nnz jac: dynamics
     int nnzDynBlock = 0;
-    int containedIndex = 0; // target idx
+    int containedIndex = 0;  // target idx
     for (const auto& dyn : problem->F) {
         nnzDynBlock += sz(dyn->adj.indX) + sz(dyn->adj.indU) + sz(dyn->adj.indP);
         // check if the k-th component of x, that is always contained in this block equation,
@@ -42,16 +44,16 @@ void GDOP::init_jac(Index& nnz_jac_g) {
             nnzDynBlock -= 1;
         containedIndex++;
     }
-    nnz_jac_g += mesh.intervals * rk.steps * nnzDynBlock;                 // nnz for f(v_{ij}) eval
-    nnz_jac_g += mesh.intervals * rk.steps * rk.steps * (sz(problem->F)); // nnz for sum_k ~a_{jk} * x_{ik}
-    nnz_jac_g += (mesh.intervals - 1) * rk.steps * sz(problem->F);        // nnz for sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
+    nnz_jac_g += mesh.intervals * rk.steps * nnzDynBlock;                  // nnz for f(v_{ij}) eval
+    nnz_jac_g += mesh.intervals * rk.steps * rk.steps * (sz(problem->F));  // nnz for sum_k ~a_{jk} * x_{ik}
+    nnz_jac_g += (mesh.intervals - 1) * rk.steps * sz(problem->F);         // nnz for sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
 
     // nnz jac: path constraints
     int nnzPathBlock = 0;
     for (const auto& pathConstr : problem->G) {
         nnzPathBlock += sz(pathConstr->adj.indX) + sz(pathConstr->adj.indU) + sz(pathConstr->adj.indP);
     }
-    nnz_jac_g += mesh.intervals * rk.steps * nnzPathBlock; // RHS = nnz for g(v_{ij}) eval
+    nnz_jac_g += mesh.intervals * rk.steps * nnzPathBlock;  // RHS = nnz for g(v_{ij}) eval
 
     // nnz jac: final constraints
     for (const auto& finalConstr : problem->R) {
@@ -122,11 +124,11 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0, std::vect
      S1t: is exact -> it = correct eq index
      S2: is exact -> it = correct eq index
     **/
-    int it = 0; // eq index
+    int it = 0;  // eq index
     for (int i = 0; i < offXU; i++) {
         for (int j = 0; j <= i; j++) {
             if (denseS0[i][j] == 1) {
-                S0.insert({{i, j}, it}); // "it" not exact; shift needed based on
+                S0.insert({{i, j}, it});  // "it" not exact; shift needed based on
                 it++;
             }
         }
@@ -137,7 +139,7 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0, std::vect
     for (int i = 0; i < offXU; i++) {
         for (int j = 0; j <= i; j++) {
             if (denseS0t[i][j] == 1) {
-                S0t.insert({{i, j}, it}); // "it" exact; no shift needed later on
+                S0t.insert({{i, j}, it});  // "it" exact; no shift needed later on
                 it++;
             }
         }
@@ -147,24 +149,24 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0, std::vect
         int nnzS1row = 0;
         for (int j = 0; j < offXU; j++) {
             if (denseS1[i][j] == 1) {
-                S1.insert({{i, j}, it}); // "it" not exact; shift needed based on row
+                S1.insert({{i, j}, it});  // "it" not exact; shift needed based on row
                 it++;
                 nnzS1row++;
             }
         }
         rowLengthS1Block.push_back(nnzS1row);
-        it += nnzS1row * (mesh.intervals * rk.steps - 2); // nnzS1row * (mesh.intervals * rk.steps - 1) - nnzS1row
+        it += nnzS1row * (mesh.intervals * rk.steps - 2);  // nnzS1row * (mesh.intervals * rk.steps - 1) - nnzS1row
 
         for (int j = 0; j < offXU; j++) {
             if (denseS1t[i][j] == 1) {
-                S1t.insert({{i, j}, it}); // "it" exact; no shift needed later on
+                S1t.insert({{i, j}, it});  // "it" exact; no shift needed later on
                 it++;
             }
         }
 
         for (int j = 0; j < offP; j++) {
             if (denseS2[i][j] == 1) {
-                S2.insert({{i, j}, it}); // "it" exact; no shift needed later on
+                S2.insert({{i, j}, it});  // "it" exact; no shift needed later on
                 it++;
             }
         }
@@ -238,9 +240,8 @@ bool GDOP::get_bounds_info(Index n, Number* x_l, Number* x_u, Index m, Number* g
     // var bounds
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
-
-            const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
-            const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+            const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+            const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
             // state bounds
             for (int d = 0; d < problem->sizeX; d++) {
@@ -304,7 +305,6 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Numb
     //  * genetic / bionic algorithm
     assert(n == numberVars);
     if (init_x) {
-
         std::vector<std::vector<double>> initialStates;
         double tijOld;
 
@@ -314,8 +314,8 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Numb
                 for (int i = 0; i < mesh.intervals; i++) {
                     for (int j = 0; j < rk.steps; j++) {
                         const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
-                        const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
-                        const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+                        const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                        const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
                         for (int dimX = 0; dimX < problem->sizeX; dimX++) {
                             x[xij + dimX] = problem->x0[dimX];
@@ -341,8 +341,8 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Numb
                 for (int i = 0; i < mesh.intervals; i++) {
                     for (int j = 0; j < rk.steps; j++) {
                         const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
-                        const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
-                        const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+                        const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                        const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
                         for (int dimX = 0; dimX < problem->sizeX; dimX++) {
                             x[xij + dimX] = initialStates[rk.steps * i + j][dimX + 1];
@@ -373,8 +373,8 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Numb
                     for (int j = 0; j < rk.steps; j++) {
                         const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
                         const double dt = tij - tijOld;
-                        const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
-                        const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+                        const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                        const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
                         if (i == 0 && j == 0) {
                             for (int dimX = 0; dimX < problem->sizeX; dimX++) {
@@ -410,8 +410,8 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Numb
                     for (int j = 0; j < rk.steps; j++) {
                         const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
                         const double dt = tij - tijOld;
-                        const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
-                        const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+                        const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                        const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
                         if (i == 0 && j == 0) {
                             for (int dimX = 0; dimX < problem->sizeX; dimX++) {
@@ -507,8 +507,8 @@ bool GDOP::get_scaling_parameters(Number& obj_scaling, bool& use_x_scaling, Inde
     // variable scaling
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
-            const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
-            const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+            const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+            const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
             for (int dimX = 0; dimX < problem->sizeX; dimX++) {
                 x_scaling[xij + dimX] = checkNominalValue(problem->nominalsX[dimX]);
             }
@@ -566,8 +566,8 @@ bool GDOP::eval_f(Index n, const Number* x, bool new_x, Number& obj_value) {
         for (int i = 0; i < mesh.intervals; i++) {
             for (int j = 0; j < rk.steps; j++) {
                 const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
-                const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
-                const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+                const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
                 LAG += mesh.deltaT[i] * rk.b[j] * problem->L->eval(&x[xij], &x[uij], &x[offXUTotal], tij);
             }
         }
@@ -582,9 +582,8 @@ bool GDOP::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f) {
 
     // mayer term derivative
     if (problem->M) {
-
-        const int xnm = offXUTotal - offXU; // index of 1st x var at collocation point (n,m)
-        const int unm = offXUTotal - offU;  // index of 1st u var at collocation point (n,m)
+        const int xnm = offXUTotal - offXU;  // index of 1st x var at collocation point (n,m)
+        const int unm = offXUTotal - offU;   // index of 1st u var at collocation point (n,m)
         const auto diffMAY = problem->M->evalDiff(&x[xnm], &x[unm], &x[offXUTotal], mesh.tf);
 
         for (int v = 0; v < sz(diffMAY[0]); v++) {
@@ -602,9 +601,8 @@ bool GDOP::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f) {
     if (problem->L) {
         for (int i = 0; i < mesh.intervals; i++) {
             for (int j = 0; j < rk.steps; j++) {
-
-                const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
-                const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+                const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+                const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
                 const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
                 const double quadCoeff = mesh.deltaT[i] * rk.b[j];
                 const auto diffLAG = problem->L->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
@@ -628,18 +626,17 @@ bool GDOP::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g) {
     int eq = 0;
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
-
             const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
-            const int xij = i * offXUBlock + j * offXU;        // first index (dim=0) of x_{ij}
-            const int uij = i * offXUBlock + j * offXU + offX; // first index (dim=0) of u_{ij}
-            const int xi1_m = i * offXUBlock - offXU;          // first index (dim=0) of x_{i-1,m}; m=rk.steps
+            const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{ij}
+            const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{ij}
+            const int xi1_m = i * offXUBlock - offXU;           // first index (dim=0) of x_{i-1,m}; m=rk.steps
 
             // dynamic constraints
             // 0 = sum_k ~a_{jk} * (x_{ik} - x_{i-1,m)) - del t_i * f(x_{ij}, u_{ij}, p, t_{ij}), i=0 -> x_{i-1,m) = x0
             for (int d = 0; d < sz(problem->F); d++) {
                 double rkLinearComb = 0;
                 for (int k = 0; k < rk.steps; k++) {
-                    const int xik = i * offXUBlock + k * offXU; // first index (dim=0) of x_{ik}
+                    const int xik = i * offXUBlock + k * offXU;  // first index (dim=0) of x_{ik}
                     if (i == 0) {
                         rkLinearComb += rk.Ainv[j][k] * (x[xik + d] - problem->x0[d]);
                     }
@@ -660,8 +657,8 @@ bool GDOP::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g) {
     }
 
     // final constraints: LB_r <= r(x_{nm}, u_{nm}, p, t_{nm}) <= UB_r
-    const int xnm = offXUTotal - offXU; // first index (dim=0) of x_{n,m}
-    const int unm = offXUTotal - offU;  // first index (dim=0) of u_{n,m}
+    const int xnm = offXUTotal - offXU;  // first index (dim=0) of x_{n,m}
+    const int unm = offXUTotal - offU;   // first index (dim=0) of u_{n,m}
     for (auto const& finalConstr : problem->R) {
         g[eq] = finalConstr->eval(&x[xnm], &x[unm], &x[offXUTotal], mesh.tf);
         eq++;
@@ -682,13 +679,11 @@ int GDOP::init_jac_sparsity(Index* iRow, Index* jCol) {
     int eq = 0;
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
-
-            const int xij = i * offXUBlock + j * offXU;        // first index (dim=0) of x_{ij}
-            const int uij = i * offXUBlock + j * offXU + offX; // first index (dim=0) of u_{ij}
-            const int xi1_m = i * offXUBlock - offXU;          // first index (dim=0) of x_{i-1,m}; m=rk.steps
+            const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{ij}
+            const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{ij}
+            const int xi1_m = i * offXUBlock - offXU;           // first index (dim=0) of x_{i-1,m}; m=rk.steps
 
             for (int d = 0; d < sz(problem->F); d++) {
-
                 // sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
                 if (i > 0) {
                     iRow[it] = eq;
@@ -730,7 +725,6 @@ int GDOP::init_jac_sparsity(Index* iRow, Index* jCol) {
             }
 
             for (const auto& constrG : problem->G) {
-
                 // g(v_{ij})_x
                 for (int v : constrG->adj.indX) {
                     iRow[it] = eq;
@@ -760,7 +754,6 @@ int GDOP::init_jac_sparsity(Index* iRow, Index* jCol) {
     const int unm = offXUTotal - offU;
 
     for (const auto& constrR : problem->R) {
-
         // r(v_{nm})_x
         for (int v : constrR->adj.indX) {
             iRow[it] = eq;
@@ -785,7 +778,6 @@ int GDOP::init_jac_sparsity(Index* iRow, Index* jCol) {
     }
 
     for (const auto& constrA : problem->A) {
-
         // a_p
         for (int v : constrA->adj.indP) {
             iRow[it] = eq;
@@ -802,12 +794,11 @@ void GDOP::get_jac_values(const Number* x, Number* values) {
     int it = 0;
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
-            const int xij = i * offXUBlock + j * offXU;        // first index (dim=0) of x_{ij}
-            const int uij = i * offXUBlock + j * offXU + offX; // first index (dim=0) of u_{ij}
+            const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{ij}
+            const int uij = i * offXUBlock + j * offXU + offX;  // first index (dim=0) of u_{ij}
             const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
 
             for (int d = 0; d < sz(problem->F); d++) {
-
                 // sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
                 if (i > 0) {
                     values[it] = -rk.invRowSum[j];
@@ -852,7 +843,6 @@ void GDOP::get_jac_values(const Number* x, Number* values) {
             }
 
             for (const auto& constrG : problem->G) {
-
                 // eval grad g(v_{ij})
                 auto const diffG = constrG->evalDiff(&x[xij], &x[uij], &x[offXUTotal], tij);
 
@@ -881,7 +871,6 @@ void GDOP::get_jac_values(const Number* x, Number* values) {
     const int unm = offXUTotal - offU;
 
     for (const auto& constrR : problem->R) {
-
         // eval grad r(v_{nm})
         auto const diffR = constrR->evalDiff(&x[xnm], &x[unm], &x[offXUTotal], mesh.tf);
 
@@ -905,7 +894,6 @@ void GDOP::get_jac_values(const Number* x, Number* values) {
     }
 
     for (const auto& constrA : problem->A) {
-
         // eval grad a(p)
         auto const diffA = constrA->evalDiff(&x[offXUTotal]);
 
@@ -935,7 +923,6 @@ bool GDOP::eval_jac_g(Index n, const Number* x, bool new_x, Index m, Index nele_
 }
 
 void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
-
     // S0 block forall i, j except very last interval (n, m)
     for (const auto& [vars, it] : S0) {
         auto const [v1, v2] = vars;
@@ -1086,11 +1073,10 @@ void GDOP::evalHessianS2(Number* values, const Number* x, ParamExpression& expr,
 int GDOP::get_h_values(const Number* x, Number* values, Number obj_factor, const Number* lambda) {
     int eq = 0;
     for (int i = 0; i < mesh.intervals - 1; i++) {
-
         for (int j = 0; j < rk.steps; j++) {
             const double tij = mesh.grid[i] + rk.c[j] * mesh.deltaT[i];
-            const int xij = i * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
-            const int uij = i * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+            const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+            const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
             // eval hessian lagrangian
             if (problem->L) {
@@ -1117,8 +1103,8 @@ int GDOP::get_h_values(const Number* x, Number* values, Number obj_factor, const
     // same for the last rk.steps-1 blocks excluding the very last block -> S0t handling
     for (int j = 0; j < rk.steps - 1; j++) {
         const double tij = mesh.grid[mesh.intervals - 1] + rk.c[j] * mesh.deltaT[mesh.intervals - 1];
-        const int xij = (mesh.intervals - 1) * offXUBlock + j * offXU;        // index of 1st x var at collocation point (i,j)
-        const int uij = (mesh.intervals - 1) * offXUBlock + j * offXU + offX; // index of 1st u var at collocation point (i,j)
+        const int xij = (mesh.intervals - 1) * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
+        const int uij = (mesh.intervals - 1) * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
         // eval hessian lagrangian
         if (problem->L) {
@@ -1142,8 +1128,8 @@ int GDOP::get_h_values(const Number* x, Number* values, Number obj_factor, const
     }
 
     // S0t, S1t: contains M, L, F, G, R
-    const int xnm = (mesh.intervals - 1) * offXUBlock + (rk.steps - 1) * offXU;        // index of 1st x var at collocation point (n,m)
-    const int unm = (mesh.intervals - 1) * offXUBlock + (rk.steps - 1) * offXU + offX; // index of 1st u var at collocation point (n,m)
+    const int xnm = (mesh.intervals - 1) * offXUBlock + (rk.steps - 1) * offXU;         // index of 1st x var at collocation point (n,m)
+    const int unm = (mesh.intervals - 1) * offXUBlock + (rk.steps - 1) * offXU + offX;  // index of 1st u var at collocation point (n,m)
 
     // eval hessian mayer
     if (problem->M) {
@@ -1198,7 +1184,7 @@ bool GDOP::eval_h(Index n, const Number* x, bool new_x, Number obj_factor, Index
     else {
         std::fill(values, values + nele_hess, 0);
         int eq = get_h_values(x, values, obj_factor, lambda);
-        assert(eq == m); // same as before eq index over lambda must be equal to #constrs
+        assert(eq == m);  // same as before eq index over lambda must be equal to #constrs
     }
     return true;
 }

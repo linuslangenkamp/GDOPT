@@ -3,3 +3,5 @@ cmake-build-*/
 *.ninja
 Makefile
 /examples/.generated/
+.cache/
+__pycache__/

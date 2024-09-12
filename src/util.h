@@ -10,7 +10,8 @@
 #include <tuple>
 #include <vector>
 
-template <typename T> inline int sz(const std::vector<T>& vec) {
+template <typename T>
+inline int sz(const std::vector<T>& vec) {
     return int(vec.size());
 }
 
@@ -40,10 +41,16 @@ inline void exportSparsity(const int* iRow, const int* jCol, const int L, const 
         return;
     }
     auto const [dimRow, dimCol] = dim;
-    outFile << "dimRow" << "," << "dimCol" << "\n";
+    outFile << "dimRow"
+            << ","
+            << "dimCol"
+            << "\n";
     outFile << dimRow << "," << dimCol << "\n";
 
-    outFile << "row" << "," << "col" << "\n";
+    outFile << "row"
+            << ","
+            << "col"
+            << "\n";
     for (int i = 0; i < L; i++) {
         outFile << iRow[i] << "," << jCol[i] << "\n";
     }
@@ -120,4 +127,4 @@ inline double checkNominalValue(const double value) {
     }
 }
 
-#endif // IPOPT_DO_UTIL_H
+#endif  // IPOPT_DO_UTIL_H
