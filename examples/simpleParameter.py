@@ -17,7 +17,7 @@ p1 = model.addParameter(guess=0.5)
 p2 = model.addParameter(guess=0.5)
 
 # x1' = 2t * p1, x1(0) = 0 => x1 = p1 * t^2
-model.addDynamic(x1, 2*t * p1)
+model.addDynamic(x1, 2 * t * p1)
 
 # 0.2 <= p2 - p1 * t^2  + u(t) <= 0.25
 model.addPath(p2 - x1 + u1, lb=0.2, ub=0.25)
@@ -26,10 +26,6 @@ model.addMayer(p1 * p2)
 
 model.generate()
 
-model.optimize(steps=25, rksteps=3, tf=1,
-               flags={"outputPath": "/tmp",
-                      "linearSolver": LinearSolver.MUMPS,
-                      "tolerance": 1e-14},
-               meshFlags={})
+model.optimize(steps=25, rksteps=3, tf=1, flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MUMPS, "tolerance": 1e-14}, meshFlags={})
 
 model.printResultParameters()

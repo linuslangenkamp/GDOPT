@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # set global precision
-pd.set_option('display.precision', 8)
+pd.set_option("display.precision", 8)
 
 
 class Model:
@@ -62,25 +62,25 @@ class Model:
         self.rpVarNames = []
 
     def addState(self, start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None):
-        
+
         # adds a state x for optimization, must a have starting value
         # specify lb or ub if needed
 
         info = StateStruct(start, symbol=symbol, lb=lb, ub=ub, nominal=nominal)
-        variable = Symbol(f'x[{info.id}]')
+        variable = Symbol(f"x[{info.id}]")
         varInfo[variable] = info
         self.xVars.append(variable)
         self.checkNominalNone(nominal)
         return variable
-    
+
     def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-        
+
         # adds an input / control u for optimization
         # specify lb or ub, start/initialGuess if needed
         # only provide a guess if you are certain that it will benefit
 
         info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
-        variable = Symbol(f'u[{info.id}]')
+        variable = Symbol(f"u[{info.id}]")
         varInfo[variable] = info
         self.uVars.append(variable)
         self.checkNominalNone(nominal)
@@ -96,20 +96,20 @@ class Model:
         if guess is None:
             guess = (lb + ub) / 2
         info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
-        variable = Symbol(f'u[{info.id}]')
+        variable = Symbol(f"u[{info.id}]")
         varInfo[variable] = info
         self.uVars.append(variable)
-        self.addPath(variable**2 - variable * (lb + ub) + lb * ub, eq=0)    # forces binary type
+        self.addPath(variable**2 - variable * (lb + ub) + lb * ub, eq=0)  # forces binary type
         self.checkNominalNone(nominal)
         return variable
-        
+
     def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-        
+
         # adds a parameter p for optimization
         # specify lb or ub if needed, start/initialGuess if needed
 
         info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
-        variable = Symbol(f'p[{info.id}]')
+        variable = Symbol(f"p[{info.id}]")
         varInfo[variable] = info
         self.pVars.append(variable)
         self.checkNominalNone(nominal)
@@ -125,15 +125,15 @@ class Model:
         if guess is None:
             guess = (lb + ub) / 2
         info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
-        variable = Symbol(f'p[{info.id}]')
+        variable = Symbol(f"p[{info.id}]")
         varInfo[variable] = info
         self.pVars.append(variable)
-        self.addParametric(variable**2 - variable * (lb + ub) + lb * ub, eq=0)     # forces binary type
+        self.addParametric(variable**2 - variable * (lb + ub) + lb * ub, eq=0)  # forces binary type
         self.checkNominalNone(nominal)
         return variable
 
     def addRuntimeParameter(self, default, symbol):
-        
+
         # adds a runtime parameter: can be changed for optimization
         # will be handled symbolically -> thus quite slow
         # for actual constants simply write pythonic var = value
@@ -159,10 +159,10 @@ class Model:
         self.addLagrange(lagrange, obj, nominal=nominal)
 
     def addMayer(self, expr, obj=Objective.MINIMIZE, nominal=None):
-        
+
         # adds the mayer term: min/max expr(tf)
         # if mayer and lagrange have a nominal -> sum is used as nominal value
-        
+
         if self.M:
             raise InvalidModel("Mayer term already set")
         else:
@@ -172,9 +172,9 @@ class Model:
             else:
                 self.M = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
-                
+
     def addLagrange(self, expr, obj=Objective.MINIMIZE, nominal=None):
-        
+
         # adds the lagrange term: min/max integral_0_tf expr dt
         # if mayer and lagrange have a nominal -> sum is used as nominal value
 
@@ -187,50 +187,50 @@ class Model:
             else:
                 self.L = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
-    
+
     def addDynamic(self, diffVar, expr, nominal=None):
-        
+
         # adds a dynamic constraint: diffVar' = expr
-        
+
         for f in self.F:
             if diffVar == f.diffVar:
                 fail = f"Equation for diff({diffVar}) has been added already"
                 raise InvalidModel(fail)
         self.F.append(DynExpression(diffVar, expr, nominal=nominal))
         self.checkNominalNone(nominal)
-    
+
     def addPath(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-        
+
         # adds a path constraint: lb <= g(.(t)) <= ub or g(.(t)) == eq
-        
+
         if eq is not None and (lb != -float("inf") or ub != float("inf")):
             raise InvalidModel("Can't set eq and lb or ub.")
         self.G.append(Constraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
         self.checkNominalNone(nominal)
-    
+
     def addFinal(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-        
+
         # adds a final constraint: lb <= r(.(tf)) <= ub or r(.(tf)) == eq
-        
+
         if eq is not None and (lb != -float("inf") or ub != float("inf")):
             raise InvalidModel("Can't set eq and lb or ub.")
         self.R.append(Constraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
         self.checkNominalNone(nominal)
-        
+
     def addParametric(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-        
+
         # adds a parametric constraint: lb <= a(p) <= ub or a(p) == eq
-        
+
         if set(self.pVars).issuperset(expr.free_symbols):
             self.A.append(ParametricConstraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
         else:
             raise InvalidModel("Parametric constraints only allow parametric variables")
         self.checkNominalNone(nominal)
-            
+
     def _addDummy(self):
-        
+
         # adds a dummy state for purely parametric models
-        
+
         x = self.addState(start=0)
         self.addDynamic(x, 0)
         self.addedDummy = True
@@ -240,14 +240,25 @@ class Model:
         # solves the dynamic system with the given initial u(t), p, x0
 
         # define the rhs, uCallback function
-        rhs = [Lambdify([t] + [x for x in self.xVars] + [u for u in self.uVars] + [p for p in self.pVars] + [rp for rp in self.rpVars],
-                        self.F[eq].expr) for eq in range(len(self.F))]
+        rhs = [
+            Lambdify([t] + [x for x in self.xVars] + [u for u in self.uVars] + [p for p in self.pVars] + [rp for rp in self.rpVars], self.F[eq].expr)
+            for eq in range(len(self.F))
+        ]
         uFuncs = [Lambdify([t], varInfo[u].initialGuess) for u in self.uVars]
 
         # define rhs as an actual function
-        ode = lambda T, x: [r(*([T] + [elem for elem in x] + [uFuncs[i](T) for i in range(len(self.uVars))]
-                                    + [varInfo[pVar].initialGuess for pVar in self.pVars] +
-                                      [varInfo[rpVar].value for rpVar in self.rpVars])) for r in rhs]
+        ode = lambda T, x: [
+            r(
+                *(
+                    [T]
+                    + [elem for elem in x]
+                    + [uFuncs[i](T) for i in range(len(self.uVars))]
+                    + [varInfo[pVar].initialGuess for pVar in self.pVars]
+                    + [varInfo[rpVar].value for rpVar in self.rpVars]
+                )
+            )
+            for r in rhs
+        ]
 
         x0 = [varInfo[x].start for x in self.xVars]
         timeHorizon = [0, self.tf]
@@ -259,59 +270,59 @@ class Model:
         stateVals = solution.sol(timeVals)
         return timeVals, stateVals
 
-    def setFinalTime(self, tf : float):
+    def setFinalTime(self, tf: float):
         self.tf = tf
-    
-    def setSteps(self, steps : int):
+
+    def setSteps(self, steps: int):
         self.steps = steps
-    
-    def setRkSteps(self, rksteps : int):
+
+    def setRkSteps(self, rksteps: int):
         self.rksteps = rksteps
-    
+
     def setOutputPath(self, path: str):
         self.outputFilePath = path
-    
-    def setLinearSolver(self, solver : LinearSolver):
+
+    def setLinearSolver(self, solver: LinearSolver):
         self.linearSolver = solver
 
-    def setInitVars(self, initVars : InitVars):
+    def setInitVars(self, initVars: InitVars):
         self.initVars = initVars
 
-    def setTolerance(self, tolerance : float):
+    def setTolerance(self, tolerance: float):
         self.tolerance = tolerance
-    
-    def setExportHessianPath(self, path : str):
+
+    def setExportHessianPath(self, path: str):
         self.exportHessianPath = path
-        
-    def setExportJacobianPath(self, path : str):
+
+    def setExportJacobianPath(self, path: str):
         self.exportJacobianPath = path
 
-    def setInitialStatesPath(self, path : str):
+    def setInitialStatesPath(self, path: str):
         self.initialStatesPath = path
 
-    def setIVPSolver(self, solver : IVPSolver):
+    def setIVPSolver(self, solver: IVPSolver):
 
         # set IVP Solver for initial guess of states. (see scipy.solve_ivp)
         # default = IVPSolver.Radau (should be best), others: BDF, LSODA, RK45, DOP853, RK23
 
         self.ivpSolver = solver
 
-    def setMeshAlgorithm(self, meshAlgorithm : MeshAlgorithm):
+    def setMeshAlgorithm(self, meshAlgorithm: MeshAlgorithm):
         self.meshAlgorithm = meshAlgorithm
-    
-    def setMeshIterations(self, meshIterations : int):
+
+    def setMeshIterations(self, meshIterations: int):
         self.meshIterations = meshIterations
-    
-    def setMeshLevel(self, meshLevel : float):
+
+    def setMeshLevel(self, meshLevel: float):
         self.meshLevel = meshLevel
-    
-    def setMeshCTol(self, meshCTol : float):
+
+    def setMeshCTol(self, meshCTol: float):
         self.meshCTol = meshCTol
-    
-    def setMeshSigma(self, meshSigma : float):
+
+    def setMeshSigma(self, meshSigma: float):
         self.meshSigma = meshSigma
 
-    def setUserScaling(self, userScaling : bool):
+    def setUserScaling(self, userScaling: bool):
         self.userScaling = userScaling
 
     def hasLinearObjective(self):
@@ -377,11 +388,12 @@ class Model:
         return out
 
     def generateProblemCondition(self):
-        lines = ["\tproblem.linearObjective = true;" if self.linearObjective else "",
-                 "\tproblem.linearConstraints = true;" if self.linearConstraints else "",
-                 "\tproblem.quadraticObjLinearConstraints = true;"
-                 if (self.linearObjective or self.quadraticObjective) and self.linearConstraints else ""]
-        out = '\n'.join(line for line in lines if line)
+        lines = [
+            "\tproblem.linearObjective = true;" if self.linearObjective else "",
+            "\tproblem.linearConstraints = true;" if self.linearConstraints else "",
+            "\tproblem.quadraticObjLinearConstraints = true;" if (self.linearObjective or self.quadraticObjective) and self.linearConstraints else "",
+        ]
+        out = "\n".join(line for line in lines if line)
         if out != "":
             out = "\n" + out + "\n"
         return out
@@ -409,10 +421,10 @@ class Model:
             self.userScaling = True
 
     def initAnalysis(self):
-        with open('/tmp/modelinfo.txt', 'r') as file:
+        with open("/tmp/modelinfo.txt", "r") as file:
             for line in file:
                 line = line.strip()
-                key, value = line.split(',')
+                key, value = line.split(",")
                 key = key.strip()
                 value = value.strip()
                 self.modelInfo[key] = int(value)
@@ -422,13 +434,13 @@ class Model:
         # does the entire code generation of the model
 
         if len(self.F) != len(self.xVars):
-            raise InvalidModel("#states != #differential equations") 
+            raise InvalidModel("#states != #differential equations")
         elif len(self.xVars) == 0:
             # adding a dummy var: x(0)=0, x'=0 for purely parametric models
             self._addDummy()
-            
+
         # preparations
-        
+
         self.F.sort(key=lambda eq: varInfo[eq.diffVar].id, reverse=False)
 
         # codegen
@@ -436,7 +448,7 @@ class Model:
 
         print("Starting .cpp codegen...\n")
 
-        OUTPUT = f'''
+        OUTPUT = f"""
 // CODEGEN FOR MODEL "{self.name}"\n
 // includes
 #define _USE_MATH_DEFINES
@@ -449,15 +461,15 @@ class Model:
 #include "mesh.h"
 #include "gdop.h"
 #include "solver.h"
-\n\n'''
-        
+\n\n"""
+
         OUTPUT += "// runtime parameters and global constants\n"
         for rp in self.rpVars:
             info = varInfo[rp]
             OUTPUT += f"const double {info.symbol} = {str(info.symbol).upper().strip(' ')}_VALUE;\n"
         else:
             OUTPUT += "\n\n"
-        
+
         if self.M:
             OUTPUT += "// mayer term\n"
             OUTPUT += self.M.codegen("Mayer" + self.name)
@@ -467,31 +479,31 @@ class Model:
             OUTPUT += "// lagrange term\n"
             OUTPUT += self.L.codegen("Lagrange" + self.name)
             print("Lagrange: codegen done.\n")
-        
+
         if self.F:
             OUTPUT += "// dynamic constraints\n"
-        
+
         for n, f in enumerate(self.F):
             OUTPUT += f.codegen("F" + str(n) + self.name)
             print(f"Dynamic constraint {n}: codegen done.\n")
-            
+
         if self.G:
             OUTPUT += "// path constraints\n"
-            
+
         for n, g in enumerate(self.G):
             OUTPUT += g.codegen("G" + str(n) + self.name)
             print(f"Path constraint {n}: codegen done.\n")
-        
+
         if self.R:
             OUTPUT += "// final constraints\n"
-        
+
         for n, r in enumerate(self.R):
             OUTPUT += r.codegen("R" + str(n) + self.name)
             print(f"Final constraint {n}: codegen done.\n")
-        
+
         if self.A:
             OUTPUT += "// parametric constraints\n"
-        
+
         for n, a in enumerate(self.A):
             OUTPUT += a.codegen("A" + str(n) + self.name)
             print(f"Parametric constraints {n}: codegen done.\n")
@@ -502,7 +514,7 @@ class Model:
         pushG = "\n    ".join("G.push_back(" + "G" + str(n) + self.name + "::create());" for n in range(len(self.G)))
         pushR = "\n    ".join("R.push_back(" + "R" + str(n) + self.name + "::create());" for n in range(len(self.R)))
         pushA = "\n    ".join("A.push_back(" + "A" + str(n) + self.name + "::create());" for n in range(len(self.A)))
-        
+
         OUTPUT += f"""Problem createProblem_{self.name}() {{
 
     std::vector<std::unique_ptr<Expression>> F;
@@ -608,28 +620,27 @@ int main() {{
         """
         print(".cpp: codegen done.\n")
 
-
         os.makedirs(f".generated/{self.name}", exist_ok=True)
 
-        with open(f'.generated/{self.name}/{filename}.cpp', 'w') as file:
+        with open(f".generated/{self.name}/{filename}.cpp", "w") as file:
             file.write(OUTPUT)
 
         print(f"Generated model to .generated/{self.name}/{filename}.cpp.\n")
         print(f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.\n")
         return 0
-        
+
     def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
-        
+
         # generate corresponding main function with flags, mesh, refinement
         # set runtime parameter file from map
         # run the code
 
-        if not resimulate:      # use everything from the previous optimization
-            if not self.addedDummy:       # use provided values / standard values
+        if not resimulate:  # use everything from the previous optimization
+            if not self.addedDummy:  # use provided values / standard values
                 self.setFinalTime(tf)
                 self.setSteps(steps)
                 self.setRkSteps(rksteps)
-            else:                           # purely parametric
+            else:  # purely parametric
                 print("\nSetting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.")
                 self.setFinalTime(0)
                 self.setSteps(1)
@@ -639,8 +650,7 @@ int main() {{
 
             self.setMeshFlags(meshFlags)
         else:
-            self.resultHistory = {}     # clear result history for new optimization
-
+            self.resultHistory = {}  # clear result history for new optimization
 
         if self.initVars == InitVars.SOLVE:
             print("Solving IVP for initial state guesses...")
@@ -650,13 +660,13 @@ int main() {{
             print(f"\nSolving the IVP took {round(timer.time() - solveStart, 4)} seconds.")
 
             print(f"\nWriting guesses to {self.initialStatesPath + '/initialValues.csv'}...")
-            with open(self.initialStatesPath + '/initialValues.csv', 'w') as file:
+            with open(self.initialStatesPath + "/initialValues.csv", "w") as file:
                 for i in range(len(timeVals)):
                     row = [str(timeVals[i])]
                     for dim in range(len(self.xVars)):
                         row.append(str(stateVals[dim][i]))
 
-                    file.write(','.join(row) + '\n')
+                    file.write(",".join(row) + "\n")
             print("\nInitial guesses done.\n")
 
         ### main codegen
@@ -679,13 +689,13 @@ int main() {{
         if self.exportJacobianPath:
             OUTPUT += f'#define EXPORT_JACOBIAN_PATH "{self.exportJacobianPath}"\n'
         if self.initVars == InitVars.SOLVE and self.initialStatesPath:
-                OUTPUT += f'#define INITIAL_STATES_PATH "{self.initialStatesPath}"\n'
+            OUTPUT += f'#define INITIAL_STATES_PATH "{self.initialStatesPath}"\n'
         if self.meshSigma:
-            OUTPUT += f'#define SIGMA {self.meshSigma}\n'
+            OUTPUT += f"#define SIGMA {self.meshSigma}\n"
         if self.meshLevel:
-            OUTPUT += f'#define LEVEL {self.meshLevel}\n'
+            OUTPUT += f"#define LEVEL {self.meshLevel}\n"
         if self.meshCTol:
-            OUTPUT += f'#define C_TOL {self.meshCTol}\n'
+            OUTPUT += f"#define C_TOL {self.meshCTol}\n"
         if self.rpVars:
             OUTPUT += "\n// values for runtime parameters\n"
 
@@ -693,13 +703,15 @@ int main() {{
             info = varInfo[rp]
             OUTPUT += f'#define {str(info.symbol).upper().strip(" ")}_VALUE {info.value}\n'
 
-        with open(f'.generated/{self.name}/{filename}Params.h', 'w') as file:
+        with open(f".generated/{self.name}/{filename}Params.h", "w") as file:
             file.write(OUTPUT)
 
         print("Compiling generated code...\n")
         compileStart = timer.time()
         # TODO: investigate if -ffast-math is save here
-        os.system(f"g++ .generated/{self.name}/{filename}.cpp -O3 -ffast-math -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}")
+        os.system(
+            f"g++ .generated/{self.name}/{filename}.cpp -O3 -ffast-math -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}"
+        )
         print(f"Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.")
 
         os.system(f"LD_LIBRARY_PATH=../cmake-build-release/src/ ./.generated/{self.name}/{self.name}")
@@ -731,22 +743,24 @@ int main() {{
         if interval is None:
             interval = [0, self.tf]
         self.getResults(meshIteration=meshIteration)
-        plt.rcParams.update({
-    'font.serif': ['Times New Roman'],
-    'axes.labelsize': 14,
-    'axes.titlesize': 16,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
-    'legend.fontsize': 12,
-    'legend.frameon': True,
-    'legend.loc': 'best',
-    'grid.alpha': 0.3,
-    'grid.linestyle': '--',
-    'grid.linewidth': 0.5,
-    'figure.figsize': (12, 8),
-    'axes.titlepad': 20,
-    'axes.labelpad': 10
-        })
+        plt.rcParams.update(
+            {
+                "font.serif": ["Times New Roman"],
+                "axes.labelsize": 14,
+                "axes.titlesize": 16,
+                "xtick.labelsize": 12,
+                "ytick.labelsize": 12,
+                "legend.fontsize": 12,
+                "legend.frameon": True,
+                "legend.loc": "best",
+                "grid.alpha": 0.3,
+                "grid.linestyle": "--",
+                "grid.linewidth": 0.5,
+                "figure.figsize": (12, 8),
+                "axes.titlepad": 20,
+                "axes.labelpad": 10,
+            }
+        )
 
         if specifCols is None:
             columns_to_plot = self.resultHistory[meshIteration].columns[1:]
@@ -761,17 +775,38 @@ int main() {{
 
         for idx, column in enumerate(columns_to_plot):
             ax = axs[idx]
-            ax.plot(self.resultHistory[meshIteration]['time'], self.resultHistory[meshIteration][column], label=column, linewidth=2, linestyle='-', color='steelblue')
+            ax.plot(
+                self.resultHistory[meshIteration]["time"],
+                self.resultHistory[meshIteration][column],
+                label=column,
+                linewidth=2,
+                linestyle="-",
+                color="steelblue",
+            )
             if dots == Dots.ALL:
-                ax.scatter(self.resultHistory[meshIteration]['time'], self.resultHistory[meshIteration][column], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+                ax.scatter(
+                    self.resultHistory[meshIteration]["time"],
+                    self.resultHistory[meshIteration][column],
+                    color="red",
+                    s=30,
+                    edgecolor="black",
+                    alpha=0.8,
+                    zorder=5,
+                )
             elif dots == Dots.BASE:
-                ax.scatter([x for i, x in enumerate(self.resultHistory[meshIteration]['time']) if i % self.rksteps == 0],
-                           [x for i, x in enumerate(self.resultHistory[meshIteration][column]) if i % self.rksteps == 0],
-                           color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
-            ax.set_xlabel('time')
+                ax.scatter(
+                    [x for i, x in enumerate(self.resultHistory[meshIteration]["time"]) if i % self.rksteps == 0],
+                    [x for i, x in enumerate(self.resultHistory[meshIteration][column]) if i % self.rksteps == 0],
+                    color="red",
+                    s=30,
+                    edgecolor="black",
+                    alpha=0.8,
+                    zorder=5,
+                )
+            ax.set_xlabel("time")
             ax.set_ylabel(column)
             ax.set_xlim(interval[0], interval[1])
-            ax.legend(frameon=True, loc='best')
+            ax.legend(frameon=True, loc="best")
             ax.grid(True)
             ax.title.set_fontsize(16)
 
@@ -783,39 +818,47 @@ int main() {{
         if interval is None:
             interval = [0, self.tf]
         self.getResults(meshIteration=meshIteration)
-        plt.rcParams.update({
-            'font.serif': ['Times New Roman'],
-            'axes.labelsize': 14,
-            'axes.titlesize': 16,
-            'xtick.labelsize': 12,
-            'ytick.labelsize': 12,
-            'legend.fontsize': 12,
-            'legend.frameon': True,
-            'legend.loc': 'best',
-            'grid.alpha': 0.3,
-            'grid.linestyle': '--',
-            'grid.linewidth': 0.5,
-            'figure.figsize': (12, 8),
-            'axes.titlepad': 20,
-            'axes.labelpad': 10
-        })
+        plt.rcParams.update(
+            {
+                "font.serif": ["Times New Roman"],
+                "axes.labelsize": 14,
+                "axes.titlesize": 16,
+                "xtick.labelsize": 12,
+                "ytick.labelsize": 12,
+                "legend.fontsize": 12,
+                "legend.frameon": True,
+                "legend.loc": "best",
+                "grid.alpha": 0.3,
+                "grid.linestyle": "--",
+                "grid.linewidth": 0.5,
+                "figure.figsize": (12, 8),
+                "axes.titlepad": 20,
+                "axes.labelpad": 10,
+            }
+        )
 
         x_data = self.resultHistory[meshIteration][varInfo[varX].symbol]
         y_data = self.resultHistory[meshIteration][varInfo[varY].symbol]
-        time_data = self.resultHistory[meshIteration]['time']
+        time_data = self.resultHistory[meshIteration]["time"]
         timeFiltered = (time_data >= interval[0]) & (time_data <= interval[1])
         name1, name2 = varInfo[varX].symbol, varInfo[varY].symbol
 
         plt.plot(x_data[timeFiltered], y_data[timeFiltered])
 
         if dots == Dots.ALL:
-            plt.scatter(x_data[timeFiltered], y_data[timeFiltered], color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+            plt.scatter(x_data[timeFiltered], y_data[timeFiltered], color="red", s=30, edgecolor="black", alpha=0.8, zorder=5)
         elif dots == Dots.BASE:
-            plt.scatter([x for i, x in enumerate(x_data[timeFiltered]) if i % self.rksteps == 0],
-                        [x for i, x in enumerate(y_data[timeFiltered]) if i % self.rksteps == 0],
-                        color='red', s=30, edgecolor='black', alpha=0.8, zorder=5)
+            plt.scatter(
+                [x for i, x in enumerate(x_data[timeFiltered]) if i % self.rksteps == 0],
+                [x for i, x in enumerate(y_data[timeFiltered]) if i % self.rksteps == 0],
+                color="red",
+                s=30,
+                edgecolor="black",
+                alpha=0.8,
+                zorder=5,
+            )
 
-        plt.title(f'{name1} vs {name2}')
+        plt.title(f"{name1} vs {name2}")
         plt.xlabel(name1)
         plt.ylabel(name2)
 
@@ -839,7 +882,7 @@ int main() {{
 
             # remove dummy column for purely parametric models
             if self.addedDummy:
-                results = results.drop(columns=['x[0]'])
+                results = results.drop(columns=["x[0]"])
 
             alias = {variable.name: varInfo[variable].symbol for variable in varInfo}
             for col in results.columns:
@@ -884,12 +927,12 @@ int main() {{
 
             cumulative_count = np.arange(1, len(arr) + 1)
 
-            plt.plot(arr, cumulative_count, label=f'Mesh Iteration {m}')
+            plt.plot(arr, cumulative_count, label=f"Mesh Iteration {m}")
             plt.xlim(interval)
 
-        plt.xlabel('Time')
-        plt.ylabel('Cumulative Count')
-        plt.title('Cumulative Count of Mesh Points Over Time')
+        plt.xlabel("Time")
+        plt.ylabel("Cumulative Count")
+        plt.title("Cumulative Count of Mesh Points Over Time")
         plt.legend()
 
         plt.show()
@@ -917,12 +960,12 @@ int main() {{
             # subtract the interpolated mesh count from interval 0
             differenceInterpolated = cumulative_count - np.interp(arr, time0, count0)
 
-            plt.plot(arr, differenceInterpolated, label=f'Mesh Iteration {m}')
+            plt.plot(arr, differenceInterpolated, label=f"Mesh Iteration {m}")
             plt.xlim(interval)
 
-        plt.xlabel('Time')
-        plt.ylabel('Cumulative Count of Iteration m - Iteration 0')
-        plt.title('Cumulative Count of Mesh Points Over Time - Count of the initial Mesh')
+        plt.xlabel("Time")
+        plt.ylabel("Cumulative Count of Iteration m - Iteration 0")
+        plt.title("Cumulative Count of Mesh Points Over Time - Count of the initial Mesh")
         plt.legend()
 
         plt.show()
@@ -930,21 +973,22 @@ int main() {{
     def plotSparseMatrix(self, matrixType):
         from matplotlib.patches import Rectangle
         import scipy.sparse as sp
+
         if matrixType == MatrixType.JACOBIAN:
             file_path = self.exportJacobianPath + f"/{self.name}_jacobian.csv"
         elif matrixType == MatrixType.HESSIAN:
-            file_path = self.exportHessianPath  + f"/{self.name}_hessian.csv"
+            file_path = self.exportHessianPath + f"/{self.name}_hessian.csv"
         else:
             raise InvalidMatrix("Plotting is only possible for matrixTypes JACOBIAN or HESSIAN.")
 
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             lines = f.readlines()
 
-        dim_row, dim_col = map(int, lines[1].strip().split(','))
+        dim_row, dim_col = map(int, lines[1].strip().split(","))
 
         rows, cols = [], []
         for line in lines[3:]:
-            row, col = map(int, line.strip().split(','))
+            row, col = map(int, line.strip().split(","))
             rows.append(row)
             cols.append(col)
 
@@ -953,24 +997,24 @@ int main() {{
 
         fig, ax = plt.subplots()
 
-        for (x, y, data) in zip(m.col, m.row, m.data):
-            ax.add_patch(Rectangle(
-                xy=(x, y), width=1, height=1, edgecolor='black', facecolor='blue', alpha=0.6))
+        for x, y, data in zip(m.col, m.row, m.data):
+            ax.add_patch(Rectangle(xy=(x, y), width=1, height=1, edgecolor="black", facecolor="blue", alpha=0.6))
 
         ax.set_xlim(0, m.shape[1])
         ax.set_ylim(0, m.shape[0])
         ax.invert_yaxis()
 
         if matrixType == MatrixType.JACOBIAN:
-            ax.set_xlabel('Variables')
-            ax.set_ylabel('Equations')
-            ax.set_title('Jacobian Sparsity')
+            ax.set_xlabel("Variables")
+            ax.set_ylabel("Equations")
+            ax.set_title("Jacobian Sparsity")
         elif matrixType == MatrixType.HESSIAN:
-            ax.set_xlabel('Variables')
-            ax.set_ylabel('Variables')
-            ax.set_title('Hessian Sparsity')
+            ax.set_xlabel("Variables")
+            ax.set_ylabel("Variables")
+            ax.set_title("Hessian Sparsity")
 
         plt.show()
+
 
 # time symbol
 t = Symbol("t")

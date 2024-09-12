@@ -1,34 +1,21 @@
 #ifndef IPOPT_DO_SOLVER_H
 #define IPOPT_DO_SOLVER_H
 
+#include "gdop.h"
 #include <chrono>
 #include <unordered_map>
-#include "gdop.h"
 
-enum class LinearSolver {
-    MUMPS,
-    MA27,
-    MA57,
-    MA77,
-    MA86,
-    MA97,
-    PARDISO
-};
+enum class LinearSolver { MUMPS, MA27, MA57, MA77, MA86, MA97, PARDISO };
 
-enum class MeshAlgorithm {
-    NONE,
-    BASIC,
-    L2_BOUNDARY_NORM
-};
+enum class MeshAlgorithm { NONE, BASIC, L2_BOUNDARY_NORM };
 
 struct SolverPrivate;
 namespace Ipopt {
-    class IpoptApplication;
+class IpoptApplication;
 }
 
-
 class Solver {
-public:
+  public:
     Solver(GDOP* gdop, int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm);
     ~Solver();
 
@@ -37,7 +24,7 @@ public:
     int meshIteration = 0;
     const int maxMeshIterations;
     double tolerance = 1e-12;
-    std::vector<double> cbValues;           // starting values after refinement
+    std::vector<double> cbValues; // starting values after refinement
     std::unordered_map<std::string, double> meshParameters;
 
     // important methods
@@ -62,7 +49,7 @@ public:
     bool exportHessian = false;
     std::string exportJacobianPath;
     bool exportJacobian = false;
-    bool userScaling = true;     // use nlp scaling provided by the user, otherwise use gradient-based
+    bool userScaling = true; // use nlp scaling provided by the user, otherwise use gradient-based
 
     void printObjectiveHistory();
     void printMeshStats() const;
@@ -84,8 +71,9 @@ public:
     // L2 norm / boundary parameters
     double L2Level = 0;
     double L2CornerTol = 0.2;
-private:
+
+  private:
     std::unique_ptr<SolverPrivate> _priv;
 };
 
-#endif //IPOPT_DO_SOLVER_H
+#endif // IPOPT_DO_SOLVER_H

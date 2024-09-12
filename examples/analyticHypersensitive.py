@@ -20,7 +20,7 @@ x = model.addState(start=1.5)
 u = model.addInput()
 
 model.addDynamic(x, -x + u)
-model.addFinal(1. - x, eq=0)
+model.addFinal(1.0 - x, eq=0)
 model.addLagrange(0.5 * (x**2 + u**2))
 
 model.hasQuadraticObjective()
@@ -28,11 +28,12 @@ model.hasLinearConstraints()
 
 model.generate()
 
-model.optimize(tf=10000, steps=100, rksteps=9,
-               flags={"outputPath": "/tmp",
-                      "linearSolver": LinearSolver.MA57},
-               meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-                          "meshIterations": 20,
-                          "meshLevel": 0})
+model.optimize(
+    tf=10000,
+    steps=100,
+    rksteps=9,
+    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 20, "meshLevel": 0},
+)
 
 model.plot(interval=[9980, 10000], dots=Dots.ALL)

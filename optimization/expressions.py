@@ -4,6 +4,7 @@ from symengine import *
 # global map varInfo: symbol -> info
 varInfo = {}
 
+
 class Expression:
     simplification = False
 
@@ -37,9 +38,11 @@ class Expression:
         for i, var1 in enumerate(self.adj):
             for j, var2 in enumerate(self.adj):
                 info1, info2 = varInfo[var1], varInfo[var2]
-                if not ((isinstance(info1, StateStruct) and isinstance(info2, StateStruct) and i < j)
-                        or (isinstance(info1, InputStruct) and isinstance(info2, InputStruct) and i < j)
-                        or (isinstance(info1, ParameterStruct) and isinstance(info2, ParameterStruct) and i < j)):
+                if not (
+                    (isinstance(info1, StateStruct) and isinstance(info2, StateStruct) and i < j)
+                    or (isinstance(info1, InputStruct) and isinstance(info2, InputStruct) and i < j)
+                    or (isinstance(info1, ParameterStruct) and isinstance(info2, ParameterStruct) and i < j)
+                ):
 
                     der = diff(self.expr, var1)
                     if var2 in der.free_symbols:
@@ -61,7 +64,7 @@ class Expression:
                 adjDiff_indices[1].append((info1.id, info2.id))  # indUX
             elif isinstance(info1, InputStruct) and isinstance(info2, InputStruct):
                 cEvalDiff2[2].append(toCode(expr))
-                adjDiff_indices[2].append((info1.id, info2.id)) # indUU
+                adjDiff_indices[2].append((info1.id, info2.id))  # indUU
             elif isinstance(info1, ParameterStruct) and isinstance(info2, StateStruct):
                 cEvalDiff2[3].append(toCode(expr))
                 adjDiff_indices[3].append((info1.id, info2.id))  # indPX
@@ -71,7 +74,6 @@ class Expression:
             elif isinstance(info1, ParameterStruct) and isinstance(info2, ParameterStruct):
                 cEvalDiff2[5].append(toCode(expr))
                 adjDiff_indices[5].append((info1.id, info2.id))  # indPP
-
 
         # first derivatives
 
@@ -104,7 +106,7 @@ class Expression:
         adj = "{{{}, {}, {}}}".format(
             "{{{}}}".format(", ".join(map(str, adj_indices[0]))),
             "{{{}}}".format(", ".join(map(str, adj_indices[1]))),
-            "{{{}}}".format(", ".join(map(str, adj_indices[2])))
+            "{{{}}}".format(", ".join(map(str, adj_indices[2]))),
         )
         adjDiff = "{{{}, {}, {}, {}, {}, {}}}".format(
             "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[0])),
@@ -112,7 +114,7 @@ class Expression:
             "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[2])),
             "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[3])),
             "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[4])),
-            "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[5]))
+            "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[5])),
         )
 
         out = f"class {name} : public Expression {{\n"
@@ -193,9 +195,11 @@ class Constraint(Expression):
         for i, var1 in enumerate(self.adj):
             for j, var2 in enumerate(self.adj):
                 info1, info2 = varInfo[var1], varInfo[var2]
-                if not ((isinstance(info1, StateStruct) and isinstance(info2, StateStruct) and i < j)
-                        or (isinstance(info1, InputStruct) and isinstance(info2, InputStruct) and i < j)
-                        or (isinstance(info1, ParameterStruct) and isinstance(info2, ParameterStruct) and i < j)):
+                if not (
+                    (isinstance(info1, StateStruct) and isinstance(info2, StateStruct) and i < j)
+                    or (isinstance(info1, InputStruct) and isinstance(info2, InputStruct) and i < j)
+                    or (isinstance(info1, ParameterStruct) and isinstance(info2, ParameterStruct) and i < j)
+                ):
 
                     der = diff(self.expr, var1)
                     if var2 in der.free_symbols:
@@ -217,7 +221,7 @@ class Constraint(Expression):
                 adjDiff_indices[1].append((info1.id, info2.id))  # indUX
             elif isinstance(info1, InputStruct) and isinstance(info2, InputStruct):
                 cEvalDiff2[2].append(toCode(expr))
-                adjDiff_indices[2].append((info1.id, info2.id)) # indUU
+                adjDiff_indices[2].append((info1.id, info2.id))  # indUU
             elif isinstance(info1, ParameterStruct) and isinstance(info2, StateStruct):
                 cEvalDiff2[3].append(toCode(expr))
                 adjDiff_indices[3].append((info1.id, info2.id))  # indPX
@@ -227,7 +231,6 @@ class Constraint(Expression):
             elif isinstance(info1, ParameterStruct) and isinstance(info2, ParameterStruct):
                 cEvalDiff2[5].append(toCode(expr))
                 adjDiff_indices[5].append((info1.id, info2.id))  # indPP
-
 
         # first derivatives
 
@@ -260,7 +263,7 @@ class Constraint(Expression):
         adj = "{{{}, {}, {}}}".format(
             "{{{}}}".format(", ".join(map(str, adj_indices[0]))),
             "{{{}}}".format(", ".join(map(str, adj_indices[1]))),
-            "{{{}}}".format(", ".join(map(str, adj_indices[2])))
+            "{{{}}}".format(", ".join(map(str, adj_indices[2]))),
         )
         adjDiff = "{{{}, {}, {}, {}, {}, {}}}".format(
             "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[0])),
@@ -268,11 +271,11 @@ class Constraint(Expression):
             "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[2])),
             "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[3])),
             "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[4])),
-            "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[5]))
+            "{{{}}}".format(", ".join(f"{{{i}, {j}}}" for i, j in adjDiff_indices[5])),
         )
 
-        lb = self.lb if self.lb != -float('inf') else "MINUS_INFINITY"
-        ub = self.ub if self.ub != float('inf') else "PLUS_INFINITY"
+        lb = self.lb if self.lb != -float("inf") else "MINUS_INFINITY"
+        ub = self.ub if self.ub != float("inf") else "PLUS_INFINITY"
 
         out = f"class {name} : public Constraint {{\n"
         out += "public:\n"
@@ -319,6 +322,7 @@ class Constraint(Expression):
         out += "};\n\n\n"
         return out
 
+
 class ParametricConstraint(Expression):
 
     def __init__(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
@@ -329,7 +333,6 @@ class ParametricConstraint(Expression):
         else:
             self.lb = lb
             self.ub = ub
-
 
     def codegen(self, name):
 
@@ -377,9 +380,8 @@ class ParametricConstraint(Expression):
         adj = f"{{{', '.join(map(str, adj_indices))}}}"
         adjDiff = "{{{}}}".format(", ".join("{{{}}}".format(", ".join(map(str, tpl))) for tpl in adjDiff_indices))
 
-
-        lb = self.lb if self.lb != -float('inf') else "MINUS_INFINITY"
-        ub = self.ub if self.ub != float('inf') else "PLUS_INFINITY"
+        lb = self.lb if self.lb != -float("inf") else "MINUS_INFINITY"
+        ub = self.ub if self.ub != float("inf") else "PLUS_INFINITY"
 
         out = f"class {name} : public ParamConstraint {{\n"
         out += "public:\n"
@@ -420,8 +422,10 @@ class ParametricConstraint(Expression):
         out += "};\n\n\n"
         return out
 
+
 def toCode(expr):
     return ccode(expr)
+
 
 def cseCustom(expressions):
     if type(expressions) is not list:

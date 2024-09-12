@@ -46,13 +46,13 @@ model.hasLinearObjective()
 
 model.generate()
 
-model.optimize(tf=1, steps=5000, rksteps=3,
-               flags={"outputPath": "/tmp",
-                      "linearSolver": LinearSolver.MA57,
-                      "initVars": InitVars.SOLVE,
-                      "exportJacobianPath": "/tmp"},
-               meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-                          "meshIterations": 0})
+model.optimize(
+    tf=1,
+    steps=5000,
+    rksteps=3,
+    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE, "exportJacobianPath": "/tmp"},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 0},
+)
 
 model.plotInputs(dots=Dots.BASE)
 model.plotSparseMatrix(MatrixType.JACOBIAN)

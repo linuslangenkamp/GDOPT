@@ -1,5 +1,3 @@
-from pickle import FALSE
-
 from optimization import *
 
 model = Model("satellite")
@@ -37,17 +35,25 @@ model.addDynamic(x5, ((I2 - I3) * x6 * x7 + T1S * u1) / I1)
 model.addDynamic(x6, ((I3 - I1) * x7 * x5 + T2S * u2) / I2)
 model.addDynamic(x7, ((I1 - I2) * x5 * x6 + T3S * u3) / I3)
 
-model.addMayer((x1 - M1)**2 + (x2 - M2)**2 + (x3 - M3)**2 + 
-                (x4 - M4)**2 + x5**2 + x6**2 + x7**2, Objective.MINIMIZE)
-                
+model.addMayer(
+    (x1 - M1) ** 2 + (x2 - M2) ** 2 + (x3 - M3) ** 2 + (x4 - M4) ** 2 + x5**2 + x6**2 + x7**2,
+    Objective.MINIMIZE,
+)
+
 model.addLagrange(0.5 * (u1**2 + u2**2 + u3**2), Objective.MINIMIZE)
 
 model.generate()
 
-model.optimize(steps=1000, rksteps=3, tf=100,
-               flags={"outputPath": "/tmp",
-                      "linearSolver": LinearSolver.MUMPS,
-                      "tolerance": 1e-12},
-               meshFlags={})
+model.optimize(
+    steps=1000,
+    rksteps=3,
+    tf=100,
+    flags={
+        "outputPath": "/tmp",
+        "linearSolver": LinearSolver.MUMPS,
+        "tolerance": 1e-12,
+    },
+    meshFlags={},
+)
 
 model.plotInputs()

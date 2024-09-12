@@ -1,17 +1,16 @@
 #ifndef IPOPT_DO_UTIL_H
 #define IPOPT_DO_UTIL_H
 
-#include <vector>
-#include <cstdlib>
-#include <tuple>
-#include <fstream>
-#include <iostream>
 #include <cmath>
+#include <cstdlib>
+#include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <set>
+#include <tuple>
+#include <vector>
 
-template<typename T>
-inline int sz(const std::vector<T>& vec) {
+template <typename T> inline int sz(const std::vector<T>& vec) {
     return int(vec.size());
 }
 
@@ -110,12 +109,14 @@ inline double checkNominalValue(const double value) {
     double nom = std::abs(value);
     if (nom >= 1e-18 and 1e18 >= nom) {
         return 1 / nom;
-    }
-    else {
-        std::cerr << "The program will be terminated, since the nominal value abs(" << value << ") "
-                      "is not in the range""[1e-18, 1e18]." << std::endl;
+    } else {
+        std::cerr << "The program will be terminated, since the nominal value abs(" << value
+                  << ") "
+                     "is not in the range"
+                     "[1e-18, 1e18]."
+                  << std::endl;
         abort();
     }
 }
 
-#endif //IPOPT_DO_UTIL_H
+#endif // IPOPT_DO_UTIL_H

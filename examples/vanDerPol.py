@@ -16,13 +16,13 @@ model.addLagrange(x1**2 + x2**2 + rp * u**2)
 
 model.generate()
 
-model.optimize(tf=10, steps=20, rksteps=3,
-               flags={"outputPath": "/tmp",
-                      "linearSolver": LinearSolver.MA57},
-               meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-                          "meshIterations": 10,
-                          "meshLevel": -0.5,
-                          "meshCTol": 0.5})
+model.optimize(
+    tf=10,
+    steps=20,
+    rksteps=3,
+    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 10, "meshLevel": -0.5, "meshCTol": 0.5},
+)
 
 model.parametricPlot(x1, x2, dots=Dots.ALL)
 

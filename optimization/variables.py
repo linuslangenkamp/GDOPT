@@ -16,7 +16,7 @@ class StateStruct(VariableStruct):
     def __init__(self, start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None):
         super().__init__(symbol, lb, ub, nominal=nominal)
         self.start = start
-        self.symbol = symbol if symbol is not None else f'x[{StateStruct.id_counter}]'
+        self.symbol = symbol if symbol is not None else f"x[{StateStruct.id_counter}]"
         self.id = StateStruct.id_counter
         StateStruct.id_counter += 1
 
@@ -27,7 +27,7 @@ class InputStruct(VariableStruct):
     def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf"), initialGuess=0, nominal=None):
         super().__init__(symbol, lb, ub, nominal=nominal)
         self.initialGuess = initialGuess
-        self.symbol = symbol if symbol is not None else f'u[{InputStruct.id_counter}]'
+        self.symbol = symbol if symbol is not None else f"u[{InputStruct.id_counter}]"
         self.id = InputStruct.id_counter
         InputStruct.id_counter += 1
 
@@ -38,7 +38,7 @@ class ParameterStruct(VariableStruct):
     def __init__(self, symbol=None, lb=-float("inf"), ub=float("inf"), initialGuess=0, nominal=None):
         super().__init__(symbol, lb, ub, nominal=nominal)
         self.initialGuess = initialGuess
-        self.symbol = symbol if symbol is not None else f'p[{ParameterStruct.id_counter}]'
+        self.symbol = symbol if symbol is not None else f"p[{ParameterStruct.id_counter}]"
         self.id = ParameterStruct.id_counter
         ParameterStruct.id_counter += 1
 
@@ -48,23 +48,21 @@ class RuntimeParameterStruct(VariableStruct):
 
     def __init__(self, default, symbol=None, lb=-float("inf"), ub=float("inf")):
         super().__init__(symbol, lb, ub)
-        self.symbol = symbol if symbol is not None else f'rp[{ParameterStruct.id_counter}]'
+        self.symbol = symbol if symbol is not None else f"rp[{ParameterStruct.id_counter}]"
         self.id = ParameterStruct.id_counter
         self.value = default
         ParameterStruct.id_counter += 1
 
 
-class_order = {
-    'State': 0,
-    'Input': 1,
-    'Parameter': 2
-}
+class_order = {"State": 0, "Input": 1, "Parameter": 2}
+
 
 def get_sort_key(symbol, obj_map):
     obj = obj_map[symbol]
-    class_name = obj.__class__.__name__.replace('Struct', '')
-    order = class_order.get(class_name, float('inf'))
+    class_name = obj.__class__.__name__.replace("Struct", "")
+    order = class_order.get(class_name, float("inf"))
     return order, obj.id
+
 
 def sort_symbols(symbols, obj_map):
     return symbols.sort(key=lambda s: get_sort_key(s, obj_map))
