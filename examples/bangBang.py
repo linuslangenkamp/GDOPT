@@ -20,11 +20,11 @@ model.addMayer(x1, Objective.MAXIMIZE)
 model.generate()
 
 # optimizer attributes can be set directly as well
-model.meshAlgorithm = MeshAlgorithm.L2_BOUNDARY_NORM
-model.meshIterations = 10
+model.meshAlgorithm = MeshAlgorithm.L2_BOUNDARY_NORM_SI
+model.meshIterations = 3
 model.outputFilePath = "/tmp"
 
-model.optimize(tf=1, steps=15, rksteps=3)
+model.optimize(tf=0.5, steps=15, rksteps=3)
 
-model.plot(dots=Dots.ALL)
+model.plot(dots=Dots.BASE)
 model.plotPointCumulativeCount(meshIteration="all")

@@ -94,7 +94,7 @@ int Solver::solve() {
     return status;
 }
 
-std::vector<int> Solver::detect() const {
+std::vector<int> Solver::detect() {
     switch (meshAlgorithm) {
         case MeshAlgorithm::NONE:
             return {};
@@ -102,6 +102,8 @@ std::vector<int> Solver::detect() const {
             return basicStrategy();
         case MeshAlgorithm::L2_BOUNDARY_NORM:
             return l2BoundaryNorm();
+        case MeshAlgorithm::L2_BOUNDARY_NORM_SI:
+            return l2BoundaryNormSI();
         default:
             return {};
     }
@@ -114,6 +116,8 @@ void Solver::setRefinementParameters() {
         case MeshAlgorithm::BASIC:
             return setBasicStrategy();
         case MeshAlgorithm::L2_BOUNDARY_NORM:
+            return setl2BoundaryNorm();
+        case MeshAlgorithm::L2_BOUNDARY_NORM_SI:
             return setl2BoundaryNorm();
         default:
             return;
@@ -230,6 +234,140 @@ std::vector<int> Solver::l2BoundaryNorm() const {
 
                 // corner criterium (only exists for i > 0) -> forces left adjacent interval split
                 if (intervalInserted) {
+                    markerSet.insert(i - 1);
+                }
+
+                break;
+            }
+        }
+    }
+    return {markerSet.begin(), markerSet.end()};
+}
+
+std::vector<int> Solver::l2BoundaryNormSI() {
+    const double cDiff = 1;
+    const double cDiff2 = cDiff / 2;
+    std::set<int> markerSet;
+
+    auto oldNeighbors = L2InsertedNeighbors;
+    L2InsertedNeighbors = {};
+
+    // init last derivatives u^(d)_{i-1,m} as 0
+    std::vector<std::vector<double>> lastDiffs;
+    lastDiffs.reserve(_priv->gdop->problem->sizeU);
+    for (int u = 0; u < _priv->gdop->problem->sizeU; u++) {
+        lastDiffs.push_back({0, 0});
+    }
+
+    // calculate max, min of u^(d)
+    std::vector<double> maxU;
+    std::vector<double> minU;
+    maxU.reserve(_priv->gdop->problem->sizeU);
+    minU.reserve(_priv->gdop->problem->sizeU);
+    for (int i = 0; i < _priv->gdop->mesh.intervals; i++) {
+        for (int j = 0; j < _priv->gdop->rk.steps; j++) {
+            for (int u = 0; u < _priv->gdop->problem->sizeU; u++) {
+                if (i == 0 && j == 0) {
+                    maxU.push_back(_priv->gdop->optimum[u + _priv->gdop->offX]);
+                    minU.push_back(_priv->gdop->optimum[u + _priv->gdop->offX]);
+                }
+                else {
+                    if (_priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU] > maxU[u]) {
+                        maxU[u] = _priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU];
+                    }
+                    else if (_priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU] < minU[u]) {
+                        minU[u] = _priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU];
+                    }
+                }
+            }
+        }
+    }
+    std::vector<double> rangeU;
+    rangeU.reserve(_priv->gdop->problem->sizeU);
+    for (int u = 0; u < _priv->gdop->problem->sizeU; u++) {
+        rangeU.push_back(maxU[u] - minU[u]);
+    }
+
+    std::vector<double> boundsDiff;
+    std::vector<double> boundsDiff2;
+    for (int u = 0; u < _priv->gdop->problem->sizeU; u++) {
+        boundsDiff.push_back(cDiff * rangeU[u] / initialIntervals * pow(10, -L2Level));
+        boundsDiff2.push_back(cDiff2 * rangeU[u] / initialIntervals * pow(10, -L2Level));
+    }
+
+    for (int i = 0; i < _priv->gdop->mesh.intervals; i++) {
+        bool cornerTrigger = false;
+
+        // insert old (prior split) neighbors shifted by markerSet size
+        if (oldNeighbors.find(i) != oldNeighbors.end()) {
+            L2InsertedNeighbors.emplace(i + markerSet.size());
+        }
+
+        for (int u = 0; u < _priv->gdop->problem->sizeU; u++) {
+            std::vector<double> uCoeffs;
+            if (i == 0) {
+                for (int j = 0; j < _priv->gdop->rk.steps; j++) {
+                    uCoeffs.push_back(_priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
+                }
+                uCoeffs.insert(uCoeffs.begin(), Integrator::evalLagrange(_priv->gdop->rk.c, uCoeffs, 0.0));
+            }
+            else {
+                for (int j = -1; j < _priv->gdop->rk.steps; j++) {
+                    uCoeffs.push_back(_priv->gdop->optimum[u + _priv->gdop->offX + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
+                }
+            }
+
+            // values of the (1st, 2nd) diff of the interpolating polynomial at 0, c1, c2, ...
+            std::vector<double> p_uDiff = _priv->gdop->rk.evalLagrangeDiff(uCoeffs);
+            std::vector<double> p_uDiff2 = _priv->gdop->rk.evalLagrangeDiff2(uCoeffs);
+
+            // squared values of the (1st, 2nd) diff of the interpolating polynomial at c1, c2, ...
+            std::vector<double> sq_p_uDiff;
+            std::vector<double> sq_p_uDiff2;
+            for (int k = 1; k < sz(p_uDiff); k++) {
+                sq_p_uDiff.push_back(p_uDiff[k] * p_uDiff[k]);
+                sq_p_uDiff2.push_back(p_uDiff2[k] * p_uDiff2[k]);
+            }
+
+            // (int_0^1 (d^{1,2}/dt^{1,2} p_u(t))^2 dt)^0.5 - L2 norm of the (1st, 2nd) diff
+            double L2Diff1 = std::sqrt(_priv->gdop->rk.integrate(sq_p_uDiff));
+            double L2Diff2 = std::sqrt(_priv->gdop->rk.integrate(sq_p_uDiff2));
+            if (i > 0) {
+                // difference in derivatives from polynomial of adjacent intervals
+                // must not exceed some eps using p1 (+1) error; basically
+                // isclose(.) in numpy bib
+                double p1ErrorDiff = std::abs(p_uDiff[0] - lastDiffs[u][0]) / (1 + std::max({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])}));
+                double p1ErrorDiff2 = std::abs(p_uDiff2[0] - lastDiffs[u][1]) / (1 + std::max({std::abs(p_uDiff2[0]), std::abs(lastDiffs[u][1])}));
+
+                if (p1ErrorDiff > L2CornerTol || p1ErrorDiff2 > L2CornerTol) {
+                    cornerTrigger = true;
+                }
+            }
+            lastDiffs[u] = {p_uDiff[sz(_priv->gdop->rk.c)], p_uDiff2[sz(_priv->gdop->rk.c)]};
+
+            // detection which intervals should be bisected
+            if (L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u] || cornerTrigger) {
+
+                // on interval / L2 criterium -> forces adjacent intervals to be split aswell
+                if (L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u]) {
+                    if (i >= 1 and (oldNeighbors.find(i - 1) == oldNeighbors.end())) {
+                        markerSet.insert(i - 1);
+                        L2InsertedNeighbors.emplace(i - 2 + markerSet.size());
+                        L2InsertedNeighbors.emplace(i - 1 + markerSet.size());
+                    }
+
+                    markerSet.insert(i);
+
+                    if (i <= _priv->gdop->mesh.intervals - 2 and (oldNeighbors.find(i + 1) == oldNeighbors.end())) {
+                        markerSet.insert(i + 1);
+                        L2InsertedNeighbors.emplace(i + markerSet.size());
+                        L2InsertedNeighbors.emplace(i + 1 + markerSet.size());
+                    }
+                }
+
+                // corner criterium (only exists for i > 0) -> forces left adjacent interval split
+                if (cornerTrigger) {
+                    markerSet.insert(i);
                     markerSet.insert(i - 1);
                 }
 
