@@ -21,7 +21,7 @@ model.optimize(
     steps=20,
     rksteps=3,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57},
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 10, "meshLevel": -0.5, "meshCTol": 0.5},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 10},
 )
 
 model.parametricPlot(x1, x2, dots=Dots.ALL)
@@ -30,4 +30,4 @@ model.setValue(rp, 0.1)
 
 model.optimize(resimulate=True)
 model.plot(dots=Dots.ALL)
-model.plotMeshRefinement()
+model.plotInputsAndRefinement()

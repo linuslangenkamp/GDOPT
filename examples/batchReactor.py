@@ -54,7 +54,7 @@ model.optimize(
     meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 6},
 )
 
-model.plotInputs(dots=Dots.BASE)
+model.plotInputs(dots=Dots.ALL)
 model.plotSparseMatrix(MatrixType.JACOBIAN)
 model.printResults()
 model.plotMeshRefinement()

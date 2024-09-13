@@ -151,8 +151,9 @@ model.optimize(
         "initVars": InitVars.SOLVE,
         "tolerance": 1e-14,
     },
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 8},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 4},
 )
 
-model.plotInputs(dots=Dots.BASE)
+model.plot(dots=Dots.BASE)
 model.plotMeshRefinement()
+model.plotInputsAndRefinement(dotsGraph=Dots.BASE)

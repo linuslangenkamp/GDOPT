@@ -26,11 +26,11 @@ model.generate()
 
 model.optimize(
     tf=8,
-    steps=50,
+    steps=200,
     rksteps=3,
     flags={"outputPath": "/tmp", "tolerance": 1e-14, "linearSolver": LinearSolver.MA57, "exportJacobianPath": "/tmp"},
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 3},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 5},
 )
 
 model.plot()
-model.plotMeshRefinement()
+model.plotInputsAndRefinement(dotsGraph=Dots.BASE)

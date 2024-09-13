@@ -23,4 +23,4 @@ model.optimize(
 )
 
 model.plotInputs(interval=[9980, 10000], dots=Dots.ALL)
-model.plotMeshRefinement(interval=[9980, 10000])
+model.plotInputsAndRefinement(interval=[9900, 10000], dotsMesh=Dots.ALL)

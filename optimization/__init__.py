@@ -720,151 +720,6 @@ int main() {{
 
         return 0
 
-    def checkMeshIteration(self, meshIteration):
-        maxMeshIteration = self.modelInfo["maxMeshIteration"]
-        if meshIteration is None:
-            return maxMeshIteration
-        if type(meshIteration) == int:
-            if meshIteration > maxMeshIteration:
-                print(f"meshIteration too large. Setting meshIteration to maximum value of {maxMeshIteration}.")
-                meshIteration = maxMeshIteration
-        return meshIteration
-
-    def plotStates(self, meshIteration=None, interval=None, dots=Dots.OFF):
-        self.initVarNames()
-        self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.xVarNames)
-
-    def plotInputs(self, meshIteration=None, interval=None, dots=Dots.OFF):
-        self.initVarNames()
-        self.plot(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.uVarNames)
-
-    def plot(self, meshIteration=None, interval=None, specifCols=None, dots=Dots.OFF):
-        meshIteration = self.checkMeshIteration(meshIteration)
-        if interval is None:
-            interval = [0, self.tf]
-        self.getResults(meshIteration=meshIteration)
-        plt.rcParams.update(
-            {
-                "font.serif": ["Times New Roman"],
-                "axes.labelsize": 14,
-                "axes.titlesize": 16,
-                "xtick.labelsize": 12,
-                "ytick.labelsize": 12,
-                "legend.fontsize": 12,
-                "legend.frameon": True,
-                "legend.loc": "best",
-                "grid.alpha": 0.3,
-                "grid.linestyle": "--",
-                "grid.linewidth": 0.5,
-                "figure.figsize": (12, 8),
-                "axes.titlepad": 20,
-                "axes.labelpad": 10,
-            }
-        )
-
-        if specifCols is None:
-            columns_to_plot = self.resultHistory[meshIteration].columns[1:]
-        else:
-            columns_to_plot = specifCols
-
-        num_plots = len(columns_to_plot)
-        fig, axs = plt.subplots(num_plots, 1, figsize=(12, 8 * num_plots), sharex=True)
-
-        if num_plots == 1:
-            axs = [axs]
-
-        for idx, column in enumerate(columns_to_plot):
-            ax = axs[idx]
-            ax.plot(
-                self.resultHistory[meshIteration]["time"],
-                self.resultHistory[meshIteration][column],
-                label=column,
-                linewidth=2,
-                linestyle="-",
-                color="steelblue",
-            )
-            if dots == Dots.ALL:
-                ax.scatter(
-                    self.resultHistory[meshIteration]["time"],
-                    self.resultHistory[meshIteration][column],
-                    color="red",
-                    s=30,
-                    edgecolor="black",
-                    alpha=0.8,
-                    zorder=5,
-                )
-            elif dots == Dots.BASE:
-                ax.scatter(
-                    [x for i, x in enumerate(self.resultHistory[meshIteration]["time"]) if i % self.rksteps == 0],
-                    [x for i, x in enumerate(self.resultHistory[meshIteration][column]) if i % self.rksteps == 0],
-                    color="red",
-                    s=30,
-                    edgecolor="black",
-                    alpha=0.8,
-                    zorder=5,
-                )
-            ax.set_xlabel("time")
-            ax.set_ylabel(column)
-            ax.set_xlim(interval[0], interval[1])
-            ax.legend(frameon=True, loc="best")
-            ax.grid(True)
-            ax.title.set_fontsize(16)
-
-        plt.tight_layout()
-        plt.show()
-
-    def parametricPlot(self, varX, varY, meshIteration=None, interval=None, dots=Dots.OFF):
-        meshIteration = self.checkMeshIteration(meshIteration)
-        if interval is None:
-            interval = [0, self.tf]
-        self.getResults(meshIteration=meshIteration)
-        plt.rcParams.update(
-            {
-                "font.serif": ["Times New Roman"],
-                "axes.labelsize": 14,
-                "axes.titlesize": 16,
-                "xtick.labelsize": 12,
-                "ytick.labelsize": 12,
-                "legend.fontsize": 12,
-                "legend.frameon": True,
-                "legend.loc": "best",
-                "grid.alpha": 0.3,
-                "grid.linestyle": "--",
-                "grid.linewidth": 0.5,
-                "figure.figsize": (12, 8),
-                "axes.titlepad": 20,
-                "axes.labelpad": 10,
-            }
-        )
-
-        x_data = self.resultHistory[meshIteration][varInfo[varX].symbol]
-        y_data = self.resultHistory[meshIteration][varInfo[varY].symbol]
-        time_data = self.resultHistory[meshIteration]["time"]
-        timeFiltered = (time_data >= interval[0]) & (time_data <= interval[1])
-        name1, name2 = varInfo[varX].symbol, varInfo[varY].symbol
-
-        plt.plot(x_data[timeFiltered], y_data[timeFiltered])
-
-        if dots == Dots.ALL:
-            plt.scatter(x_data[timeFiltered], y_data[timeFiltered], color="red", s=30, edgecolor="black", alpha=0.8, zorder=5)
-        elif dots == Dots.BASE:
-            plt.scatter(
-                [x for i, x in enumerate(x_data[timeFiltered]) if i % self.rksteps == 0],
-                [x for i, x in enumerate(y_data[timeFiltered]) if i % self.rksteps == 0],
-                color="red",
-                s=30,
-                edgecolor="black",
-                alpha=0.8,
-                zorder=5,
-            )
-
-        plt.title(f"{name1} vs {name2}")
-        plt.xlabel(name1)
-        plt.ylabel(name2)
-
-        plt.tight_layout()
-        plt.show()
-
     def initVarNames(self):
         self.xVarNames = [info.symbol for variable, info in varInfo.items() if isinstance(info, StateStruct)]
         self.uVarNames = [info.symbol for variable, info in varInfo.items() if isinstance(info, InputStruct)]
@@ -909,55 +764,236 @@ int main() {{
         print(self.resultHistory[meshIteration][self.pVarNames].iloc[0].to_string())
         print("")
 
+    def checkMeshIteration(self, meshIteration):
+        maxMeshIteration = self.modelInfo["maxMeshIteration"]
+        if meshIteration is None:
+            return maxMeshIteration
+        if type(meshIteration) == int:
+            if meshIteration > maxMeshIteration:
+                print(f"meshIteration too large. Setting meshIteration to maximum value of {maxMeshIteration}.")
+                meshIteration = maxMeshIteration
+        return meshIteration
+
+    def setPlotDefaults(self):
+        plt.rcParams.update(
+            {
+                "font.serif": ["Times New Roman"],
+                "axes.labelsize": 14,
+                "axes.titlesize": 16,
+                "xtick.labelsize": 12,
+                "ytick.labelsize": 12,
+                "legend.fontsize": 12,
+                "legend.frameon": True,
+                "legend.loc": "best",
+                "grid.alpha": 0.3,
+                "grid.linestyle": "--",
+                "grid.linewidth": 0.5,
+                "figure.figsize": (12, 8),
+                "axes.titlepad": 20,
+                "axes.labelpad": 10,
+            }
+        )
+
+    def plotStates(self, meshIteration=None, interval=None, dots=Dots.OFF):
+        self.initVarNames()
+        self.plotGeneral(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.xVarNames)
+
+    def plot(self, specifCols=None, meshIteration=None, interval=None, dots=Dots.OFF):
+        self.initVarNames()
+        self.plotGeneral(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=specifCols)
+
+    def plotInputs(self, meshIteration=None, interval=None, dots=Dots.OFF):
+        self.initVarNames()
+        self.plotGeneral(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.uVarNames)
+
+    def parametricPlot(self, varX, varY, meshIteration=None, interval=None, dots=Dots.OFF):
+        self.initVarNames()
+        if interval is None:
+            interval = [0, self.tf]
+        self.plotParametric(varX=varX, varY=varY, meshIteration=meshIteration, interval=interval, dots=dots)
+
+    def plotInputsAndRefinement(self, meshIteration=None, interval=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.OFF, epsilon=1e-14):
+        self.initVarNames()
+        self.plotColsAndRefinement(meshIteration=meshIteration, interval=interval, specifCols=self.uVarNames, markerSize=markerSize, dotsMesh=dotsMesh, dotsGraph=dotsGraph, epsilon=epsilon)
+
+    def plotColsAndRefinement(self, meshIteration=None, interval=None, specifCols=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.OFF, epsilon=1e-14):
+        if interval is None:
+            interval = [0, self.tf]
+
+        figMesh, axMesh = self._plotMeshRefinement(interval=interval, markerSize=markerSize, dots=dotsMesh, epsilon=epsilon)
+        figGraph, axsGraph = self._plotGeneral(meshIteration=meshIteration, interval=interval, specifCols=specifCols, dots=dotsGraph)
+
+        plt.close(figGraph)
+        plt.close(figMesh)
+
+        fig, axs = plt.subplots(len(axsGraph) + 1, 1, figsize=(12, 10))
+
+        for i in range(len(axsGraph)):
+            axs[i].set_xticks([])
+            axs[i].plot(axsGraph[i].lines[0].get_xdata(), axsGraph[i].lines[0].get_ydata())
+            axs[i].set_ylabel(axsGraph[i].get_ylabel())
+            axs[i].set_xlim(interval)
+            if axsGraph[i].collections:
+                for coll in axsGraph[i].collections:
+                    offsets = coll.get_offsets()
+                    axs[i].scatter(offsets[:, 0], offsets[:, 1], color="red", s=30, edgecolor="black", alpha=0.8, zorder=5)
+
+        if axMesh.collections:
+            for coll in axMesh.collections:
+                offsets = coll.get_offsets()
+                axs[len(axs) - 1].scatter(offsets[:, 0], offsets[:, 1], color="red", s=markerSize, edgecolor="black", alpha=0.8)
+            axs[len(axs) - 1].set_ylabel(axMesh.get_ylabel())
+            axs[len(axs) - 1].set_xlim(interval)
+
+        plt.tight_layout()
+        plt.subplots_adjust(left=0.075, right=0.95, top=0.925, bottom=0.075, hspace=0.1)
+        plt.show()
+
     def plotMeshRefinement(self, interval=None, markerSize=30, dots=Dots.BASE, epsilon=1e-14):
+        fig, ax = self._plotMeshRefinement(interval=interval, markerSize=markerSize, dots=dots, epsilon=epsilon)
+        ax.set_xlabel("Time")
+        ax.set_title("Inserted Mesh Points Over Time")
+        plt.tight_layout()
+        plt.subplots_adjust(left=0.075, right=0.95, top=0.925, bottom=0.075, hspace=0.1)
+        plt.show()
+
+    def plotGeneral(self, meshIteration=None, interval=None, specifCols=None, dots=Dots.OFF):
+        fig, axs = self._plotGeneral(meshIteration=meshIteration, interval=interval, specifCols=specifCols, dots=dots)
+        axs[-1].set_xlabel("Time")
+        axs[0].set_title(f"Optimal Solution: {self.name}")
+        plt.tight_layout()
+        plt.subplots_adjust(left=0.075, right=0.95, top=0.925, bottom=0.075, hspace=0.1)
+        plt.show()
+
+    def _plotGeneral(self, meshIteration=None, interval=None, specifCols=None, dots=Dots.OFF):
+        self.setPlotDefaults()
+
+        meshIteration = self.checkMeshIteration(meshIteration)
+        if interval is None:
+            interval = [0, self.tf]
+        self.getResults(meshIteration=meshIteration)
+
+        columns_to_plot = specifCols or self.resultHistory[meshIteration].columns[1:]
+
+        fig, axs = plt.subplots(len(columns_to_plot), 1, figsize=(12, 8 * len(columns_to_plot)), sharex=True)
+
+        if len(columns_to_plot) == 1:
+            axs = [axs]
+
+        for idx, column in enumerate(columns_to_plot):
+            ax = axs[idx]
+            ax.plot(
+                self.resultHistory[meshIteration]["time"],
+                self.resultHistory[meshIteration][column],
+                label=column,
+                linewidth=2,
+                linestyle="-",
+                color="steelblue",
+            )
+            self._applyDots(ax, dots, meshIteration, column)
+            ax.set_ylabel(column)
+            ax.set_xlim(interval)
+            ax.legend(frameon=True, loc="best")
+
+        return fig, axs
+
+    def plotParametric(self, varX, varY, meshIteration=None, interval=None, dots=Dots.OFF):
+        self.setPlotDefaults()
+
+        meshIteration = self.checkMeshIteration(meshIteration)
+        if interval is None:
+            interval = [0, self.tf]
+
+        self.getResults(meshIteration=meshIteration)
+
+        x_data = self.resultHistory[meshIteration][varInfo[varX].symbol]
+        y_data = self.resultHistory[meshIteration][varInfo[varY].symbol]
+        time_data = self.resultHistory[meshIteration]["time"]
+        time_filtered = (time_data >= interval[0]) & (time_data <= interval[1])
+
+        plt.plot(x_data[time_filtered], y_data[time_filtered])
+
+        if dots != Dots.OFF:
+            self._applyDotsParametric(x_data[time_filtered], y_data[time_filtered], dots)
+
+        plt.title(f"{varInfo[varX].symbol} vs {varInfo[varY].symbol}")
+        plt.xlabel(varInfo[varX].symbol)
+        plt.ylabel(varInfo[varY].symbol)
+        plt.tight_layout()
+        plt.show()
+
+    # Helper function to apply dots in regular plots
+    def _applyDots(self, ax, dots, meshIteration, column):
+        if dots == Dots.ALL:
+            ax.scatter(
+                self.resultHistory[meshIteration]["time"],
+                self.resultHistory[meshIteration][column],
+                color="red",
+                s=30,
+                edgecolor="black",
+                alpha=0.8,
+                zorder=5,
+            )
+        elif dots == Dots.BASE:
+            ax.scatter(
+                [x for i, x in enumerate(self.resultHistory[meshIteration]["time"]) if i % self.rksteps == 0],
+                [x for i, x in enumerate(self.resultHistory[meshIteration][column]) if i % self.rksteps == 0],
+                color="red",
+                s=30,
+                edgecolor="black",
+                alpha=0.8,
+                zorder=5,
+            )
+
+    # Helper function to apply dots in parametric plots
+    def _applyDotsParametric(self, x_data, y_data, dots):
+        if dots == Dots.ALL:
+            plt.scatter(x_data, y_data, color="red", s=30, edgecolor="black", alpha=0.8, zorder=5)
+        elif dots == Dots.BASE:
+            plt.scatter(
+                [x for i, x in enumerate(x_data) if i % self.rksteps == 0],
+                [y for i, y in enumerate(y_data) if i % self.rksteps == 0],
+                color="red",
+                s=30,
+                edgecolor="black",
+                alpha=0.8,
+                zorder=5,
+            )
+
+    # Private mesh refinement plot function
+    def _plotMeshRefinement(self, ax=None, interval=None, markerSize=30, dots=Dots.BASE, epsilon=1e-14):
+        self.setPlotDefaults()
         from matplotlib.ticker import MaxNLocator
 
         if interval is None:
             interval = [0, self.tf]
 
-        meshIteration = range(0, self.modelInfo["maxMeshIteration"] + 1)
+        prev_points = np.array([])
 
-        if dots == Dots.OFF:
-            print("Dots.OFF invalid argument: Choose Dots.ALL or Dots.BASE.\n")
-            return
+        fig, ax = plt.subplots(figsize=(12, 8)) if ax is None else (None, ax)
 
-        if dots == Dots.ALL:
-            modulo = 1
-        elif dots == Dots.BASE:
-            modulo = self.rksteps
-
-        prev_points = np.array([])  # To hold points from previous iteration
-
-        for m in meshIteration:  # Reverse list -> view at which iteration points were inserted
+        for m in range(self.modelInfo["maxMeshIteration"] + 1):
             self.getResults(m)
-            arr = self.resultHistory[m]["time"].to_numpy()[::modulo]
+            arr = self.resultHistory[m]["time"].to_numpy()[:: self._getModulo(dots)]
 
             if m == 0:
-                plt.scatter(arr, np.ones_like(arr) * m, color="red", s=markerSize, edgecolor="black", alpha=0.8, zorder=5)
+                ax.scatter(arr, np.ones_like(arr) * m, color="red", s=markerSize, edgecolor="black", alpha=0.8, zorder=5)
             else:
-                new_points = []
-                for point in arr:
-                    if prev_points.size == 0 or not np.any(np.abs(prev_points - point) < epsilon):
-                        new_points.append(point)
-                new_points = np.array(new_points)
-
-                plt.scatter(
-                    new_points,
-                    np.ones_like(new_points) * m,
-                    color="red",
-                    s=markerSize,
-                    edgecolor="black",
-                    alpha=0.8,
-                    zorder=5,
-                )
+                new_points = np.array([pt for pt in arr if prev_points.size == 0 or not np.any(np.abs(prev_points - pt) < epsilon)])
+                ax.scatter(new_points, np.ones_like(new_points) * m, color="red", s=markerSize, edgecolor="black", alpha=0.8, zorder=5)
 
             prev_points = arr
-        plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
-        plt.xlim(interval)
-        plt.xlabel("Time")
-        plt.ylabel("Mesh Refinement Iteration")
-        plt.title("Inserted Mesh Points Over Time")
-        plt.show()
+
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.set_xlim(interval)
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Iteration")
+        ax.set_title("Inserted Mesh Points Over Time")
+        return fig, ax
+
+    # Helper function to get modulo value based on dots argument
+    def _getModulo(self, dots):
+        return 1 if dots == Dots.ALL else self.rksteps
 
     def plotSparseMatrix(self, matrixType):
         from matplotlib.patches import Rectangle

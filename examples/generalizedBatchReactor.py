@@ -63,5 +63,5 @@ model.optimize(
 )
 
 model.plot(specifCols=["obj", "u", "energy"], dots=Dots.ALL)
-model.plotMeshRefinement()
+model.plotInputsAndRefinement(dotsGraph=Dots.BASE)
 # model.plotSparseMatrix(MatrixType.JACOBIAN)
