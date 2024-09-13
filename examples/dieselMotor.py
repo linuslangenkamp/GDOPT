@@ -154,4 +154,5 @@ model.optimize(
     meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 8},
 )
 
-model.plot(dots=Dots.BASE)
+model.plotInputs(dots=Dots.BASE)
+model.plotMeshRefinement()

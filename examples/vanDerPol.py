@@ -30,3 +30,4 @@ model.setValue(rp, 0.1)
 
 model.optimize(resimulate=True)
 model.plot(dots=Dots.ALL)
+model.plotMeshRefinement()

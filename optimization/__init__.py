@@ -909,65 +909,54 @@ int main() {{
         print(self.resultHistory[meshIteration][self.pVarNames].iloc[0].to_string())
         print("")
 
-    def plotPointCumulativeCount(self, meshIteration=None, interval=None):
+    def plotMeshRefinement(self, interval=None, markerSize=30, dots=Dots.BASE, epsilon=1e-14):
+        from matplotlib.ticker import MaxNLocator
 
         if interval is None:
             interval = [0, self.tf]
 
-        meshIteration = self.checkMeshIteration(meshIteration)
+        meshIteration = range(0, self.modelInfo["maxMeshIteration"] + 1)
 
-        if meshIteration == "all":  # all iterations
-            meshIteration = range(0, self.modelInfo["maxMeshIteration"] + 1)
-        elif isinstance(meshIteration, int):  # specific iteration
-            meshIteration = [meshIteration]
+        if dots == Dots.OFF:
+            print("Dots.OFF invalid argument: Choose Dots.ALL or Dots.BASE.\n")
+            return
 
-        for m in meshIteration[::-1]:  # reverse the list -> view at which iteration some detections stopped
+        if dots == Dots.ALL:
+            modulo = 1
+        elif dots == Dots.BASE:
+            modulo = self.rksteps
+
+        prev_points = np.array([])  # To hold points from previous iteration
+
+        for m in meshIteration:  # Reverse list -> view at which iteration points were inserted
             self.getResults(m)
-            arr = self.resultHistory[m]["time"].to_numpy()
+            arr = self.resultHistory[m]["time"].to_numpy()[::modulo]
 
-            cumulative_count = np.arange(1, len(arr) + 1)
+            if m == 0:
+                plt.scatter(arr, np.ones_like(arr) * m, color="red", s=markerSize, edgecolor="black", alpha=0.8, zorder=5)
+            else:
+                new_points = []
+                for point in arr:
+                    if prev_points.size == 0 or not np.any(np.abs(prev_points - point) < epsilon):
+                        new_points.append(point)
+                new_points = np.array(new_points)
 
-            plt.plot(arr, cumulative_count, label=f"Mesh Iteration {m}")
-            plt.xlim(interval)
+                plt.scatter(
+                    new_points,
+                    np.ones_like(new_points) * m,
+                    color="red",
+                    s=markerSize,
+                    edgecolor="black",
+                    alpha=0.8,
+                    zorder=5,
+                )
 
+            prev_points = arr
+        plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(interval)
         plt.xlabel("Time")
-        plt.ylabel("Cumulative Count")
-        plt.title("Cumulative Count of Mesh Points Over Time")
-        plt.legend()
-
-        plt.show()
-
-    def plotPointDifferenceCount(self, meshIteration=None, interval=None):
-
-        if interval is None:
-            interval = [0, self.tf]
-
-        meshIteration = self.checkMeshIteration(meshIteration)
-
-        if meshIteration == "all":  # all iterations
-            meshIteration = range(0, self.modelInfo["maxMeshIteration"] + 1)
-
-        self.getResults(0)
-        time0 = self.resultHistory[0]["time"].to_numpy()
-        count0 = np.arange(1, len(time0) + 1)
-
-        for m in meshIteration[::-1]:  # reverse the list -> view at which iteration some detections stopped
-            self.getResults(m)
-            arr = self.resultHistory[m]["time"].to_numpy()
-
-            cumulative_count = np.arange(1, len(arr) + 1)
-
-            # subtract the interpolated mesh count from interval 0
-            differenceInterpolated = cumulative_count - np.interp(arr, time0, count0)
-
-            plt.plot(arr, differenceInterpolated, label=f"Mesh Iteration {m}")
-            plt.xlim(interval)
-
-        plt.xlabel("Time")
-        plt.ylabel("Cumulative Count of Iteration m - Iteration 0")
-        plt.title("Cumulative Count of Mesh Points Over Time - Count of the initial Mesh")
-        plt.legend()
-
+        plt.ylabel("Mesh Refinement Iteration")
+        plt.title("Inserted Mesh Points Over Time")
         plt.show()
 
     def plotSparseMatrix(self, matrixType):

@@ -33,3 +33,4 @@ model.optimize(
 )
 
 model.plot()
+model.plotMeshRefinement()

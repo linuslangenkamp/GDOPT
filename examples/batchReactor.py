@@ -48,13 +48,13 @@ model.generate()
 
 model.optimize(
     tf=1,
-    steps=100,
+    steps=25,
     rksteps=3,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE, "exportJacobianPath": "/tmp"},
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 2},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 6},
 )
 
 model.plotInputs(dots=Dots.BASE)
 model.plotSparseMatrix(MatrixType.JACOBIAN)
 model.printResults()
-model.plotPointDifferenceCount(meshIteration="all")
+model.plotMeshRefinement()

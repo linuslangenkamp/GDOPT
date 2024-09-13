@@ -27,4 +27,4 @@ model.outputFilePath = "/tmp"
 model.optimize(tf=0.5, steps=15, rksteps=3)
 
 model.plot(dots=Dots.BASE)
-model.plotPointCumulativeCount(meshIteration="all")
+model.plotMeshRefinement()

@@ -37,3 +37,4 @@ model.optimize(
 )
 
 model.plot(interval=[9980, 10000], dots=Dots.ALL)
+model.plotMeshRefinement(interval=[9980, 10000])

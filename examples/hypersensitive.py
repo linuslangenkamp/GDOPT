@@ -23,4 +23,4 @@ model.optimize(
 )
 
 model.plotInputs(interval=[9980, 10000], dots=Dots.ALL)
-model.plotPointDifferenceCount(interval=[9980, 10000], meshIteration="all")
+model.plotMeshRefinement(interval=[9980, 10000])
