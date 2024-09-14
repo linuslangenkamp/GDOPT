@@ -59,9 +59,9 @@ public:
     std::vector<double> objectiveHistory;
     int initialIntervals = -1;
     std::chrono::_V2::system_clock::time_point solveStartTime;
-    std::chrono::duration<double> solveTotalTimeTaken;   // total time in solver
-    std::chrono::duration<double> solveActualTimeTaken;  // total time in solver - IO
-    std::chrono::duration<double> timedeltaIO{0};        // time in IO operations
+    std::chrono::duration<double> solveTotalTimeTaken{};   // total time in solver
+    std::chrono::duration<double> solveActualTimeTaken{};  // total time in solver - IO
+    std::chrono::duration<double> timedeltaIO{0};          // time in IO operations
     std::string exportOptimumPath;
     bool exportOptimum = false;
     std::string exportHessianPath;
@@ -73,7 +73,7 @@ public:
     void printObjectiveHistory();
     void printMeshStats() const;
     void createModelInfo() const;
-    void setRefinementMethod(const RefinementMethod method);
+    void setRefinementMethod(RefinementMethod method);
     void setExportOptimumPath(const std::string& exportPath);
     void setExportJacobianPath(const std::string& exportPath);
     void setExportHessianPath(const std::string& exportPath);

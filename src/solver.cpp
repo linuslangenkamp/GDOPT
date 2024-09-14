@@ -456,7 +456,7 @@ void Solver::setExportJacobianPath(const std::string& exportPath) {
     exportJacobian = true;
 }
 
-void Solver::setRefinementMethod(const RefinementMethod method) {
+void Solver::setRefinementMethod(RefinementMethod method) {
     refinementMethod = method;
 }
 

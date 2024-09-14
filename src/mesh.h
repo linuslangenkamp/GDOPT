@@ -16,7 +16,7 @@ public:
     std::vector<double> deltaT;
 
     static Mesh createEquidistantMesh(int intervals, double tf);
-    void update(std::vector<int>&);
+    void update(std::vector<int>& markedIntervals);
 };
 
 #endif  // IPOPT_DO_MESH_H

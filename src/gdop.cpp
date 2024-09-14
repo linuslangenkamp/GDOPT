@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cassert>
 #include <exception>
-#include <utility>
 
 #include "gdop_impl.h"
 #include "util.h"
@@ -114,14 +113,14 @@ void GDOP::init_h(Index& nnz_h_lag) {
 
 void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseA, std::vector<std::vector<int>>& denseAt, std::vector<std::vector<int>>& denseB,
                                std::vector<std::vector<int>>& denseBt, std::vector<std::vector<int>>& denseC, Index& nnz_h_lag) {
-    /*
+    /**
      it  :  equation index in COO format
      A   :  shift block 0,0 -> i,j: shift by lengthA * (i * rk.steps + j)
      At  :  is exact -> it = correct eq index
      B   :  is not exact, it = starting index for p-th parameter:  rowLengthBlockB[p] * (i * rk.steps + j)
      Bt  :  is exact -> it = correct eq index
      C   :  is exact -> it = correct eq index
-    */
+    **/
     int it = 0;  // eq index
     for (int i = 0; i < offXU; i++) {
         for (int j = 0; j <= i; j++) {
@@ -332,7 +331,6 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Numb
 
             case InitVars::SOLVE:
                 // currently reading in a solution from the frontend (solved by scipy with Radau5 or BDF)
-
                 initialStates = readInitialValues(problem->initialStatesPath);
 
                 for (int i = 0; i < mesh.intervals; i++) {

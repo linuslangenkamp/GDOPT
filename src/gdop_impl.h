@@ -24,7 +24,6 @@ public:
     double objective{};           // optimal solution - objective
     std::vector<double> x_cb;     // optimal solution (interpolated after refinement)
 
-    bool exportSolution = false;
     std::string exportPath;
     std::string exportHessianPath;
     bool exportHessian = false;
@@ -44,13 +43,13 @@ public:
 
     /**
     Hessian struct:
-    vars    ...     xu    ...    p
-      .      A    0   0   0   0   0
-      .      0    A   0   0   0   0
-      xu     .    .   .   .   .   .
-      .      0    0   0   A   0   0
-      .      0    0   0   0  At   0
-      p      B    ...     B  Bt   C
+    vars   ...     xu    ...    p
+      .    A    0   0   0   0   0
+      .    0    A   0   0   0   0
+     xu    .    .   .   .   .   .
+      .    0    0   0   A   0   0
+      .    0    0   0   0  At   0
+      p    B    ...     B  Bt   C
     **/
 
     int lengthA = 0;                        // length of one A block
