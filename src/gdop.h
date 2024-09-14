@@ -1,7 +1,3 @@
-//
-// Created by linus on 14.08.24.
-//
-
 #ifndef GDOP_H
 #define GDOP_H
 

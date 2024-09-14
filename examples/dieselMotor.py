@@ -155,7 +155,7 @@ model.optimize(
         "outputPath": "/tmp",
         "linearSolver": LinearSolver.MUMPS,
         "ivpSolver": IVPSolver.RADAU,
-        "refinementMethod": RefinementMethod.POLYNOMIAL,
+        "refinementMethod": RefinementMethod.LINEAR_SPLINE,
         "initVars": InitVars.SOLVE,
         "tolerance": 1e-14,
     },

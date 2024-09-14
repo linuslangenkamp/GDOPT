@@ -189,13 +189,11 @@ std::vector<int> Solver::l2BoundaryNorm() const {
                 }
             }
 
-            // values of the (1st, 2nd) diff of the interpolating polynomial at 0, c1,
-            // c2, ...
+            // values of the (1st, 2nd) diff of the interpolating polynomial at 0, c1, c2, ...
             std::vector<double> p_uDiff = _priv->gdop->rk.evalLagrangeDiff(uCoeffs);
             std::vector<double> p_uDiff2 = _priv->gdop->rk.evalLagrangeDiff2(uCoeffs);
 
-            // squared values of the (1st, 2nd) diff of the interpolating polynomial
-            // at c1, c2, ...
+            // squared values of the (1st, 2nd) diff of the interpolating polynomial at c1, c2, ...
             std::vector<double> sq_p_uDiff;
             std::vector<double> sq_p_uDiff2;
             for (int k = 1; k < sz(p_uDiff); k++) {
@@ -203,8 +201,7 @@ std::vector<int> Solver::l2BoundaryNorm() const {
                 sq_p_uDiff2.push_back(p_uDiff2[k] * p_uDiff2[k]);
             }
 
-            // (int_0^1 (d^{1,2}/dt^{1,2} p_u(t))^2 dt)^0.5 - L2 norm of the (1st,
-            // 2nd) diff
+            // (int_0^1 (d^{1,2}/dt^{1,2} p_u(t))^2 dt)^0.5 - L2 norm of the (1st, 2nd) diff
             double L2Diff1 = std::sqrt(_priv->gdop->rk.integrate(sq_p_uDiff));
             double L2Diff2 = std::sqrt(_priv->gdop->rk.integrate(sq_p_uDiff2));
             if (i > 0) {
@@ -225,8 +222,8 @@ std::vector<int> Solver::l2BoundaryNorm() const {
                 // splitting the interval itself
                 markerSet.insert(i);
 
-                // on interval / L2 criterium -> forces adjacent intervals to be split
-                // aswell
+                // on interval / L2 criterion -> forces adjacent intervals to be split
+                // as well
                 if (L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u]) {
                     if (i >= 1) {
                         markerSet.insert(i - 1);
@@ -236,7 +233,7 @@ std::vector<int> Solver::l2BoundaryNorm() const {
                     }
                 }
 
-                // corner criterium (only exists for i > 0) -> forces left adjacent
+                // corner criterion (only exists for i > 0) -> forces left adjacent
                 // interval split
                 if (cornerTrigger) {
                     markerSet.insert(i - 1);
@@ -346,8 +343,7 @@ void Solver::refineLinear(std::vector<int>& markedIntervals) {
                         }
                     }
                     else {
-                        // 0-th control -> interpolate with order one less (only
-                        // not rk.steps points, not rk.steps + 1)
+                        // 0-th control -> interpolate to get the value at t=0, linear splines
                         for (int j = 0; j < _priv->gdop->rk.steps; j++) {
                             localVars.push_back(_priv->gdop->optimum[v + j * _priv->gdop->offXU]);
                         }
@@ -571,12 +567,21 @@ void Solver::setSolverFlags(IpoptApplication& app) {
 }
 
 void Solver::setStandardSolverFlags(IpoptApplication& app) {
-    // these are flags that are always set, no matter if a mesh refinement is currently executed
+    // these are flags are always set, no matter if a mesh refinement is currently executed
     app.Options()->SetStringValue("mu_strategy", "adaptive");
     app.Options()->SetNumericValue("tol", tolerance);
     app.Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
     app.Options()->SetIntegerValue("max_iter", 15000);
 
+    // ipopt dump
+    app.Options()->SetIntegerValue("print_level", 5);
+    app.Options()->SetStringValue("timing_statistics", "yes");
+
+    // linear solver
+    app.Options()->SetStringValue("linear_solver", getLinearSolverName(linearSolver));
+    app.Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
+
+    // scaling
     if (userScaling) {
         app.Options()->SetStringValue("nlp_scaling_method", "user-scaling");
     }
@@ -584,12 +589,7 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
         app.Options()->SetStringValue("nlp_scaling_method", "gradient-based");
     }
 
-    app.Options()->SetIntegerValue("print_level", 5);
-    app.Options()->SetStringValue("timing_statistics", "yes");
-
-    app.Options()->SetStringValue("linear_solver", getLinearSolverName(linearSolver));
-    app.Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
-
+    // constant derivatives reduce the number of function evals
     if (_priv->gdop->problem->quadraticObjLinearConstraints) {
         app.Options()->SetStringValue("hessian_constant", "yes");
     }

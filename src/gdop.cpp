@@ -8,8 +8,6 @@
 #include "gdop_impl.h"
 #include "util.h"
 
-// TODO?: recheck derivatives, indices
-
 bool GDOP::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style) {
     // #vars
     n = numberVars;
@@ -20,7 +18,7 @@ bool GDOP::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, 
     // #nnz in jac
     init_jac(nnz_jac_g);
 
-    // # nnz in hessian + creation of sparsity maps and offsets
+    // #nnz in hessian + creation of sparsity maps and offsets
     init_h(nnz_h_lag);
 
     // index starts at 0
@@ -70,103 +68,103 @@ void GDOP::init_h(Index& nnz_h_lag) {
     nnz_h_lag = 0;
 
     // dense local hessian adjacency structure, will be reduced to hashmap later
-    std::vector<std::vector<int>> denseS0(offXU), denseS0t(offXU), denseS1(offP), denseS1t(offP), denseS2(offP);
+    std::vector<std::vector<int>> denseA(offXU), denseAt(offXU), denseB(offP), denseBt(offP), denseC(offP);
 
     // init local hessian adjacency
     for (int i = 0; i < offXU; i++) {
-        denseS0[i] = std::vector<int>(i + 1, 0);
-        denseS0t[i] = std::vector<int>(i + 1, 0);
+        denseA[i] = std::vector<int>(i + 1, 0);
+        denseAt[i] = std::vector<int>(i + 1, 0);
     }
     for (int i = 0; i < offP; i++) {
-        denseS1[i] = std::vector<int>(offXU, 0);
-        denseS1t[i] = std::vector<int>(offXU, 0);
-        denseS2[i] = std::vector<int>(offP, 0);
+        denseB[i] = std::vector<int>(offXU, 0);
+        denseBt[i] = std::vector<int>(offXU, 0);
+        denseC[i] = std::vector<int>(offP, 0);
     }
 
     // update lagrange, dynamics, path constraint hessian structure
     if (problem->L)
-        updateDenseHessianLFG(*problem->L, denseS0, denseS0t, denseS1, denseS1t, denseS2);
+        updateDenseHessianLFG(*problem->L, denseA, denseAt, denseB, denseBt, denseC);
 
     for (const auto& f : problem->F) {
-        updateDenseHessianLFG(*f, denseS0, denseS0t, denseS1, denseS1t, denseS2);
+        updateDenseHessianLFG(*f, denseA, denseAt, denseB, denseBt, denseC);
     }
 
     for (const auto& g : problem->G) {
-        updateDenseHessianLFG(*g, denseS0, denseS0t, denseS1, denseS1t, denseS2);
+        updateDenseHessianLFG(*g, denseA, denseAt, denseB, denseBt, denseC);
     }
 
     // update mayer, final constraint hessian structure
     if (problem->M)
-        updateDenseHessianMR(*problem->M, denseS0t, denseS1t, denseS2);
+        updateDenseHessianMR(*problem->M, denseAt, denseBt, denseC);
 
     for (const auto& r : problem->R) {
-        updateDenseHessianMR(*r, denseS0t, denseS1t, denseS2);
+        updateDenseHessianMR(*r, denseAt, denseBt, denseC);
     }
 
     // update algebraic parameter constraint hessian structure
     for (const auto& a : problem->A) {
-        updateDenseHessianA(*a, denseS2);
+        updateDenseHessianA(*a, denseC);
     }
 
     // at this point all local hessian structures have been obtained
-    nnz_h_lag = (fullSum(denseS0) + fullSum(denseS1)) * (mesh.intervals * rk.steps - 1) + fullSum(denseS0t) + fullSum(denseS1t) + fullSum(denseS2);
+    nnz_h_lag = (fullSum(denseA) + fullSum(denseB)) * (mesh.intervals * rk.steps - 1) + fullSum(denseAt) + fullSum(denseBt) + fullSum(denseC);
 
-    createSparseHessian(denseS0, denseS0t, denseS1, denseS1t, denseS2, nnz_h_lag);
+    createSparseHessian(denseA, denseAt, denseB, denseBt, denseC, nnz_h_lag);
 }
 
-void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0, std::vector<std::vector<int>>& denseS0t, std::vector<std::vector<int>>& denseS1,
-                               std::vector<std::vector<int>>& denseS1t, std::vector<std::vector<int>>& denseS2, Index& nnz_h_lag) {
-    /**
-     it: equation index in COO format
-     S0: shift block 0,0 -> i,j: shift by lengthS0 * (i * rk.steps + j)
-     S0t: is exact -> it = correct eq index
-     S1: is not exact, it = starting index for p-th parameter:  rowLengthS1Block[p] * (i * rk.steps + j)
-     S1t: is exact -> it = correct eq index
-     S2: is exact -> it = correct eq index
-    **/
+void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseA, std::vector<std::vector<int>>& denseAt, std::vector<std::vector<int>>& denseB,
+                               std::vector<std::vector<int>>& denseBt, std::vector<std::vector<int>>& denseC, Index& nnz_h_lag) {
+    /*
+     it  :  equation index in COO format
+     A   :  shift block 0,0 -> i,j: shift by lengthA * (i * rk.steps + j)
+     At  :  is exact -> it = correct eq index
+     B   :  is not exact, it = starting index for p-th parameter:  rowLengthBlockB[p] * (i * rk.steps + j)
+     Bt  :  is exact -> it = correct eq index
+     C   :  is exact -> it = correct eq index
+    */
     int it = 0;  // eq index
     for (int i = 0; i < offXU; i++) {
         for (int j = 0; j <= i; j++) {
-            if (denseS0[i][j] == 1) {
-                S0.insert({{i, j}, it});  // "it" not exact; shift needed based on
+            if (denseA[i][j] == 1) {
+                hessianA.insert({{i, j}, it});  // "it" not exact; shift needed based on
                 it++;
             }
         }
     }
-    lengthS0 = it;
+    lengthA = it;
     it *= (mesh.intervals * rk.steps - 1);
 
     for (int i = 0; i < offXU; i++) {
         for (int j = 0; j <= i; j++) {
-            if (denseS0t[i][j] == 1) {
-                S0t.insert({{i, j}, it});  // "it" exact; no shift needed later on
+            if (denseAt[i][j] == 1) {
+                hessianAt.insert({{i, j}, it});  // "it" exact; no shift needed later on
                 it++;
             }
         }
     }
 
     for (int i = 0; i < offP; i++) {
-        int nnzS1row = 0;
+        int nnzRowB = 0;
         for (int j = 0; j < offXU; j++) {
-            if (denseS1[i][j] == 1) {
-                S1.insert({{i, j}, it});  // "it" not exact; shift needed based on row
+            if (denseB[i][j] == 1) {
+                hessianB.insert({{i, j}, it});  // "it" not exact; shift needed based on row
+                nnzRowB++;
                 it++;
-                nnzS1row++;
             }
         }
-        rowLengthS1Block.push_back(nnzS1row);
-        it += nnzS1row * (mesh.intervals * rk.steps - 2);  // nnzS1row * (mesh.intervals * rk.steps - 1) - nnzS1row
+        rowLengthBlockB.push_back(nnzRowB);
+        it += nnzRowB * (mesh.intervals * rk.steps - 2);  // nnzRowB * (mesh.intervals * rk.steps - 1) - nnzRowB
 
         for (int j = 0; j < offXU; j++) {
-            if (denseS1t[i][j] == 1) {
-                S1t.insert({{i, j}, it});  // "it" exact; no shift needed later on
+            if (denseBt[i][j] == 1) {
+                hessianBt.insert({{i, j}, it});  // "it" exact; no shift needed later on
                 it++;
             }
         }
 
         for (int j = 0; j < offP; j++) {
-            if (denseS2[i][j] == 1) {
-                S2.insert({{i, j}, it});  // "it" exact; no shift needed later on
+            if (denseC[i][j] == 1) {
+                hessianC.insert({{i, j}, it});  // "it" exact; no shift needed later on
                 it++;
             }
         }
@@ -174,62 +172,61 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseS0, std::vect
     assert(it == nnz_h_lag);
 }
 
-void GDOP::updateDenseHessianLFG(const Expression& expr, std::vector<std::vector<int>>& denseS0, std::vector<std::vector<int>>& denseS0t,
-                                 std::vector<std::vector<int>>& denseS1, std::vector<std::vector<int>>& denseS1t,
-                                 std::vector<std::vector<int>>& denseS2) const {
-    // update of Hessian Blocks for Lagrange-term, dynamic and path constraints
+void GDOP::updateDenseHessianLFG(const Expression& expr, std::vector<std::vector<int>>& denseA, std::vector<std::vector<int>>& denseAt,
+                                 std::vector<std::vector<int>>& denseB, std::vector<std::vector<int>>& denseBt, std::vector<std::vector<int>>& denseC) const {
+    // update of hessian blocks for lagrange-term, dynamic and path constraints
     for (auto const [x1, x2] : expr.adjDiff.indXX) {
-        denseS0[x1][x2] = 1;
-        denseS0t[x1][x2] = 1;
+        denseA[x1][x2] = 1;
+        denseAt[x1][x2] = 1;
     }
     for (auto const [u, x] : expr.adjDiff.indUX) {
-        denseS0[offX + u][x] = 1;
-        denseS0t[offX + u][x] = 1;
+        denseA[offX + u][x] = 1;
+        denseAt[offX + u][x] = 1;
     }
     for (auto const [u1, u2] : expr.adjDiff.indUU) {
-        denseS0[offX + u1][offX + u2] = 1;
-        denseS0t[offX + u1][offX + u2] = 1;
+        denseA[offX + u1][offX + u2] = 1;
+        denseAt[offX + u1][offX + u2] = 1;
     }
     for (auto const [p, x] : expr.adjDiff.indPX) {
-        denseS1[p][x] = 1;
-        denseS1t[p][x] = 1;
+        denseB[p][x] = 1;
+        denseBt[p][x] = 1;
     }
     for (auto const [p, u] : expr.adjDiff.indPU) {
-        denseS1[p][offX + u] = 1;
-        denseS1t[p][offX + u] = 1;
+        denseB[p][offX + u] = 1;
+        denseBt[p][offX + u] = 1;
     }
     for (auto const [p1, p2] : expr.adjDiff.indPP) {
-        denseS2[p1][p2] = 1;
+        denseC[p1][p2] = 1;
     }
 }
 
-void GDOP::updateDenseHessianMR(const Expression& expr, std::vector<std::vector<int>>& denseS0t, std::vector<std::vector<int>>& denseS1t,
-                                std::vector<std::vector<int>>& denseS2) const {
-    // update of Hessian Blocks for Mayer-term and final constraints
+void GDOP::updateDenseHessianMR(const Expression& expr, std::vector<std::vector<int>>& denseAt, std::vector<std::vector<int>>& denseBt,
+                                std::vector<std::vector<int>>& denseC) const {
+    // update of hessian blocks for Mayer-term and final constraints
     for (auto const [x1, x2] : expr.adjDiff.indXX) {
-        denseS0t[x1][x2] = 1;
+        denseAt[x1][x2] = 1;
     }
     for (auto const [u, x] : expr.adjDiff.indUX) {
-        denseS0t[offX + u][x] = 1;
+        denseAt[offX + u][x] = 1;
     }
     for (auto const [u1, u2] : expr.adjDiff.indUU) {
-        denseS0t[offX + u1][offX + u2] = 1;
+        denseAt[offX + u1][offX + u2] = 1;
     }
     for (auto const [p, x] : expr.adjDiff.indPX) {
-        denseS1t[p][x] = 1;
+        denseBt[p][x] = 1;
     }
     for (auto const [p, u] : expr.adjDiff.indPU) {
-        denseS1t[p][offX + u] = 1;
+        denseBt[p][offX + u] = 1;
     }
     for (auto const [p1, p2] : expr.adjDiff.indPP) {
-        denseS2[p1][p2] = 1;
+        denseC[p1][p2] = 1;
     }
 }
 
-void GDOP::updateDenseHessianA(const ParamExpression& expr, std::vector<std::vector<int>>& denseS2) {
-    // update of Hessian Blocks for parametric constraints
+void GDOP::updateDenseHessianA(const ParamExpression& expr, std::vector<std::vector<int>>& denseC) {
+    // update of hessian Blocks for parametric constraints
     for (auto const [p1, p2] : expr.adjDiff.indPP) {
-        denseS2[p1][p2] = 1;
+        denseC[p1][p2] = 1;
     }
 }
 
@@ -923,12 +920,12 @@ bool GDOP::eval_jac_g(Index n, const Number* x, bool new_x, Index m, Index nele_
 }
 
 void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
-    // S0 block forall i, j except very last interval (n, m)
-    for (const auto& [vars, it] : S0) {
+    // A block forall i, j except very last interval (n, m)
+    for (const auto& [vars, it] : hessianA) {
         auto const [v1, v2] = vars;
         for (int i = 0; i < mesh.intervals - 1; i++) {
             for (int j = 0; j < rk.steps; j++) {
-                const int idxij = it + lengthS0 * (i * rk.steps + j);
+                const int idxij = it + lengthA * (i * rk.steps + j);
                 const int v1ij = i * offXUBlock + j * offXU + v1;
                 const int v2ij = i * offXUBlock + j * offXU + v2;
                 iRow[idxij] = v1ij;
@@ -936,7 +933,7 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
             }
         }
         for (int j = 0; j < rk.steps - 1; j++) {
-            const int idxij = it + lengthS0 * ((mesh.intervals - 1) * rk.steps + j);
+            const int idxij = it + lengthA * ((mesh.intervals - 1) * rk.steps + j);
             const int v1ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v1;
             const int v2ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v2;
             iRow[idxij] = v1ij;
@@ -944,8 +941,8 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
         }
     }
 
-    // S0t for very last interval, note that "it" is the correct array index by construction
-    for (const auto& [vars, it] : S0t) {
+    // At for very last interval, note that "it" is the correct array index by construction
+    for (const auto& [vars, it] : hessianAt) {
         auto const [v1, v2] = vars;
         for (int j = 0; j < rk.steps; j++) {
             const int v1ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v1;
@@ -955,12 +952,12 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
         }
     }
 
-    // S1 block forall i, j except very last interval (n, m)
-    for (const auto& [vars, it] : S1) {
+    // B block forall i, j except very last interval (n, m)
+    for (const auto& [vars, it] : hessianB) {
         auto const [p, v] = vars;
         for (int i = 0; i < mesh.intervals - 1; i++) {
             for (int j = 0; j < rk.steps; j++) {
-                const int idxij = it + rowLengthS1Block[p] * (i * rk.steps + j);
+                const int idxij = it + rowLengthBlockB[p] * (i * rk.steps + j);
                 const int pshifted = offXUTotal + p;
                 const int vij = i * offXUBlock + j * offXU + v;
                 iRow[idxij] = pshifted;
@@ -968,7 +965,7 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
             }
         }
         for (int j = 0; j < rk.steps - 1; j++) {
-            const int idxij = it + rowLengthS1Block[p] * ((mesh.intervals - 1) * rk.steps + j);
+            const int idxij = it + rowLengthBlockB[p] * ((mesh.intervals - 1) * rk.steps + j);
             const int pshifted = offXUTotal + p;
             const int vij = (mesh.intervals - 1) * offXUBlock + j * offXU + v;
             iRow[idxij] = pshifted;
@@ -976,8 +973,8 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
         }
     }
 
-    // S1t for very last interval, note that "it" is the correct array index by construction
-    for (const auto& [vars, it] : S1t) {
+    // Bt for very last interval, note that "it" is the correct array index by construction
+    for (const auto& [vars, it] : hessianBt) {
         auto const [p, v] = vars;
         for (int j = 0; j < rk.steps; j++) {
             const int pshifted = offXUTotal + p;
@@ -987,8 +984,8 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
         }
     }
 
-    // S2
-    for (const auto& [vars, it] : S2) {
+    // C
+    for (const auto& [vars, it] : hessianC) {
         auto const [p1, p2] = vars;
         const int p1shifted = offXUTotal + p1;
         const int p2shifted = offXUTotal + p2;
@@ -997,76 +994,76 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
     }
 }
 
-void GDOP::evalHessianS0_S1(Number* values, const Number* x, Expression& expr, const double factor, const int xij, const int uij, const double tij, const int i,
-                            const int j) {
+void GDOP::evalHessianA_B(Number* values, const Number* x, Expression& expr, const double factor, const int xij, const int uij, const double tij, const int i,
+                          const int j) {
     auto const diff2Expr = expr.evalDiff2(&x[xij], &x[uij], &x[offXUTotal], tij);
     for (int k = 0; k < sz(expr.adjDiff.indXX); k++) {
         auto const vars = expr.adjDiff.indXX[k];
-        auto const idx = lengthS0 * (i * rk.steps + j) + S0[vars];
+        auto const idx = lengthA * (i * rk.steps + j) + hessianA[vars];
         values[idx] += factor * diff2Expr[0][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indUX); k++) {
         auto const [uvar, xvar] = expr.adjDiff.indUX[k];
-        auto const idx = lengthS0 * (i * rk.steps + j) + S0[{offX + uvar, xvar}];
+        auto const idx = lengthA * (i * rk.steps + j) + hessianA[{offX + uvar, xvar}];
         values[idx] += factor * diff2Expr[1][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indUU); k++) {
         auto const [uvar1, uvar2] = expr.adjDiff.indUU[k];
-        auto const idx = lengthS0 * (i * rk.steps + j) + S0[{offX + uvar1, offX + uvar2}];
+        auto const idx = lengthA * (i * rk.steps + j) + hessianA[{offX + uvar1, offX + uvar2}];
         values[idx] += factor * diff2Expr[2][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPX); k++) {
         auto const [pvar, xvar] = expr.adjDiff.indPX[k];
-        auto const it = S1[{pvar, xvar}];
-        auto const idx = it + rowLengthS1Block[pvar] * (i * rk.steps + j);
+        auto const it = hessianB[{pvar, xvar}];
+        auto const idx = it + rowLengthBlockB[pvar] * (i * rk.steps + j);
         values[idx] += factor * diff2Expr[3][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPU); k++) {
         auto const [pvar, uvar] = expr.adjDiff.indPU[k];
-        auto const it = S1[{pvar, uvar + offX}];
-        auto const idx = it + rowLengthS1Block[pvar] * (i * rk.steps + j);
+        auto const it = hessianB[{pvar, uvar + offX}];
+        auto const idx = it + rowLengthBlockB[pvar] * (i * rk.steps + j);
         values[idx] += factor * diff2Expr[4][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPP); k++) {
         auto const vars = expr.adjDiff.indPP[k];
-        auto const it = S2[vars];
+        auto const it = hessianC[vars];
         values[it] += factor * diff2Expr[5][k];
     }
 }
 
-void GDOP::evalHessianS0t_S1t(Number* values, const Number* x, Expression& expr, const double factor, const int xij, const int uij, const double tij) {
+void GDOP::evalHessianAt_Bt(Number* values, const Number* x, Expression& expr, const double factor, const int xij, const int uij, const double tij) {
     auto const diff2Expr = expr.evalDiff2(&x[xij], &x[uij], &x[offXUTotal], tij);
     for (int k = 0; k < sz(expr.adjDiff.indXX); k++) {
         auto const vars = expr.adjDiff.indXX[k];
-        values[S0t[vars]] += factor * diff2Expr[0][k];
+        values[hessianAt[vars]] += factor * diff2Expr[0][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indUX); k++) {
         auto const [uvar, xvar] = expr.adjDiff.indUX[k];
-        values[S0t[{offX + uvar, xvar}]] += factor * diff2Expr[1][k];
+        values[hessianAt[{offX + uvar, xvar}]] += factor * diff2Expr[1][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indUU); k++) {
         auto const [uvar1, uvar2] = expr.adjDiff.indUU[k];
-        values[S0t[{offX + uvar1, offX + uvar2}]] += factor * diff2Expr[2][k];
+        values[hessianAt[{offX + uvar1, offX + uvar2}]] += factor * diff2Expr[2][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPX); k++) {
         auto const vars = expr.adjDiff.indPX[k];
-        values[S1t[vars]] += factor * diff2Expr[3][k];
+        values[hessianBt[vars]] += factor * diff2Expr[3][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPU); k++) {
         auto const [pvar, uvar] = expr.adjDiff.indPU[k];
-        values[S1t[{pvar, uvar + offX}]] += factor * diff2Expr[4][k];
+        values[hessianBt[{pvar, uvar + offX}]] += factor * diff2Expr[4][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPP); k++) {
         auto const vars = expr.adjDiff.indPP[k];
-        values[S2[vars]] += factor * diff2Expr[5][k];
+        values[hessianC[vars]] += factor * diff2Expr[5][k];
     }
 }
 
-void GDOP::evalHessianS2(Number* values, const Number* x, ParamExpression& expr, double factor) {
+void GDOP::evalHessianC(Number* values, const Number* x, ParamExpression& expr, double factor) {
     auto const diff2Expr = expr.evalDiff2(&x[offXUTotal]);
     for (int k = 0; k < sz(expr.adjDiff.indPP); k++) {
         auto const vars = expr.adjDiff.indPP[k];
-        values[S2[vars]] += factor * diff2Expr[k];
+        values[hessianC[vars]] += factor * diff2Expr[k];
     }
 }
 
@@ -1081,26 +1078,26 @@ int GDOP::get_h_values(const Number* x, Number* values, Number obj_factor, const
             // eval hessian lagrangian
             if (problem->L) {
                 const double lFactor = obj_factor * mesh.deltaT[i] * rk.b[j];
-                evalHessianS0_S1(values, x, *problem->L, lFactor, xij, uij, tij, i, j);
+                evalHessianA_B(values, x, *problem->L, lFactor, xij, uij, tij, i, j);
             }
 
             // eval hessian dynamics
             for (auto const& f : problem->F) {
                 const double fFactor = -lambda[eq] * mesh.deltaT[i];
-                evalHessianS0_S1(values, x, *f, fFactor, xij, uij, tij, i, j);
+                evalHessianA_B(values, x, *f, fFactor, xij, uij, tij, i, j);
                 eq++;
             }
 
             // eval hessian path constraints
             for (auto const& g : problem->G) {
                 const double gFactor = lambda[eq];
-                evalHessianS0_S1(values, x, *g, gFactor, xij, uij, tij, i, j);
+                evalHessianA_B(values, x, *g, gFactor, xij, uij, tij, i, j);
                 eq++;
             }
         }
     }
 
-    // same for the last rk.steps-1 blocks excluding the very last block -> S0t handling
+    // same for the last rk.steps-1 blocks excluding the very last block -> At handling
     for (int j = 0; j < rk.steps - 1; j++) {
         const double tij = mesh.grid[mesh.intervals - 1] + rk.c[j] * mesh.deltaT[mesh.intervals - 1];
         const int xij = (mesh.intervals - 1) * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
@@ -1109,65 +1106,65 @@ int GDOP::get_h_values(const Number* x, Number* values, Number obj_factor, const
         // eval hessian lagrangian
         if (problem->L) {
             const double lagrFactor = obj_factor * mesh.deltaT[(mesh.intervals - 1)] * rk.b[j];
-            evalHessianS0_S1(values, x, *problem->L, lagrFactor, xij, uij, tij, (mesh.intervals - 1), j);
+            evalHessianA_B(values, x, *problem->L, lagrFactor, xij, uij, tij, (mesh.intervals - 1), j);
         }
 
         // eval hessian dynamics
         for (auto const& f : problem->F) {
             const double fFactor = lambda[eq] * (-mesh.deltaT[(mesh.intervals - 1)]);
-            evalHessianS0_S1(values, x, *f, fFactor, xij, uij, tij, mesh.intervals - 1, j);
+            evalHessianA_B(values, x, *f, fFactor, xij, uij, tij, mesh.intervals - 1, j);
             eq++;
         }
 
         // eval hessian path constraints
         for (auto const& g : problem->G) {
             const double gFactor = lambda[eq];
-            evalHessianS0_S1(values, x, *g, gFactor, xij, uij, tij, mesh.intervals - 1, j);
+            evalHessianA_B(values, x, *g, gFactor, xij, uij, tij, mesh.intervals - 1, j);
             eq++;
         }
     }
 
-    // S0t, S1t: contains M, L, F, G, R
+    // At, Bt: contains M, L, F, G, R
     const int xnm = (mesh.intervals - 1) * offXUBlock + (rk.steps - 1) * offXU;         // index of 1st x var at collocation point (n,m)
     const int unm = (mesh.intervals - 1) * offXUBlock + (rk.steps - 1) * offXU + offX;  // index of 1st u var at collocation point (n,m)
 
     // eval hessian mayer
     if (problem->M) {
         const double mayFactor = obj_factor;
-        evalHessianS0t_S1t(values, x, *problem->M, mayFactor, xnm, unm, mesh.tf);
+        evalHessianAt_Bt(values, x, *problem->M, mayFactor, xnm, unm, mesh.tf);
     }
 
     // eval hessian lagrangian
     if (problem->L) {
         const double lagrFactor = obj_factor * mesh.deltaT[(mesh.intervals - 1)] * rk.b[rk.steps - 1];
-        evalHessianS0t_S1t(values, x, *problem->L, lagrFactor, xnm, unm, mesh.tf);
+        evalHessianAt_Bt(values, x, *problem->L, lagrFactor, xnm, unm, mesh.tf);
     }
 
     // eval hessian dynamics
     for (auto const& f : problem->F) {
         const double fFactor = lambda[eq] * (-mesh.deltaT[(mesh.intervals - 1)]);
-        evalHessianS0t_S1t(values, x, *f, fFactor, xnm, unm, mesh.tf);
+        evalHessianAt_Bt(values, x, *f, fFactor, xnm, unm, mesh.tf);
         eq++;
     }
 
     // eval hessian path constraints
     for (auto const& g : problem->G) {
         const double gFactor = lambda[eq];
-        evalHessianS0t_S1t(values, x, *g, gFactor, xnm, unm, mesh.tf);
+        evalHessianAt_Bt(values, x, *g, gFactor, xnm, unm, mesh.tf);
         eq++;
     }
 
     // eval hessian final constraints
     for (auto const& r : problem->R) {
         const double rFactor = lambda[eq];
-        evalHessianS0t_S1t(values, x, *r, rFactor, xnm, unm, mesh.tf);
+        evalHessianAt_Bt(values, x, *r, rFactor, xnm, unm, mesh.tf);
         eq++;
     }
 
     // eval hessian algebraic parameter constraints
     for (auto const& a : problem->A) {
         const double aFactor = lambda[eq];
-        evalHessianS2(values, x, *a, aFactor);
+        evalHessianC(values, x, *a, aFactor);
         eq++;
     }
     return eq;

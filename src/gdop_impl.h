@@ -40,36 +40,36 @@ public:
     const int numberVars = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals + problem->sizeP;
 
     // block hessians as sparse map: (i,j) -> it, it-th index in COO format, (i,j) var indices
-    // note that S0, S0t, S2 only contain the lower triangle
+    // note that A, At, C only contain the lower triangle
 
     /**
     Hessian struct:
     vars    ...     xu    ...    p
-      .     S0   0   0   0   0   0
-      .      0  S0   0   0   0   0
-      xu     .   .   .   .   .   .
-      .      0   0   0  S0   0   0
-      .      0   0   0   0 S0t   0
-      p     S1    ...   S1 S1t  S2
+      .      A    0   0   0   0   0
+      .      0    A   0   0   0   0
+      xu     .    .   .   .   .   .
+      .      0    0   0   A   0   0
+      .      0    0   0   0  At   0
+      p      B    ...     B  Bt   C
     **/
 
-    int lengthS0 = 0;                        // length of one S0 block
-    std::vector<int> rowLengthS1Block = {};  // length of the i-th row of one S1 block
+    int lengthA = 0;                        // length of one A block
+    std::vector<int> rowLengthBlockB = {};  // length of the i-th row of one B block
 
-    // upper left corner of entire hessian, xu block
-    std::unordered_map<std::tuple<int, int>, int, n2hash> S0{};
+    // upper left corner of entire hessian: xu - xu block
+    std::unordered_map<std::tuple<int, int>, int, n2hash> hessianA{};
 
-    // lower right corner xu block, might be different since M(.), r(.) are evaluated only at the last grid point
-    std::unordered_map<std::tuple<int, int>, int, n2hash> S0t{};
+    // lower right corner xu - xu block, might be different since M(.), r(.) are evaluated only at the last grid point
+    std::unordered_map<std::tuple<int, int>, int, n2hash> hessianAt{};
 
-    // lower left corner of entire hessian, xu-p block
-    std::unordered_map<std::tuple<int, int>, int, n2hash> S1{};
+    // lower left corner of entire hessian: xu-p block
+    std::unordered_map<std::tuple<int, int>, int, n2hash> hessianB{};
 
     // lower right corner xu-p block, might be different since M(.), r(.) are evaluated only at the last grid point
-    std::unordered_map<std::tuple<int, int>, int, n2hash> S1t{};
+    std::unordered_map<std::tuple<int, int>, int, n2hash> hessianBt{};
 
     // lower right corner of entire hessian, p-p block
-    std::unordered_map<std::tuple<int, int>, int, n2hash> S2{};
+    std::unordered_map<std::tuple<int, int>, int, n2hash> hessianC{};
 
     bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style) override;
 
@@ -102,11 +102,11 @@ public:
     void updateDenseHessianLFG(const Expression&, std::vector<std::vector<int>>&, std::vector<std::vector<int>>&, std::vector<std::vector<int>>&,
                                std::vector<std::vector<int>>&, std::vector<std::vector<int>>&) const;
 
-    void evalHessianS0_S1(Number* values, const Number* x, Expression& expr, double factor, int xij, int uij, double tij, int i, int j);
+    void evalHessianA_B(Number* values, const Number* x, Expression& expr, double factor, int xij, int uij, double tij, int i, int j);
 
-    void evalHessianS0t_S1t(Number* values, const Number* x, Expression& expr, double factor, int xij, int uij, double tij);
+    void evalHessianAt_Bt(Number* values, const Number* x, Expression& expr, double factor, int xij, int uij, double tij);
 
-    void evalHessianS2(Number* values, const Number* x, ParamExpression& expr, double factor);
+    void evalHessianC(Number* values, const Number* x, ParamExpression& expr, double factor);
 
     void updateDenseHessianMR(const Expression&, std::vector<std::vector<int>>&, std::vector<std::vector<int>>&, std::vector<std::vector<int>>&) const;
 

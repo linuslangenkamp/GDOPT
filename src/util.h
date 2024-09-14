@@ -118,11 +118,7 @@ inline double checkNominalValue(const double value) {
         return 1 / nom;
     }
     else {
-        std::cerr << "The program will be terminated, since the nominal value abs(" << value
-                  << ") "
-                     "is not in the range"
-                     "[1e-18, 1e18]."
-                  << std::endl;
+        std::cerr << "The program will be terminated, since the nominal value abs(" << value << ") is not in the range [1e-18, 1e18]." << std::endl;
         abort();
     }
 }
