@@ -1,5 +1,28 @@
 from optimization.variables import *
-from symengine import *
+from symengine import (
+    Symbol,
+    cse,
+    diff,
+    ccode,
+    symbols,
+    Lambdify,
+    exp,
+    sin,
+    cos,
+    tan,
+    log,
+    sqrt,
+    asin,
+    acos,
+    atan,
+    sinh,
+    cosh,
+    tanh,
+    asinh,
+    acosh,
+    atanh,
+    pi,
+)
 
 # global map varInfo: symbol -> info
 varInfo = {}
@@ -76,7 +99,6 @@ class Expression:
                 adjDiff_indices[5].append((info1.id, info2.id))  # indPP
 
         # first derivatives
-
         adj_indices = [[], [], []]  # indX, indU, indP
         cEvalDiff = [[], [], []]
         allDiffs = []
@@ -233,7 +255,6 @@ class Constraint(Expression):
                 adjDiff_indices[5].append((info1.id, info2.id))  # indPP
 
         # first derivatives
-
         adj_indices = [[], [], []]  # indX, indU, indP
         cEvalDiff = [[], [], []]
         allDiffs = []

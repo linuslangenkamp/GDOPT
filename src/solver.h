@@ -9,6 +9,8 @@
 
 enum class LinearSolver { MUMPS, MA27, MA57, MA77, MA86, MA97, PARDISO };
 
+enum class RefinementMethod { POLYNOMIAL, LINEAR_SPLINE };
+
 /*
  * NONE: no mesh algorithm
  * BASIC: basic strategy based on deviation to the mean of control vars
@@ -31,6 +33,7 @@ public:
 
     LinearSolver linearSolver;
     MeshAlgorithm meshAlgorithm;
+    RefinementMethod refinementMethod = RefinementMethod::LINEAR_SPLINE;
     int meshIteration = 0;
     const int maxMeshIterations;
     double tolerance = 1e-12;
@@ -48,11 +51,17 @@ public:
     std::vector<int> basicStrategy() const;
     std::vector<int> l2BoundaryNorm() const;
 
+    // interpolation type for the new initial solution
+    void refinePolynomial(std::vector<int>& markedIntervals);
+    void refineLinear(std::vector<int>& markedIntervals);
+
     // additional / optional flags, printouts, ...
     std::vector<double> objectiveHistory;
     int initialIntervals = -1;
     std::chrono::_V2::system_clock::time_point solveStartTime;
-    std::chrono::duration<double> timedeltaIO{0};  // time in IO operations
+    std::chrono::duration<double> solveTotalTimeTaken;   // total time in solver
+    std::chrono::duration<double> solveActualTimeTaken;  // total time in solver - IO
+    std::chrono::duration<double> timedeltaIO{0};        // time in IO operations
     std::string exportOptimumPath;
     bool exportOptimum = false;
     std::string exportHessianPath;
@@ -64,6 +73,7 @@ public:
     void printObjectiveHistory();
     void printMeshStats() const;
     void createModelInfo() const;
+    void setRefinementMethod(const RefinementMethod method);
     void setExportOptimumPath(const std::string& exportPath);
     void setExportJacobianPath(const std::string& exportPath);
     void setExportHessianPath(const std::string& exportPath);
@@ -74,6 +84,7 @@ public:
     void setBasicStrategy();
     void setMeshParameter(const std::string& field, double value);
     void setSolverFlags(Ipopt::IpoptApplication& app);
+    void setStandardSolverFlags(Ipopt::IpoptApplication& app);
 
     // basicStrategy parameters
     double basicStrategySigma = 2.5;

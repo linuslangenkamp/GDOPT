@@ -52,13 +52,18 @@ model.addFinal(energy, ub=0.5)
 
 model.addMayer(x[0], Objective.MAXIMIZE)
 
-model.generate()
+# model.generate()
 
 model.optimize(
     tf=1,
     steps=25,
     rksteps=3,
-    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "exportJacobianPath": "/tmp"},
+    flags={
+        "outputPath": "/tmp",
+        "linearSolver": LinearSolver.MA57,
+        "exportJacobianPath": "/tmp",
+        "refinementMethod": RefinementMethod.LINEAR_SPLINE,
+    },
     meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 5},
 )
 

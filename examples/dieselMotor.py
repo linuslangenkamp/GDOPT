@@ -102,7 +102,9 @@ dot_m_f = U_F * W_ICE * n_cyl * 1e-6 / (4 * pi)
 eta_ig = eta_igch * (1 - (1 / (r_c ** (gamma_cyl - 1))))
 T_pump = V_D * (P_EM - P_IM)
 T_ig = n_cyl * Hlhv * eta_ig * u_f * control_norm1 * 1e-6
-T_fric = V_D * (10**5) * (c_fr1 * ((W_ICE * 60 / (2 * pi * 1000)) ** 2) + c_fr2 * (W_ICE * 60 / (2 * pi * 1000)) + c_fr3)
+T_fric = (
+    V_D * (10**5) * (c_fr1 * ((W_ICE * 60 / (2 * pi * 1000)) ** 2) + c_fr2 * (W_ICE * 60 / (2 * pi * 1000)) + c_fr3)
+)
 T_ice = (T_ig - T_fric - T_pump) / (4 * pi)
 
 Pi_e = P_EM / P_IM
@@ -135,25 +137,31 @@ model.addDynamic(p_im, 20.2505119361145 * ((0.526906365590249 * sqrt(Cm_temp)) -
 model.addDynamic(p_em, 0.0476078551344513 * (T_eo * (dot_m_ci + dot_m_f - dot_m_t - dot_m_wg)))
 model.addDynamic(w_tc, 0.0001 * ((P_t - P_c) / (0.000197779559297041 * W_TC) - 2.47230109968751e-005 * W_TC * W_TC))
 
-model.addMayer((w_ice - 0.515309170685596) ** 2 + (p_im - 0.547055854225991) ** 2 + (p_em - 0.381048005791294) ** 2 + (w_tc - 0.271443000537680) ** 2)
+model.addMayer(
+    (w_ice - 0.515309170685596) ** 2
+    + (p_im - 0.547055854225991) ** 2
+    + (p_em - 0.381048005791294) ** 2
+    + (w_tc - 0.271443000537680) ** 2
+)
 model.addLagrange(dot_m_f)
 
 model.generate()
 
 model.optimize(
-    steps=60,
+    steps=50,
     rksteps=3,
     tf=0.5,
     flags={
         "outputPath": "/tmp",
         "linearSolver": LinearSolver.MUMPS,
         "ivpSolver": IVPSolver.RADAU,
+        "refinementMethod": RefinementMethod.POLYNOMIAL,
         "initVars": InitVars.SOLVE,
         "tolerance": 1e-14,
     },
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 4},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 8},
 )
 
-model.plot(dots=Dots.BASE)
+model.plot(dots=Dots.ALL)
 model.plotMeshRefinement()
-model.plotInputsAndRefinement(dotsGraph=Dots.BASE)
+model.plotInputsAndRefinement()

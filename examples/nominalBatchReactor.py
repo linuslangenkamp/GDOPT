@@ -25,7 +25,13 @@ model.optimize(
     tf=1,
     steps=500,
     rksteps=3,
-    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE, "tolerance": 1e-14, "userScaling": True},
+    flags={
+        "outputPath": "/tmp",
+        "linearSolver": LinearSolver.MA57,
+        "initVars": InitVars.SOLVE,
+        "tolerance": 1e-14,
+        "userScaling": True,
+    },
 )
 
-model.plotInputs(dots=Dots.BASE)
+model.plot(dots=Dots.BASE)

@@ -33,6 +33,11 @@ class LinearSolver(Enum):
     PARDISO = 7
 
 
+class RefinementMethod(Enum):
+    LINEAR_SPLINE = 1
+    POLYNOMIAL = 2
+
+
 class MeshAlgorithm(Enum):
     NONE = 1
     BASIC = 2

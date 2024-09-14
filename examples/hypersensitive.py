@@ -19,8 +19,13 @@ model.optimize(
     steps=30,
     rksteps=9,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57},
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 20, "meshLevel": 0},
+    meshFlags={
+        "meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+        "refinementMethod": RefinementMethod.LINEAR_SPLINE,
+        "meshIterations": 20,
+        "meshLevel": 0,
+    },
 )
 
 model.plotInputs(interval=[9980, 10000], dots=Dots.ALL)
-model.plotInputsAndRefinement(interval=[9900, 10000], dotsMesh=Dots.ALL)
+model.plotInputsAndRefinement(interval=[9900, 10000], dotsMesh=Dots.BASE)

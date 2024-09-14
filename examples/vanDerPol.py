@@ -18,16 +18,16 @@ model.generate()
 
 model.optimize(
     tf=10,
-    steps=20,
+    steps=50,
     rksteps=3,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57},
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 10},
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 5},
 )
 
-model.parametricPlot(x1, x2, dots=Dots.ALL)
+model.parametricPlot(x1, x2, dots=Dots.BASE)
 
 model.setValue(rp, 0.1)
 
 model.optimize(resimulate=True)
-model.plot(dots=Dots.ALL)
+model.plot(dots=Dots.BASE)
 model.plotInputsAndRefinement()

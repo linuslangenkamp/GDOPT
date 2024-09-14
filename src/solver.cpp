@@ -87,6 +87,9 @@ int Solver::solve() {
         // set new starting values
         _priv->gdop->x_cb = cbValues;
 
+        // update solver flags
+        setSolverFlags(*app);
+
         // optimize again
         status = app->OptimizeTNLP(_priv->gdop);
         postOptimization();
@@ -291,8 +294,25 @@ std::vector<int> Solver::basicStrategy() const {
 }
 
 void Solver::refine(std::vector<int>& markedIntervals) {
+    switch (refinementMethod) {
+        case RefinementMethod::LINEAR_SPLINE:
+            refineLinear(markedIntervals);
+            break;
+
+        case RefinementMethod::POLYNOMIAL:
+            refinePolynomial(markedIntervals);
+            break;
+
+        default:
+            refineLinear(markedIntervals);
+            break;
+    }
+}
+
+void Solver::refineLinear(std::vector<int>& markedIntervals) {
+    // does a linear spline on each marked interval -> new values of control, states
     const int oldIntervalLen = _priv->gdop->mesh.intervals;
-    _priv->gdop->mesh.update(markedIntervals);  // create newMesh here
+    _priv->gdop->mesh.update(markedIntervals);  // create new mesh here
     int newOffXUTotal = (_priv->gdop->problem->sizeX + _priv->gdop->problem->sizeU) * _priv->gdop->rk.steps * _priv->gdop->mesh.intervals;
     int newNumberVars = newOffXUTotal + _priv->gdop->problem->sizeP;
     cbValues.resize(newNumberVars, 0.0);
@@ -302,13 +322,79 @@ void Solver::refine(std::vector<int>& markedIntervals) {
     for (int i = 0; i < oldIntervalLen; i++) {
         if (markedIntervals[index] == i) {
             for (int v = 0; v < _priv->gdop->offXU; v++) {  // iterate over every var in {x, u} -> interpolate
-                std::vector<double> localVars;
+                std::vector<double> localVars = {};
                 // i > 0 interval cases
                 if (i > 0) {
                     for (int j = -1; j < _priv->gdop->rk.steps; j++) {
                         localVars.push_back(_priv->gdop->optimum[v + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
                     }
-                    auto const polyVals = _priv->gdop->rk.interpolate(localVars);
+                    auto const splineVals = _priv->gdop->rk.evalLinearSplineNewKnots(localVars);
+                    for (int k = 0; k < sz(splineVals); k++) {
+                        cbValues[v + (i + index) * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = splineVals[k];
+                    }
+                }
+                else {
+                    // 0-th interval cases
+                    if (v < _priv->gdop->offX) {
+                        localVars.push_back(_priv->gdop->problem->x0[v]);
+                        for (int j = 0; j < _priv->gdop->rk.steps; j++) {
+                            localVars.push_back(_priv->gdop->optimum[v + j * _priv->gdop->offXU]);
+                        }
+                        auto const splineVals = _priv->gdop->rk.evalLinearSplineNewKnots(localVars);
+                        for (int k = 0; k < sz(splineVals); k++) {
+                            cbValues[v + i * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = splineVals[k];
+                        }
+                    }
+                    else {
+                        // 0-th control -> interpolate with order one less (only
+                        // not rk.steps points, not rk.steps + 1)
+                        for (int j = 0; j < _priv->gdop->rk.steps; j++) {
+                            localVars.push_back(_priv->gdop->optimum[v + j * _priv->gdop->offXU]);
+                        }
+                        localVars.insert(localVars.begin(), Integrator::evalLagrange(_priv->gdop->rk.c, localVars, 0.0));
+                        auto const splineVals = _priv->gdop->rk.evalInterpolationNewKnots(localVars);
+                        for (int k = 0; k < sz(splineVals); k++) {
+                            cbValues[v + i * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = splineVals[k];
+                        }
+                    }
+                }
+            }
+            index++;  // go to next marked interval
+        }
+        // not marked interval: copy optimal values
+        else {
+            for (int v = 0; v < _priv->gdop->offXU; v++) {
+                for (int k = 0; k < _priv->gdop->rk.steps; k++) {
+                    cbValues[v + (i + index) * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] =
+                        _priv->gdop->optimum[v + i * _priv->gdop->offXUBlock + k * _priv->gdop->offXU];
+                }
+            }
+        }
+    }
+    for (int p = 0; p < _priv->gdop->offP; p++) {
+        cbValues[newOffXUTotal + p] = _priv->gdop->optimum[_priv->gdop->offXUTotal + p];
+    }
+}
+
+void Solver::refinePolynomial(std::vector<int>& markedIntervals) {
+    const int oldIntervalLen = _priv->gdop->mesh.intervals;
+    _priv->gdop->mesh.update(markedIntervals);  // create new mesh here
+    int newOffXUTotal = (_priv->gdop->problem->sizeX + _priv->gdop->problem->sizeU) * _priv->gdop->rk.steps * _priv->gdop->mesh.intervals;
+    int newNumberVars = newOffXUTotal + _priv->gdop->problem->sizeP;
+    cbValues.resize(newNumberVars, 0.0);
+
+    // interpolate all values on marked intervals
+    int index = 0;
+    for (int i = 0; i < oldIntervalLen; i++) {
+        if (markedIntervals[index] == i) {
+            for (int v = 0; v < _priv->gdop->offXU; v++) {  // iterate over every var in {x, u} -> interpolate
+                std::vector<double> localVars = {};
+                // i > 0 interval cases
+                if (i > 0) {
+                    for (int j = -1; j < _priv->gdop->rk.steps; j++) {
+                        localVars.push_back(_priv->gdop->optimum[v + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
+                    }
+                    auto const polyVals = _priv->gdop->rk.evalInterpolationNewKnots(localVars);
                     for (int k = 0; k < sz(polyVals); k++) {
                         cbValues[v + (i + index) * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = polyVals[k];
                     }
@@ -319,10 +405,10 @@ void Solver::refine(std::vector<int>& markedIntervals) {
                         localVars.push_back(_priv->gdop->problem->x0[v]);
                         for (int j = 0; j < _priv->gdop->rk.steps; j++) {
                             localVars.push_back(_priv->gdop->optimum[v + j * _priv->gdop->offXU]);
-                            auto const polyVals = _priv->gdop->rk.interpolate(localVars);
-                            for (int k = 0; k < sz(polyVals); k++) {
-                                cbValues[v + i * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = polyVals[k];
-                            }
+                        }
+                        auto const polyVals = _priv->gdop->rk.evalInterpolationNewKnots(localVars);
+                        for (int k = 0; k < sz(polyVals); k++) {
+                            cbValues[v + i * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = polyVals[k];
                         }
                     }
                     else {
@@ -374,6 +460,10 @@ void Solver::setExportJacobianPath(const std::string& exportPath) {
     exportJacobian = true;
 }
 
+void Solver::setRefinementMethod(const RefinementMethod method) {
+    refinementMethod = method;
+}
+
 void Solver::initSolvingProcess() {
     setRefinementParameters();
     solveStartTime = std::chrono::high_resolution_clock::now();
@@ -418,6 +508,9 @@ void Solver::createModelInfo() const {
         return;
     }
     outFile << "maxMeshIteration, " << meshIteration - 1 << "\n";
+    outFile << "totalTimeInSolver, " << solveTotalTimeTaken.count() << "\n";
+    outFile << "actualTimeInSolver, " << solveActualTimeTaken.count() << "\n";
+    outFile << "totalTimeInIO, " << timedeltaIO.count() << "\n";
     outFile.close();
 }
 
@@ -427,18 +520,19 @@ void Solver::finalizeOptimization() {
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << "\nOutput for optimization of model: " << _priv->gdop->problem->name << std::endl;
 
-    createModelInfo();
     printMeshStats();
     printObjectiveHistory();
 
-    auto timeTaken = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - solveStartTime).count();
-    auto actualTime = timeTaken - timedeltaIO.count();
+    solveTotalTimeTaken = (std::chrono::high_resolution_clock::now() - solveStartTime);
+    solveActualTimeTaken = solveTotalTimeTaken - timedeltaIO;
     std::cout << std::fixed << std::setprecision(5);
     std::cout << "\n----------------------------------------------------------------" << std::endl;
-    std::cout << "\nTotal time in Solver (w/o I/O): " << std::setw(8) << actualTime << " seconds" << std::endl;
+    std::cout << "\nTotal time in Solver (w/o I/O): " << std::setw(8) << solveTotalTimeTaken.count() << " seconds" << std::endl;
     std::cout << "Total time in I/O: " << std::setw(21) << timedeltaIO.count() << " seconds" << std::endl;
-    std::cout << "Total time in Solver: " << std::setw(18) << timeTaken << " seconds" << std::endl;
+    std::cout << "Total time in Solver: " << std::setw(18) << solveActualTimeTaken.count() << " seconds" << std::endl;
     std::cout << std::defaultfloat;
+
+    createModelInfo();
 }
 
 void Solver::printMeshStats() const {
@@ -452,17 +546,36 @@ void Solver::printMeshStats() const {
 void Solver::setSolverFlags(IpoptApplication& app) {
     // numeric jacobian and hessian
     // app->Options()->SetStringValue("hessian_approximation", "limited-memory");
-    // app->Options()->SetStringValue("jacobian_approximation",
-    // "finite-difference-values");
+    // app->Options()->SetStringValue("jacobian_approximation", "finite-difference-values");
 
     // test derivatives
     // app->Options()->SetStringValue("derivative_test", "second-order");
 
+    if (meshIteration == 0) {
+        // flags for the initial optimization
+        app.Options()->SetNumericValue("bound_push", 1e-2);
+        app.Options()->SetNumericValue("bound_frac", 1e-2);
+    }
+    else {
+        // flags for every following refined optimization
+        app.Options()->SetNumericValue("mu_init", 1e-3);
+
+        app.Options()->SetNumericValue("bound_push", 1e-4);
+        app.Options()->SetNumericValue("bound_frac", 1e-4);
+
+        app.Options()->SetNumericValue("bound_relax_factor", 1e-6);
+    }
+
+    // setting the standard flags
+    setStandardSolverFlags(app);
+}
+
+void Solver::setStandardSolverFlags(IpoptApplication& app) {
+    // these are flags that are always set, no matter if a mesh refinement is currently executed
+    app.Options()->SetStringValue("mu_strategy", "adaptive");
     app.Options()->SetNumericValue("tol", tolerance);
     app.Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
-    app.Options()->SetIntegerValue("max_iter", 100000);
-
-    app.Options()->SetStringValue("mu_strategy", "adaptive");
+    app.Options()->SetIntegerValue("max_iter", 15000);
 
     if (userScaling) {
         app.Options()->SetStringValue("nlp_scaling_method", "user-scaling");
@@ -476,10 +589,6 @@ void Solver::setSolverFlags(IpoptApplication& app) {
 
     app.Options()->SetStringValue("linear_solver", getLinearSolverName(linearSolver));
     app.Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
-
-    // options for initial feasible point
-    app.Options()->SetNumericValue("bound_push", 1e-3);
-    app.Options()->SetNumericValue("bound_frac", 1e-3);
 
     if (_priv->gdop->problem->quadraticObjLinearConstraints) {
         app.Options()->SetStringValue("hessian_constant", "yes");

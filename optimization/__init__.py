@@ -37,6 +37,7 @@ class Model:
         self.outputFilePath = None
         self.ivpSolver = IVPSolver.Radau
         self.initVars = InitVars.SOLVE
+        self.refinementMethod = RefinementMethod.LINEAR_SPLINE
         self.linearSolver = LinearSolver.MUMPS
         self.meshAlgorithm = MeshAlgorithm.NONE
         self.meshIterations = 0
@@ -50,7 +51,9 @@ class Model:
         self.quadraticObjective = False
         self.linearObjective = False
         self.linearConstraints = False
-        self.autoVariableNominals = False  # TODO: not in use: automatically scale variables and equations that dont have a nominal value
+        self.autoVariableNominals = (
+            False  # TODO: not in use: automatically scale variables and equations that dont have a nominal value
+        )
         self.userScaling = False
 
         # stuff for analyzing the results
@@ -241,7 +244,14 @@ class Model:
 
         # define the rhs, uCallback function
         rhs = [
-            Lambdify([t] + [x for x in self.xVars] + [u for u in self.uVars] + [p for p in self.pVars] + [rp for rp in self.rpVars], self.F[eq].expr)
+            Lambdify(
+                [t]
+                + [x for x in self.xVars]
+                + [u for u in self.uVars]
+                + [p for p in self.pVars]
+                + [rp for rp in self.rpVars],
+                self.F[eq].expr,
+            )
             for eq in range(len(self.F))
         ]
         uFuncs = [Lambdify([t], varInfo[u].initialGuess) for u in self.uVars]
@@ -262,6 +272,7 @@ class Model:
 
         x0 = [varInfo[x].start for x in self.xVars]
         timeHorizon = [0, self.tf]
+
         # scipy.solve_ivp
         solution = solve_ivp(ode, timeHorizon, x0, method=self.ivpSolver.name, dense_output=True, rtol=1e-8)
 
@@ -306,6 +317,9 @@ class Model:
         # default = IVPSolver.Radau (should be best), others: BDF, LSODA, RK45, DOP853, RK23
 
         self.ivpSolver = solver
+
+    def setRefinementMethod(self, refinementMethod: RefinementMethod):
+        self.refinementMethod = refinementMethod
 
     def setMeshAlgorithm(self, meshAlgorithm: MeshAlgorithm):
         self.meshAlgorithm = meshAlgorithm
@@ -354,6 +368,8 @@ class Model:
             self.setOutputPath(flags["outputPath"])
         if "linearSolver" in flags:
             self.setLinearSolver(flags["linearSolver"])
+        if "refinementMethod" in flags:
+            self.setRefinementMethod(flags["refinementMethod"])
         if "tolerance" in flags:
             self.setTolerance(flags["tolerance"])
         if "exportHessianPath" in flags:
@@ -391,7 +407,11 @@ class Model:
         lines = [
             "\tproblem.linearObjective = true;" if self.linearObjective else "",
             "\tproblem.linearConstraints = true;" if self.linearConstraints else "",
-            "\tproblem.quadraticObjLinearConstraints = true;" if (self.linearObjective or self.quadraticObjective) and self.linearConstraints else "",
+            (
+                "\tproblem.quadraticObjLinearConstraints = true;"
+                if (self.linearObjective or self.quadraticObjective) and self.linearConstraints
+                else ""
+            ),
         ]
         out = "\n".join(line for line in lines if line)
         if out != "":
@@ -427,7 +447,10 @@ class Model:
                 key, value = line.split(",")
                 key = key.strip()
                 value = value.strip()
-                self.modelInfo[key] = int(value)
+                if key == "maxMeshIteration":
+                    self.modelInfo[key] = int(value)
+                elif key in ["totalTimeInSolver", "actualTimeInSolver", "totalTimeInIO"]:
+                    self.modelInfo[key] = float(value)
 
     def generate(self):
 
@@ -580,6 +603,10 @@ int main() {{
     Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 
     // set solver flags
+    #ifdef REFINEMENT_METHOD
+    solver.setRefinementMethod(REFINEMENT_METHOD);
+    #endif
+    
     #ifdef EXPORT_OPTIMUM_PATH
     solver.setExportOptimumPath(EXPORT_OPTIMUM_PATH);
     #endif
@@ -626,7 +653,9 @@ int main() {{
             file.write(OUTPUT)
 
         print(f"Generated model to .generated/{self.name}/{filename}.cpp.\n")
-        print(f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.\n")
+        print(
+            f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.\n"
+        )
         return 0
 
     def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
@@ -676,6 +705,7 @@ int main() {{
         OUTPUT += f"#define RADAU_INTEGRATOR IntegratorSteps::Steps{self.rksteps}\n"
         OUTPUT += f"#define INTERVALS {self.steps}\n"
         OUTPUT += f"#define FINAL_TIME {self.tf}\n"
+        OUTPUT += f"#define REFINEMENT_METHOD RefinementMethod::{self.refinementMethod.name}\n"
         OUTPUT += f"#define LINEAR_SOLVER LinearSolver::{self.linearSolver.name}\n"
         OUTPUT += f"#define MESH_ALGORITHM MeshAlgorithm::{self.meshAlgorithm.name}\n"
         OUTPUT += f"#define MESH_ITERATIONS {self.meshIterations}\n"
@@ -721,17 +751,19 @@ int main() {{
         return 0
 
     def initVarNames(self):
-        self.xVarNames = [info.symbol for variable, info in varInfo.items() if isinstance(info, StateStruct)]
-        self.uVarNames = [info.symbol for variable, info in varInfo.items() if isinstance(info, InputStruct)]
-        self.pVarNames = [info.symbol for variable, info in varInfo.items() if isinstance(info, ParameterStruct)]
-        self.rpVarNames = [info.symbol for variable, info in varInfo.items() if isinstance(info, RuntimeParameterStruct)]
+        self.xVarNames = [info.symbol for info in varInfo.values() if isinstance(info, StateStruct)]
+        self.uVarNames = [info.symbol for info in varInfo.values() if isinstance(info, InputStruct)]
+        self.pVarNames = [info.symbol for info in varInfo.values() if isinstance(info, ParameterStruct)]
+        self.rpVarNames = [info.symbol for info in varInfo.values() if isinstance(info, RuntimeParameterStruct)]
 
     def getResults(self, meshIteration=None):
         meshIteration = self.checkMeshIteration(meshIteration)
 
         if meshIteration not in self.resultHistory:
             try:
-                results = pd.read_csv(self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", delimiter=",")
+                results = pd.read_csv(
+                    self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", delimiter=","
+                )
             except:
                 raise Exception("meshIteration out of range. Set Model.maxMeshIteration to the maximum mesh iteration!")
 
@@ -810,18 +842,41 @@ int main() {{
         self.initVarNames()
         if interval is None:
             interval = [0, self.tf]
-        self.plotParametric(varX=varX, varY=varY, meshIteration=meshIteration, interval=interval, dots=dots)
+        self._parametricPlot(varX=varX, varY=varY, meshIteration=meshIteration, interval=interval, dots=dots)
 
-    def plotInputsAndRefinement(self, meshIteration=None, interval=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.OFF, epsilon=1e-14):
+    def plotInputsAndRefinement(
+        self, meshIteration=None, interval=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.BASE, epsilon=1e-14
+    ):
         self.initVarNames()
-        self.plotColsAndRefinement(meshIteration=meshIteration, interval=interval, specifCols=self.uVarNames, markerSize=markerSize, dotsMesh=dotsMesh, dotsGraph=dotsGraph, epsilon=epsilon)
+        self.plotColsAndRefinement(
+            meshIteration=meshIteration,
+            interval=interval,
+            specifCols=self.uVarNames,
+            markerSize=markerSize,
+            dotsMesh=dotsMesh,
+            dotsGraph=dotsGraph,
+            epsilon=epsilon,
+        )
 
-    def plotColsAndRefinement(self, meshIteration=None, interval=None, specifCols=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.OFF, epsilon=1e-14):
+    def plotColsAndRefinement(
+        self,
+        meshIteration=None,
+        interval=None,
+        specifCols=None,
+        markerSize=30,
+        dotsMesh=Dots.BASE,
+        dotsGraph=Dots.OFF,
+        epsilon=1e-14,
+    ):
         if interval is None:
             interval = [0, self.tf]
 
-        figMesh, axMesh = self._plotMeshRefinement(interval=interval, markerSize=markerSize, dots=dotsMesh, epsilon=epsilon)
-        figGraph, axsGraph = self._plotGeneral(meshIteration=meshIteration, interval=interval, specifCols=specifCols, dots=dotsGraph)
+        figMesh, axMesh = self._plotMeshRefinement(
+            interval=interval, markerSize=markerSize, dots=dotsMesh, epsilon=epsilon
+        )
+        figGraph, axsGraph = self._plotGeneral(
+            meshIteration=meshIteration, interval=interval, specifCols=specifCols, dots=dotsGraph
+        )
 
         plt.close(figGraph)
         plt.close(figMesh)
@@ -836,12 +891,16 @@ int main() {{
             if axsGraph[i].collections:
                 for coll in axsGraph[i].collections:
                     offsets = coll.get_offsets()
-                    axs[i].scatter(offsets[:, 0], offsets[:, 1], color="red", s=30, edgecolor="black", alpha=0.8, zorder=5)
+                    axs[i].scatter(
+                        offsets[:, 0], offsets[:, 1], color="red", s=30, edgecolor="black", alpha=0.8, zorder=5
+                    )
 
         if axMesh.collections:
             for coll in axMesh.collections:
                 offsets = coll.get_offsets()
-                axs[len(axs) - 1].scatter(offsets[:, 0], offsets[:, 1], color="red", s=markerSize, edgecolor="black", alpha=0.8)
+                axs[len(axs) - 1].scatter(
+                    offsets[:, 0], offsets[:, 1], color="red", s=markerSize, edgecolor="black", alpha=0.8
+                )
             axs[len(axs) - 1].set_ylabel(axMesh.get_ylabel())
             axs[len(axs) - 1].set_xlim(interval)
 
@@ -897,7 +956,7 @@ int main() {{
 
         return fig, axs
 
-    def plotParametric(self, varX, varY, meshIteration=None, interval=None, dots=Dots.OFF):
+    def _parametricPlot(self, varX, varY, meshIteration=None, interval=None, dots=Dots.OFF):
         self.setPlotDefaults()
 
         meshIteration = self.checkMeshIteration(meshIteration)
@@ -922,7 +981,7 @@ int main() {{
         plt.tight_layout()
         plt.show()
 
-    # Helper function to apply dots in regular plots
+    # helper function to apply dots in regular plots
     def _applyDots(self, ax, dots, meshIteration, column):
         if dots == Dots.ALL:
             ax.scatter(
@@ -945,7 +1004,7 @@ int main() {{
                 zorder=5,
             )
 
-    # Helper function to apply dots in parametric plots
+    # helper function to apply dots in parametric plots
     def _applyDotsParametric(self, x_data, y_data, dots):
         if dots == Dots.ALL:
             plt.scatter(x_data, y_data, color="red", s=30, edgecolor="black", alpha=0.8, zorder=5)
@@ -960,7 +1019,7 @@ int main() {{
                 zorder=5,
             )
 
-    # Private mesh refinement plot function
+    # private mesh refinement plot function
     def _plotMeshRefinement(self, ax=None, interval=None, markerSize=30, dots=Dots.BASE, epsilon=1e-14):
         self.setPlotDefaults()
         from matplotlib.ticker import MaxNLocator
@@ -977,10 +1036,22 @@ int main() {{
             arr = self.resultHistory[m]["time"].to_numpy()[:: self._getModulo(dots)]
 
             if m == 0:
-                ax.scatter(arr, np.ones_like(arr) * m, color="red", s=markerSize, edgecolor="black", alpha=0.8, zorder=5)
+                ax.scatter(
+                    arr, np.ones_like(arr) * m, color="red", s=markerSize, edgecolor="black", alpha=0.8, zorder=5
+                )
             else:
-                new_points = np.array([pt for pt in arr if prev_points.size == 0 or not np.any(np.abs(prev_points - pt) < epsilon)])
-                ax.scatter(new_points, np.ones_like(new_points) * m, color="red", s=markerSize, edgecolor="black", alpha=0.8, zorder=5)
+                new_points = np.array(
+                    [pt for pt in arr if prev_points.size == 0 or not np.any(np.abs(prev_points - pt) < epsilon)]
+                )
+                ax.scatter(
+                    new_points,
+                    np.ones_like(new_points) * m,
+                    color="red",
+                    s=markerSize,
+                    edgecolor="black",
+                    alpha=0.8,
+                    zorder=5,
+                )
 
             prev_points = arr
 
@@ -991,7 +1062,6 @@ int main() {{
         ax.set_title("Inserted Mesh Points Over Time")
         return fig, ax
 
-    # Helper function to get modulo value based on dots argument
     def _getModulo(self, dots):
         return 1 if dots == Dots.ALL else self.rksteps
 
@@ -1038,6 +1108,8 @@ int main() {{
             ax.set_ylabel("Variables")
             ax.set_title("Hessian Sparsity")
 
+        plt.tight_layout()
+        plt.subplots_adjust(left=0.075, right=0.95, top=0.925, bottom=0.075, hspace=0.1)
         plt.show()
 
 

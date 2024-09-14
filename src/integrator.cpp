@@ -22,6 +22,16 @@ Integrator::Integrator(const std::vector<double>& c, const std::vector<std::vect
           temp.insert(temp.end(), c.begin(), c.end());
           return temp;
       }()),
+      cBisection([this]() {
+          std::vector<double> newGrid;
+          for (int k = 0; k < 2; k++) {
+              for (size_t idx = 0; idx < c0.size(); idx++) {
+                  if (k != 1 || idx != 0)
+                      newGrid.push_back(0.5 * (k + c0[idx]));
+              }
+          }
+          return newGrid;
+      }()),
       interpolationFirstLagrangeBasis(interpolationFirstBasisPolynomial()),
       interpolationLagrangeBasis(interpolationBasisPolynomial()),
       lagrangeBasisDiff(basisPolynomialDiff()),
@@ -220,8 +230,9 @@ std::vector<double> Integrator::interpolateFirstControl(std::vector<double>& uVa
     return vals;
 }
 
-// output values at c_0/2, c_1/2, ..., c_m/2 = 1/2, 1/2 + c_0/2, 1/2 + c_1/2, ..., 1
-std::vector<double> Integrator::interpolate(std::vector<double>& values) {
+// output values of given interpolating polynomial
+// at  c_0/2, c_1/2, ..., c_m/2 = 1/2, 1/2 + c_0/2, 1/2 + c_1/2, ..., 1
+std::vector<double> Integrator::evalInterpolationNewKnots(std::vector<double>& values) {
     std::vector<double> vals;
     for (int j = 1; j < sz(interpolationLagrangeBasis); j++) {
         double sum = 0;
@@ -231,6 +242,34 @@ std::vector<double> Integrator::interpolate(std::vector<double>& values) {
         vals.push_back(sum);
     }
     return vals;
+}
+
+std::vector<double> Integrator::evalLinearSplineNewKnots(std::vector<double>& values) {
+    // evaluates the values input array at the new knots c1/2, ..., cm/2=1/2, c1/2 + 1/2, ...
+    // via a linear spline on the entire interval
+    std::vector<double> newVals;
+    int idx = 0;
+
+    for (double cn : cBisection) {
+        while (cn > c0[idx + 1] && idx < sz(c0) - 2) {
+            idx++;
+        }
+
+        // cn must be inside c0[idx], c0[idx+1]
+        if (c0[idx] <= cn && cn <= c0[idx + 1]) {
+            // linear interpolation
+            const double slope = (values[idx + 1] - values[idx]) / (c0[idx + 1] - c0[idx]);
+            const double interpolatedVal = values[idx] + slope * (cn - c0[idx]);
+            newVals.push_back(interpolatedVal);
+        }
+    }
+
+    // remove val at t=c0
+    if (!newVals.empty()) {
+        newVals.erase(newVals.begin());
+    }
+
+    return newVals;
 }
 
 Integrator Integrator::testIntegrator(const double a) {

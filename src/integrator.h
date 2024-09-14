@@ -52,6 +52,7 @@ public:
     const std::vector<std::vector<double>> Ainv;
     const std::vector<double> invRowSum;
     const std::vector<double> b;
+    const std::vector<double> cBisection;  // [1/2 * j + 1/2 * c_i] for j=0, 1 and i = 1, ..., m
     const int steps;
 
     double integrate(std::vector<double>&);
@@ -63,9 +64,11 @@ public:
     std::vector<std::vector<double>> interpolationFirstBasisPolynomial();  // inner basis poly, needed for 1st interval of u
     std::vector<std::vector<double>> interpolationBasisPolynomial();       // standard collocation polynomial
     std::vector<double> interpolateFirstControl(std::vector<double>& uValues);
-    std::vector<double> interpolate(std::vector<double>&);
+    std::vector<double> evalInterpolationNewKnots(std::vector<double>& values);
     const std::vector<std::vector<double>> interpolationFirstLagrangeBasis;
     const std::vector<std::vector<double>> interpolationLagrangeBasis;
+
+    std::vector<double> evalLinearSplineNewKnots(std::vector<double>& values);
 
     // all basis coefficients at all c_j for p_u, p_u', p_u''
     std::vector<std::vector<double>> basisPolynomialDiff();

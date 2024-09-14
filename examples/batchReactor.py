@@ -48,13 +48,18 @@ model.generate()
 
 model.optimize(
     tf=1,
-    steps=25,
+    steps=250,
     rksteps=3,
-    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE, "exportJacobianPath": "/tmp"},
+    flags={
+        "outputPath": "/tmp",
+        "linearSolver": LinearSolver.MA57,
+        "initVars": InitVars.SOLVE,
+        "exportJacobianPath": "/tmp",
+    },
     meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 6},
 )
 
 model.plotInputs(dots=Dots.ALL)
 model.plotSparseMatrix(MatrixType.JACOBIAN)
 model.printResults()
-model.plotMeshRefinement()
+model.plotInputsAndRefinement()
