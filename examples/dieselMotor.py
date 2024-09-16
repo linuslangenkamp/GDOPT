@@ -153,7 +153,7 @@ model.optimize(
     tf=0.5,
     flags={
         "outputPath": "/tmp",
-        "linearSolver": LinearSolver.MUMPS,
+        "linearSolver": LinearSolver.MA57,
         "ivpSolver": IVPSolver.RADAU,
         "refinementMethod": RefinementMethod.LINEAR_SPLINE,
         "initVars": InitVars.SOLVE,

@@ -554,8 +554,6 @@ void Solver::setSolverFlags(IpoptApplication& app) {
     }
     else {
         // flags for every following refined optimization
-        app.Options()->SetNumericValue("mu_init", 1e-3);
-
         app.Options()->SetNumericValue("bound_push", 1e-4);
         app.Options()->SetNumericValue("bound_frac", 1e-4);
 
@@ -568,7 +566,13 @@ void Solver::setSolverFlags(IpoptApplication& app) {
 
 void Solver::setStandardSolverFlags(IpoptApplication& app) {
     // these are flags are always set, no matter if a mesh refinement is currently executed
+
+    // mu-update strategy
+    // turns out kkt-error adaptive_mu works really well for the provided examples
     app.Options()->SetStringValue("mu_strategy", "adaptive");
+    app.Options()->SetStringValue("adaptive_mu_globalization", "kkt-error");
+
+    // iterations and tolereances
     app.Options()->SetNumericValue("tol", tolerance);
     app.Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
     app.Options()->SetIntegerValue("max_iter", 15000);
