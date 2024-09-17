@@ -13,9 +13,9 @@ CHAIN_SIZE = 15
 x = []
 for v in range(N):
     if v == 0:
-        x.append(model.addState(symbol=f"obj", start=0))
+        x.append(model.addState(symbol=f"obj", lb=0, ub=1, start=0))
     else:
-        x.append(model.addState(symbol=f"x{v}", start=1 / (N - 1)))
+        x.append(model.addState(symbol=f"x{v}", lb=0, ub=1, start=1 / (N - 1)))
 
 u = model.addInput(symbol="u", lb=0, ub=5, guess=1.5 - t)
 
@@ -52,7 +52,7 @@ model.addFinal(energy, ub=0.5)
 
 model.addMayer(x[0], Objective.MAXIMIZE)
 
-# model.generate()
+model.generate()
 
 model.optimize(
     tf=1,

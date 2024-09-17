@@ -7,18 +7,25 @@
 
 /* BIG TODOS: TYPE | IMPORTANCE | EFFORT from 1 to 5
  * TODO:
+
+    main todos:
     1 add, construct, test more mesh refinement algorithms!             4, 4
     2 OpenModelica interface                                            4, 5
-    3 tf as free variable                                               2, 4.5
-    4 vectorized equation, derivatives with local substitutions         2, 4
+    3 test framework for huge examples / industry relevant              3, 2
+    4 play with setting in ipopt / pivoting etc.                        2, 3
+    5 check long double to double cast in evals?!                       1, 2
+
+    delayed:
+    6 tf as free variable                                                2, 4.5
+    7 vectorized equation, derivatives with local substitutions          2, 4
     -> define vec(f,g), vec(r), vec(a(p))
-    5 saving of local hessian and jacobian structures (contained in 4?) 0, 1
-    6 creation of local jacobian structure (contained in 4?)            0, 1
-    7 better initial guess evolutionary algorithms                      1, 3
-    8 test framework for huge examples / industry relevant              3, 2
-    9 detection for nominal, linear, quadratic, const hessian           1, 2
-    10 play with setting in ipopt / pivoting etc.                       2, 3
-    11 check long double to double cast in evals?!                      1, 2
+    8 better initial guess evolutionary algorithms                       1, 3
+    9 detection for nominal, linear, quadratic, const hessian            1, 2
+    10 constructing a p / hp-method?                                     3, 5
+
+    abandoned:
+    10 saving of local hessian and jacobian structures (contained in 4?) 0, 1
+    11 creation of local jacobian structure (contained in 4?)            0, 1
 */
 
 struct SolverPrivate {
@@ -556,8 +563,6 @@ void Solver::setSolverFlags(IpoptApplication& app) {
         // flags for every following refined optimization
         app.Options()->SetNumericValue("bound_push", 1e-4);
         app.Options()->SetNumericValue("bound_frac", 1e-4);
-
-        app.Options()->SetNumericValue("bound_relax_factor", 1e-6);
     }
 
     // setting the standard flags

@@ -682,13 +682,13 @@ int main() {{
             self.resultHistory = {}  # clear result history for new optimization
 
         if self.initVars == InitVars.SOLVE:
-            print("Solving IVP for initial state guesses...")
+            print("Solving IVP for initial state guesses...\n")
 
             solveStart = timer.time()
             timeVals, stateVals = self.solveDynamic()
-            print(f"\nSolving the IVP took {round(timer.time() - solveStart, 4)} seconds.")
+            print(f"Solving the IVP took {round(timer.time() - solveStart, 4)} seconds.\n")
 
-            print(f"\nWriting guesses to {self.initialStatesPath + '/initialValues.csv'}...")
+            print(f"Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...\n")
             with open(self.initialStatesPath + "/initialValues.csv", "w") as file:
                 for i in range(len(timeVals)):
                     row = [str(timeVals[i])]
@@ -696,7 +696,7 @@ int main() {{
                         row.append(str(stateVals[dim][i]))
 
                     file.write(",".join(row) + "\n")
-            print("\nInitial guesses done.\n")
+            print("Initial guesses done.\n")
 
         ### main codegen
         filename = self.name + "Generated"
@@ -868,6 +868,8 @@ int main() {{
         dotsGraph=Dots.OFF,
         epsilon=1e-14,
     ):
+        from matplotlib.ticker import MaxNLocator
+
         if interval is None:
             interval = [0, self.tf]
 
@@ -903,6 +905,7 @@ int main() {{
                 )
             axs[len(axs) - 1].set_ylabel(axMesh.get_ylabel())
             axs[len(axs) - 1].set_xlim(interval)
+            axs[len(axs) - 1].yaxis.set_major_locator(MaxNLocator(integer=True))
 
         plt.tight_layout()
         plt.subplots_adjust(left=0.075, right=0.95, top=0.925, bottom=0.075, hspace=0.1)
