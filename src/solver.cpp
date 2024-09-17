@@ -113,7 +113,7 @@ std::vector<int> Solver::detect() const {
         case MeshAlgorithm::BASIC:
             return basicStrategy();
         case MeshAlgorithm::L2_BOUNDARY_NORM:
-            return l2BoundaryNorm();
+            return L2BoundaryNorm();
         default:
             return {};
     }
@@ -126,13 +126,13 @@ void Solver::setRefinementParameters() {
         case MeshAlgorithm::BASIC:
             return setBasicStrategy();
         case MeshAlgorithm::L2_BOUNDARY_NORM:
-            return setl2BoundaryNorm();
+            return setL2BoundaryNorm();
         default:
             return;
     }
 }
 
-std::vector<int> Solver::l2BoundaryNorm() const {
+std::vector<int> Solver::L2BoundaryNorm() const {
     const double cDiff = 1;
     const double cDiff2 = cDiff / 2;
     std::set<int> markerSet;
@@ -615,7 +615,7 @@ void Solver::setMeshParameter(const std::string& field, double value) {
     meshParameters.emplace(field, value);
 }
 
-void Solver::setl2BoundaryNorm() {
+void Solver::setL2BoundaryNorm() {
     if (meshParameters.count("level") > 0)
         L2Level = meshParameters["level"];
     if (meshParameters.count("ctol") > 0)

@@ -8,13 +8,13 @@
 #include "util.h"
 
 bool GDOP::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style) {
-    // #vars
+    // #variables
     n = numberVars;
 
-    // #eqs
+    // #constraints
     m = sz(problem->A) + sz(problem->R) + (sz(problem->F) + sz(problem->G)) * rk.steps * mesh.intervals;
 
-    // #nnz in jac
+    // #nnz in jacobian
     init_jac(nnz_jac_g);
 
     // #nnz in hessian + creation of sparsity maps and offsets
@@ -29,15 +29,15 @@ void GDOP::init_jac(Index& nnz_jac_g) {
     // eval jacobian nnz
     nnz_jac_g = 0;
 
-    // nnz jac: dynamics
+    // nnz jacobian: dynamics
     int nnzDynBlock = 0;
     int containedIndex = 0;  // target idx
     for (const auto& dyn : problem->F) {
         nnzDynBlock += sz(dyn->adj.indX) + sz(dyn->adj.indU) + sz(dyn->adj.indP);
         // check if the k-th component of x, that is always contained in this block equation,
         // is contained in grad f_k(.) as well => reduce block nnz by 1
-        auto it = std::find(dyn->adj.indX.begin(), dyn->adj.indX.end(), containedIndex);
-        if (it != dyn->adj.indX.end())
+        auto idx = std::find(dyn->adj.indX.begin(), dyn->adj.indX.end(), containedIndex);
+        if (idx != dyn->adj.indX.end())
             nnzDynBlock -= 1;
         containedIndex++;
     }
@@ -92,7 +92,7 @@ void GDOP::init_h(Index& nnz_h_lag) {
         updateDenseHessianLFG(*g, denseA, denseAt, denseB, denseBt, denseC);
     }
 
-    // update mayer, final constraint hessian structure
+    // update mayer term, final constraint hessian structure
     if (problem->M)
         updateDenseHessianMR(*problem->M, denseAt, denseBt, denseC);
 
@@ -106,7 +106,7 @@ void GDOP::init_h(Index& nnz_h_lag) {
     }
 
     // at this point all local hessian structures have been obtained
-    nnz_h_lag = (fullSum(denseA) + fullSum(denseB)) * (mesh.intervals * rk.steps - 1) + fullSum(denseAt) + fullSum(denseBt) + fullSum(denseC);
+    nnz_h_lag = (nnzMatrix(denseA) + nnzMatrix(denseB)) * (mesh.intervals * rk.steps - 1) + nnzMatrix(denseAt) + nnzMatrix(denseBt) + nnzMatrix(denseC);
 
     createSparseHessian(denseA, denseAt, denseB, denseBt, denseC, nnz_h_lag);
 }
@@ -114,30 +114,30 @@ void GDOP::init_h(Index& nnz_h_lag) {
 void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseA, std::vector<std::vector<int>>& denseAt, std::vector<std::vector<int>>& denseB,
                                std::vector<std::vector<int>>& denseBt, std::vector<std::vector<int>>& denseC, Index& nnz_h_lag) {
     /**
-     it  :  equation index in COO format
-     A   :  shift block 0,0 -> i,j: shift by lengthA * (i * rk.steps + j)
-     At  :  is exact -> it = correct eq index
-     B   :  is not exact, it = starting index for p-th parameter:  rowLengthBlockB[p] * (i * rk.steps + j)
-     Bt  :  is exact -> it = correct eq index
-     C   :  is exact -> it = correct eq index
+     idxCOO  :  equation index in COO format
+     A       :  shift block 0,0 -> i,j: shift by lengthA * (i * rk.steps + j)
+     At      :  is exact -> idxCOO = correct eq index
+     B       :  is not exact, idxCOO = starting index for p-th parameter:  rowLengthBlockB[p] * (i * rk.steps + j)
+     Bt      :  is exact -> idxCOO = correct eq index
+     C       :  is exact -> idxCOO = correct eq index
     **/
-    int it = 0;  // eq index
+    int idxCOO = 0;  // eq index
     for (int i = 0; i < offXU; i++) {
         for (int j = 0; j <= i; j++) {
             if (denseA[i][j] == 1) {
-                hessianA.insert({{i, j}, it});  // "it" not exact; shift needed based on
-                it++;
+                hessianA.insert({{i, j}, idxCOO});  // idxCOO not exact; shift needed based on
+                idxCOO++;
             }
         }
     }
-    lengthA = it;
-    it *= (mesh.intervals * rk.steps - 1);
+    lengthA = idxCOO;
+    idxCOO *= (mesh.intervals * rk.steps - 1);  // shifting At
 
     for (int i = 0; i < offXU; i++) {
         for (int j = 0; j <= i; j++) {
             if (denseAt[i][j] == 1) {
-                hessianAt.insert({{i, j}, it});  // "it" exact; no shift needed later on
-                it++;
+                hessianAt.insert({{i, j}, idxCOO});  // idxCOO exact; no shift needed later on
+                idxCOO++;
             }
         }
     }
@@ -146,34 +146,34 @@ void GDOP::createSparseHessian(std::vector<std::vector<int>>& denseA, std::vecto
         int nnzRowB = 0;
         for (int j = 0; j < offXU; j++) {
             if (denseB[i][j] == 1) {
-                hessianB.insert({{i, j}, it});  // "it" not exact; shift needed based on row
+                hessianB.insert({{i, j}, idxCOO});  // idxCOO not exact; shift needed based on row
                 nnzRowB++;
-                it++;
+                idxCOO++;
             }
         }
         rowLengthBlockB.push_back(nnzRowB);
-        it += nnzRowB * (mesh.intervals * rk.steps - 2);  // nnzRowB * (mesh.intervals * rk.steps - 1) - nnzRowB
+        idxCOO += nnzRowB * (mesh.intervals * rk.steps - 2);  // shifting to Bt: nnzRowB * (mesh.intervals * rk.steps - 1) - nnzRowB
 
         for (int j = 0; j < offXU; j++) {
             if (denseBt[i][j] == 1) {
-                hessianBt.insert({{i, j}, it});  // "it" exact; no shift needed later on
-                it++;
+                hessianBt.insert({{i, j}, idxCOO});  // idxCOO exact; no shift needed later on
+                idxCOO++;
             }
         }
 
         for (int j = 0; j < offP; j++) {
             if (denseC[i][j] == 1) {
-                hessianC.insert({{i, j}, it});  // "it" exact; no shift needed later on
-                it++;
+                hessianC.insert({{i, j}, idxCOO});  // idxCOO exact; no shift needed later on
+                idxCOO++;
             }
         }
     }
-    assert(it == nnz_h_lag);
+    assert(idxCOO == nnz_h_lag);
 }
 
 void GDOP::updateDenseHessianLFG(const Expression& expr, std::vector<std::vector<int>>& denseA, std::vector<std::vector<int>>& denseAt,
                                  std::vector<std::vector<int>>& denseB, std::vector<std::vector<int>>& denseBt, std::vector<std::vector<int>>& denseC) const {
-    // update of hessian blocks for lagrange-term, dynamic and path constraints
+    // update of hessian blocks for lagrange term, dynamic and path constraints
     for (auto const [x1, x2] : expr.adjDiff.indXX) {
         denseA[x1][x2] = 1;
         denseAt[x1][x2] = 1;
@@ -201,7 +201,7 @@ void GDOP::updateDenseHessianLFG(const Expression& expr, std::vector<std::vector
 
 void GDOP::updateDenseHessianMR(const Expression& expr, std::vector<std::vector<int>>& denseAt, std::vector<std::vector<int>>& denseBt,
                                 std::vector<std::vector<int>>& denseC) const {
-    // update of hessian blocks for Mayer-term and final constraints
+    // update of hessian blocks for mayer term and final constraints
     for (auto const [x1, x2] : expr.adjDiff.indXX) {
         denseAt[x1][x2] = 1;
     }
@@ -222,7 +222,7 @@ void GDOP::updateDenseHessianMR(const Expression& expr, std::vector<std::vector<
     }
 }
 
-void GDOP::updateDenseHessianA(const ParamExpression& expr, std::vector<std::vector<int>>& denseC) {
+void GDOP::updateDenseHessianA(const ParamExpression& expr, std::vector<std::vector<int>>& denseC) const {
     // update of hessian Blocks for parametric constraints
     for (auto const [p1, p2] : expr.adjDiff.indPP) {
         denseC[p1][p2] = 1;
@@ -670,7 +670,7 @@ bool GDOP::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g) {
 
 int GDOP::init_jac_sparsity(Index* iRow, Index* jCol) {
     // Just iterates over all blocks atm, no use of block struct
-    int it = 0;
+    int idxCOO = 0;
     int eq = 0;
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
@@ -681,40 +681,40 @@ int GDOP::init_jac_sparsity(Index* iRow, Index* jCol) {
             for (int d = 0; d < sz(problem->F); d++) {
                 // sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
                 if (i > 0) {
-                    iRow[it] = eq;
-                    jCol[it] = xi1_m + d;
-                    it++;
+                    iRow[idxCOO] = eq;
+                    jCol[idxCOO] = xi1_m + d;
+                    idxCOO++;
                 }
 
                 // sum_k ~a_{jk} * (x_{i,k})
                 for (int k = 0; k < rk.steps; k++) {
                     const int xik = i * offXUBlock + k * offXU;
-                    iRow[it] = eq;
-                    jCol[it] = xik + d;
-                    it++;
+                    iRow[idxCOO] = eq;
+                    jCol[idxCOO] = xik + d;
+                    idxCOO++;
                 }
 
                 // f(v_{ij})_x: care handle duplicates if d is contained in indX!!
                 for (int v : problem->F[d]->adj.indX) {
                     if (v != d) {
-                        iRow[it] = eq;
-                        jCol[it] = xij + v;
-                        it++;
+                        iRow[idxCOO] = eq;
+                        jCol[idxCOO] = xij + v;
+                        idxCOO++;
                     }
                 }
 
                 // f(v_{ij})_u
                 for (int v : problem->F[d]->adj.indU) {
-                    iRow[it] = eq;
-                    jCol[it] = uij + v;
-                    it++;
+                    iRow[idxCOO] = eq;
+                    jCol[idxCOO] = uij + v;
+                    idxCOO++;
                 }
 
                 // f(v_{ij})_p
                 for (int v : problem->F[d]->adj.indP) {
-                    iRow[it] = eq;
-                    jCol[it] = offXUTotal + v;
-                    it++;
+                    iRow[idxCOO] = eq;
+                    jCol[idxCOO] = offXUTotal + v;
+                    idxCOO++;
                 }
                 eq++;
             }
@@ -722,23 +722,23 @@ int GDOP::init_jac_sparsity(Index* iRow, Index* jCol) {
             for (const auto& constrG : problem->G) {
                 // g(v_{ij})_x
                 for (int v : constrG->adj.indX) {
-                    iRow[it] = eq;
-                    jCol[it] = xij + v;
-                    it++;
+                    iRow[idxCOO] = eq;
+                    jCol[idxCOO] = xij + v;
+                    idxCOO++;
                 }
 
                 // g(v_{ij})_u
                 for (int v : constrG->adj.indU) {
-                    iRow[it] = eq;
-                    jCol[it] = uij + v;
-                    it++;
+                    iRow[idxCOO] = eq;
+                    jCol[idxCOO] = uij + v;
+                    idxCOO++;
                 }
 
                 // g(v_{ij})_p
                 for (int v : constrG->adj.indP) {
-                    iRow[it] = eq;
-                    jCol[it] = offXUTotal + v;
-                    it++;
+                    iRow[idxCOO] = eq;
+                    jCol[idxCOO] = offXUTotal + v;
+                    idxCOO++;
                 }
                 eq++;
             }
@@ -751,23 +751,23 @@ int GDOP::init_jac_sparsity(Index* iRow, Index* jCol) {
     for (const auto& constrR : problem->R) {
         // r(v_{nm})_x
         for (int v : constrR->adj.indX) {
-            iRow[it] = eq;
-            jCol[it] = xnm + v;
-            it++;
+            iRow[idxCOO] = eq;
+            jCol[idxCOO] = xnm + v;
+            idxCOO++;
         }
 
         // r(v_{nm})_u
         for (int v : constrR->adj.indU) {
-            iRow[it] = eq;
-            jCol[it] = unm + v;
-            it++;
+            iRow[idxCOO] = eq;
+            jCol[idxCOO] = unm + v;
+            idxCOO++;
         }
 
         // r(v_{nm})_p
         for (int v : constrR->adj.indP) {
-            iRow[it] = eq;
-            jCol[it] = offXUTotal + v;
-            it++;
+            iRow[idxCOO] = eq;
+            jCol[idxCOO] = offXUTotal + v;
+            idxCOO++;
         }
         eq++;
     }
@@ -775,9 +775,9 @@ int GDOP::init_jac_sparsity(Index* iRow, Index* jCol) {
     for (const auto& constrA : problem->A) {
         // a_p
         for (int v : constrA->adj.indP) {
-            iRow[it] = eq;
-            jCol[it] = offXUTotal + v;
-            it++;
+            iRow[idxCOO] = eq;
+            jCol[idxCOO] = offXUTotal + v;
+            idxCOO++;
         }
         eq++;
     }
@@ -785,8 +785,8 @@ int GDOP::init_jac_sparsity(Index* iRow, Index* jCol) {
 }
 
 void GDOP::get_jac_values(const Number* x, Number* values) {
-    int containedIdx = -1;
-    int it = 0;
+    int containedIndex;
+    int idxCOO = 0;
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
             const int xij = i * offXUBlock + j * offXU;         // first index (dim=0) of x_{ij}
@@ -796,17 +796,17 @@ void GDOP::get_jac_values(const Number* x, Number* values) {
             for (int d = 0; d < sz(problem->F); d++) {
                 // sum_k ~a_{jk} * (-x_{i-1,m}), i>=1
                 if (i > 0) {
-                    values[it] = -rk.invRowSum[j];
-                    it++;
+                    values[idxCOO] = -rk.invRowSum[j];
+                    idxCOO++;
                 }
 
                 // sum_k ~a_{jk} * (x_{i,k})
                 for (int k = 0; k < rk.steps; k++) {
-                    values[it] = rk.Ainv[j][k];
+                    values[idxCOO] = rk.Ainv[j][k];
                     if (k == j) {
-                        containedIdx = it;
+                        containedIndex = idxCOO;
                     }
-                    it++;
+                    idxCOO++;
                 }
 
                 // eval grad f(v_{ij})
@@ -816,24 +816,24 @@ void GDOP::get_jac_values(const Number* x, Number* values) {
                 for (int v = 0; v < sz(problem->F[d]->adj.indX); v++) {
                     auto idx = problem->F[d]->adj.indX[v];
                     if (idx != d) {
-                        values[it] = -mesh.deltaT[i] * diffF[0][v];
-                        it++;
+                        values[idxCOO] = -mesh.deltaT[i] * diffF[0][v];
+                        idxCOO++;
                     }
                     else {
-                        values[containedIdx] -= mesh.deltaT[i] * diffF[0][v];
+                        values[containedIndex] -= mesh.deltaT[i] * diffF[0][v];
                     }
                 }
 
                 // f(v_{ij})_u
                 for (int v = 0; v < sz(problem->F[d]->adj.indU); v++) {
-                    values[it] = -mesh.deltaT[i] * diffF[1][v];
-                    it++;
+                    values[idxCOO] = -mesh.deltaT[i] * diffF[1][v];
+                    idxCOO++;
                 }
 
                 // f(v_{ij})_p
                 for (int v = 0; v < sz(problem->F[d]->adj.indP); v++) {
-                    values[it] = -mesh.deltaT[i] * diffF[2][v];
-                    it++;
+                    values[idxCOO] = -mesh.deltaT[i] * diffF[2][v];
+                    idxCOO++;
                 }
             }
 
@@ -843,20 +843,20 @@ void GDOP::get_jac_values(const Number* x, Number* values) {
 
                 // g(v_{ij})_x
                 for (int v = 0; v < sz(constrG->adj.indX); v++) {
-                    values[it] = diffG[0][v];
-                    it++;
+                    values[idxCOO] = diffG[0][v];
+                    idxCOO++;
                 }
 
                 // g(v_{ij})_u
                 for (int v = 0; v < sz(constrG->adj.indU); v++) {
-                    values[it] = diffG[1][v];
-                    it++;
+                    values[idxCOO] = diffG[1][v];
+                    idxCOO++;
                 }
 
                 // g(v_{ij})_p
                 for (int v = 0; v < sz(constrG->adj.indP); v++) {
-                    values[it] = diffG[2][v];
-                    it++;
+                    values[idxCOO] = diffG[2][v];
+                    idxCOO++;
                 }
             }
         }
@@ -871,20 +871,20 @@ void GDOP::get_jac_values(const Number* x, Number* values) {
 
         // r(v_{nm})_x
         for (int v = 0; v < sz(constrR->adj.indX); v++) {
-            values[it] = diffR[0][v];
-            it++;
+            values[idxCOO] = diffR[0][v];
+            idxCOO++;
         }
 
         // r(v_{nm})_u
         for (int v = 0; v < sz(constrR->adj.indU); v++) {
-            values[it] = diffR[1][v];
-            it++;
+            values[idxCOO] = diffR[1][v];
+            idxCOO++;
         }
 
         // r(v_{nm})_p
         for (int v = 0; v < sz(constrR->adj.indP); v++) {
-            values[it] = diffR[2][v];
-            it++;
+            values[idxCOO] = diffR[2][v];
+            idxCOO++;
         }
     }
 
@@ -894,8 +894,8 @@ void GDOP::get_jac_values(const Number* x, Number* values) {
 
         // a_p
         for (int v = 0; v < sz(constrA->adj.indP); v++) {
-            values[it] = diffA[v];
-            it++;
+            values[idxCOO] = diffA[v];
+            idxCOO++;
         }
     }
 }
@@ -919,11 +919,11 @@ bool GDOP::eval_jac_g(Index n, const Number* x, bool new_x, Index m, Index nele_
 
 void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
     // A block forall i, j except very last interval (n, m)
-    for (const auto& [vars, it] : hessianA) {
+    for (const auto& [vars, idxCOO] : hessianA) {
         auto const [v1, v2] = vars;
         for (int i = 0; i < mesh.intervals - 1; i++) {
             for (int j = 0; j < rk.steps; j++) {
-                const int idxij = it + lengthA * (i * rk.steps + j);
+                const int idxij = idxCOO + lengthA * (i * rk.steps + j);
                 const int v1ij = i * offXUBlock + j * offXU + v1;
                 const int v2ij = i * offXUBlock + j * offXU + v2;
                 iRow[idxij] = v1ij;
@@ -931,7 +931,7 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
             }
         }
         for (int j = 0; j < rk.steps - 1; j++) {
-            const int idxij = it + lengthA * ((mesh.intervals - 1) * rk.steps + j);
+            const int idxij = idxCOO + lengthA * ((mesh.intervals - 1) * rk.steps + j);
             const int v1ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v1;
             const int v2ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v2;
             iRow[idxij] = v1ij;
@@ -939,23 +939,23 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
         }
     }
 
-    // At for very last interval, note that "it" is the correct array index by construction
-    for (const auto& [vars, it] : hessianAt) {
+    // At for very last interval, note that idxCOO is the correct array index by construction
+    for (const auto& [vars, idxCOO] : hessianAt) {
         auto const [v1, v2] = vars;
         for (int j = 0; j < rk.steps; j++) {
             const int v1ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v1;
             const int v2ij = (mesh.intervals - 1) * offXUBlock + j * offXU + v2;
-            iRow[it] = v1ij;
-            jCol[it] = v2ij;
+            iRow[idxCOO] = v1ij;
+            jCol[idxCOO] = v2ij;
         }
     }
 
     // B block forall i, j except very last interval (n, m)
-    for (const auto& [vars, it] : hessianB) {
+    for (const auto& [vars, idxCOO] : hessianB) {
         auto const [p, v] = vars;
         for (int i = 0; i < mesh.intervals - 1; i++) {
             for (int j = 0; j < rk.steps; j++) {
-                const int idxij = it + rowLengthBlockB[p] * (i * rk.steps + j);
+                const int idxij = idxCOO + rowLengthBlockB[p] * (i * rk.steps + j);
                 const int pshifted = offXUTotal + p;
                 const int vij = i * offXUBlock + j * offXU + v;
                 iRow[idxij] = pshifted;
@@ -963,7 +963,7 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
             }
         }
         for (int j = 0; j < rk.steps - 1; j++) {
-            const int idxij = it + rowLengthBlockB[p] * ((mesh.intervals - 1) * rk.steps + j);
+            const int idxij = idxCOO + rowLengthBlockB[p] * ((mesh.intervals - 1) * rk.steps + j);
             const int pshifted = offXUTotal + p;
             const int vij = (mesh.intervals - 1) * offXUBlock + j * offXU + v;
             iRow[idxij] = pshifted;
@@ -971,66 +971,68 @@ void GDOP::init_h_sparsity(Index* iRow, Index* jCol) {
         }
     }
 
-    // Bt for very last interval, note that "it" is the correct array index by construction
-    for (const auto& [vars, it] : hessianBt) {
+    // Bt for very last interval, note that idxCOO is the correct array index by construction
+    for (const auto& [vars, idxCOO] : hessianBt) {
         auto const [p, v] = vars;
         for (int j = 0; j < rk.steps; j++) {
             const int pshifted = offXUTotal + p;
             const int vij = (mesh.intervals - 1) * offXUBlock + j * offXU + v;
-            iRow[it] = pshifted;
-            jCol[it] = vij;
+            iRow[idxCOO] = pshifted;
+            jCol[idxCOO] = vij;
         }
     }
 
     // C
-    for (const auto& [vars, it] : hessianC) {
+    for (const auto& [vars, idxCOO] : hessianC) {
         auto const [p1, p2] = vars;
         const int p1shifted = offXUTotal + p1;
         const int p2shifted = offXUTotal + p2;
-        iRow[it] = p1shifted;
-        jCol[it] = p2shifted;
+        iRow[idxCOO] = p1shifted;
+        jCol[idxCOO] = p2shifted;
     }
 }
 
 void GDOP::evalHessianA_B(Number* values, const Number* x, Expression& expr, const double factor, const int xij, const int uij, const double tij, const int i,
                           const int j) {
     auto const diff2Expr = expr.evalDiff2(&x[xij], &x[uij], &x[offXUTotal], tij);
+
+    // shifting needed for A and B COO indices!
     for (int k = 0; k < sz(expr.adjDiff.indXX); k++) {
         auto const vars = expr.adjDiff.indXX[k];
-        auto const idx = lengthA * (i * rk.steps + j) + hessianA[vars];
-        values[idx] += factor * diff2Expr[0][k];
+        auto const idxCOO = lengthA * (i * rk.steps + j) + hessianA[vars];
+        values[idxCOO] += factor * diff2Expr[0][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indUX); k++) {
         auto const [uvar, xvar] = expr.adjDiff.indUX[k];
-        auto const idx = lengthA * (i * rk.steps + j) + hessianA[{offX + uvar, xvar}];
-        values[idx] += factor * diff2Expr[1][k];
+        auto const idxCOO = lengthA * (i * rk.steps + j) + hessianA[{offX + uvar, xvar}];
+        values[idxCOO] += factor * diff2Expr[1][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indUU); k++) {
         auto const [uvar1, uvar2] = expr.adjDiff.indUU[k];
-        auto const idx = lengthA * (i * rk.steps + j) + hessianA[{offX + uvar1, offX + uvar2}];
-        values[idx] += factor * diff2Expr[2][k];
+        auto const idxCOO = lengthA * (i * rk.steps + j) + hessianA[{offX + uvar1, offX + uvar2}];
+        values[idxCOO] += factor * diff2Expr[2][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPX); k++) {
         auto const [pvar, xvar] = expr.adjDiff.indPX[k];
-        auto const it = hessianB[{pvar, xvar}];
-        auto const idx = it + rowLengthBlockB[pvar] * (i * rk.steps + j);
-        values[idx] += factor * diff2Expr[3][k];
+        auto const idxCOO = rowLengthBlockB[pvar] * (i * rk.steps + j) + hessianB[{pvar, xvar}];
+        values[idxCOO] += factor * diff2Expr[3][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPU); k++) {
         auto const [pvar, uvar] = expr.adjDiff.indPU[k];
-        auto const it = hessianB[{pvar, uvar + offX}];
-        auto const idx = it + rowLengthBlockB[pvar] * (i * rk.steps + j);
-        values[idx] += factor * diff2Expr[4][k];
+        auto const idxCOO = rowLengthBlockB[pvar] * (i * rk.steps + j) + hessianB[{pvar, uvar + offX}];
+        values[idxCOO] += factor * diff2Expr[4][k];
     }
     for (int k = 0; k < sz(expr.adjDiff.indPP); k++) {
         auto const vars = expr.adjDiff.indPP[k];
-        auto const it = hessianC[vars];
-        values[it] += factor * diff2Expr[5][k];
+        auto const idxCOO = hessianC[vars];
+        values[idxCOO] += factor * diff2Expr[5][k];
     }
 }
 
 void GDOP::evalHessianAt_Bt(Number* values, const Number* x, Expression& expr, const double factor, const int xij, const int uij, const double tij) {
     auto const diff2Expr = expr.evalDiff2(&x[xij], &x[uij], &x[offXUTotal], tij);
+
+    // no shifting needed At, Bt and C have exact COO indices!
     for (int k = 0; k < sz(expr.adjDiff.indXX); k++) {
         auto const vars = expr.adjDiff.indXX[k];
         values[hessianAt[vars]] += factor * diff2Expr[0][k];
@@ -1073,7 +1075,7 @@ int GDOP::get_h_values(const Number* x, Number* values, Number obj_factor, const
             const int xij = i * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
             const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
-            // eval hessian lagrangian
+            // eval hessian lagrange
             if (problem->L) {
                 const double lFactor = obj_factor * mesh.deltaT[i] * rk.b[j];
                 evalHessianA_B(values, x, *problem->L, lFactor, xij, uij, tij, i, j);
@@ -1101,7 +1103,7 @@ int GDOP::get_h_values(const Number* x, Number* values, Number obj_factor, const
         const int xij = (mesh.intervals - 1) * offXUBlock + j * offXU;         // index of 1st x var at collocation point (i,j)
         const int uij = (mesh.intervals - 1) * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
-        // eval hessian lagrangian
+        // eval hessian lagrange
         if (problem->L) {
             const double lagrFactor = obj_factor * mesh.deltaT[(mesh.intervals - 1)] * rk.b[j];
             evalHessianA_B(values, x, *problem->L, lagrFactor, xij, uij, tij, (mesh.intervals - 1), j);
@@ -1126,13 +1128,13 @@ int GDOP::get_h_values(const Number* x, Number* values, Number obj_factor, const
     const int xnm = (mesh.intervals - 1) * offXUBlock + (rk.steps - 1) * offXU;         // index of 1st x var at collocation point (n,m)
     const int unm = (mesh.intervals - 1) * offXUBlock + (rk.steps - 1) * offXU + offX;  // index of 1st u var at collocation point (n,m)
 
-    // eval hessian mayer
+    // eval hessian mayer term
     if (problem->M) {
         const double mayFactor = obj_factor;
         evalHessianAt_Bt(values, x, *problem->M, mayFactor, xnm, unm, mesh.tf);
     }
 
-    // eval hessian lagrangian
+    // eval hessian lagrange term
     if (problem->L) {
         const double lagrFactor = obj_factor * mesh.deltaT[(mesh.intervals - 1)] * rk.b[rk.steps - 1];
         evalHessianAt_Bt(values, x, *problem->L, lagrFactor, xnm, unm, mesh.tf);
@@ -1159,7 +1161,7 @@ int GDOP::get_h_values(const Number* x, Number* values, Number obj_factor, const
         eq++;
     }
 
-    // eval hessian algebraic parameter constraints
+    // eval hessian algebraic parametric constraints
     for (auto const& a : problem->A) {
         const double aFactor = lambda[eq];
         evalHessianC(values, x, *a, aFactor);
@@ -1210,7 +1212,6 @@ void GDOP::exportOptimum(const std::string& filename) const {
     outFile << header << "\n";
 
     // time = 0 -> interpolate the control backwards
-
     std::string values = "0";
     for (int vx = 0; vx < problem->sizeX; vx++) {
         values += "," + double2Str(problem->x0[vx]);

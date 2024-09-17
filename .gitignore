@@ -4,4 +4,5 @@ cmake-build-*/
 Makefile
 /examples/.generated/
 .cache/
+.env
 __pycache__/

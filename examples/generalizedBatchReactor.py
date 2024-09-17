@@ -61,10 +61,13 @@ model.optimize(
     flags={
         "outputPath": "/tmp",
         "linearSolver": LinearSolver.MA57,
-        "exportJacobianPath": "/tmp",
-        "refinementMethod": RefinementMethod.LINEAR_SPLINE,
+        "exportJacobianPath": "/tmp"
     },
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 5},
+    meshFlags={
+        "meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+        "meshIterations": 5,
+        "refinementMethod": RefinementMethod.LINEAR_SPLINE
+    },
 )
 
 model.plot(specifCols=["obj", "u", "energy"], dots=Dots.ALL)

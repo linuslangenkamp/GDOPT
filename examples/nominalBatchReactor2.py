@@ -21,8 +21,17 @@ model.optimize(
     tf=1,
     steps=500,
     rksteps=3,
-    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE, "tolerance": 1e-12, "exportJacobianPath": "/tmp"},
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 0},
+    flags={
+        "outputPath": "/tmp",
+        "linearSolver": LinearSolver.MA57,
+        "initVars": InitVars.SOLVE,
+        "tolerance": 1e-12,
+        "exportJacobianPath": "/tmp"
+    },
+    meshFlags={
+        "meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+        "meshIterations": 0
+    },
 )
 
 model.plotInputs(dots=Dots.BASE)

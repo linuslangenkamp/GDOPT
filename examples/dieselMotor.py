@@ -148,18 +148,21 @@ model.addLagrange(dot_m_f)
 model.generate()
 
 model.optimize(
-    steps=50,
+    steps=100,
     rksteps=3,
     tf=0.5,
     flags={
         "outputPath": "/tmp",
-        "linearSolver": LinearSolver.MA57,
+        "linearSolver": LinearSolver.MUMPS,
         "ivpSolver": IVPSolver.RADAU,
-        "refinementMethod": RefinementMethod.LINEAR_SPLINE,
         "initVars": InitVars.SOLVE,
         "tolerance": 1e-14,
     },
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 8},
+    meshFlags={
+        "meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+        "meshIterations": 5,
+        "refinementMethod": RefinementMethod.LINEAR_SPLINE
+    },
 )
 
 model.plot(dots=Dots.ALL)

@@ -274,7 +274,7 @@ class Model:
         timeHorizon = [0, self.tf]
 
         # scipy.solve_ivp
-        solution = solve_ivp(ode, timeHorizon, x0, method=self.ivpSolver.name, dense_output=True, rtol=1e-8)
+        solution = solve_ivp(ode, timeHorizon, x0, method=self.ivpSolver.name, dense_output=True, rtol=1e-10)
 
         # get solution at the RadauIIA knots (based on self.rksteps)
         timeVals = generate_radau_knots(timeHorizon, self.steps, self.rksteps)
@@ -368,8 +368,6 @@ class Model:
             self.setOutputPath(flags["outputPath"])
         if "linearSolver" in flags:
             self.setLinearSolver(flags["linearSolver"])
-        if "refinementMethod" in flags:
-            self.setRefinementMethod(flags["refinementMethod"])
         if "tolerance" in flags:
             self.setTolerance(flags["tolerance"])
         if "exportHessianPath" in flags:
@@ -390,6 +388,8 @@ class Model:
             self.setMeshAlgorithm(meshFlags["meshAlgorithm"])
         if "meshIterations" in meshFlags:
             self.setMeshIterations(meshFlags["meshIterations"])
+        if "refinementMethod" in meshFlags:
+            self.setRefinementMethod(meshFlags["refinementMethod"])
         if "meshLevel" in meshFlags:
             self.setMeshLevel(meshFlags["meshLevel"])
         if "meshCTol" in meshFlags:
@@ -398,7 +398,7 @@ class Model:
             self.setMeshSigma(meshFlags["meshSigma"])
 
     def uInitialGuessCodegen(self):
-        out = "std::vector<double> uInitialGuess(double t) {\n"
+        out = "std::vector<double> initialGuessU(double t) {\n"
         out += f"\t return {{{', '.join(str(toCode(varInfo[u].initialGuess)) for u in self.uVars)}}};"
         out += "\n};\n\n"
         return out
@@ -441,6 +441,7 @@ class Model:
             self.userScaling = True
 
     def initAnalysis(self):
+        print("") # print empty line to properly align the analysis section
         with open("/tmp/modelinfo.txt", "r") as file:
             for line in file:
                 line = line.strip()
@@ -557,7 +558,7 @@ class Model:
             {{{', '.join(str(toCode(varInfo[x].start)) for x in self.xVars)}}},  // x0
             {{{', '.join(str(toCode(varInfo[x].lb) if varInfo[x].lb != -float('inf') else "MINUS_INFINITY") for x in self.xVars)}}},  // lb x
             {{{', '.join(str(toCode(varInfo[x].ub) if varInfo[x].ub != float('inf') else "PLUS_INFINITY") for x in self.xVars)}}},  // ub x
-            &uInitialGuess,  // u0 initial guesses for optimization
+            &initialGuessU,  // u0 initial guesses for optimization
             {{{', '.join(str(toCode(varInfo[u].lb) if varInfo[u].lb != -float('inf') else "MINUS_INFINITY") for u in self.uVars)}}},  // lb u
             {{{', '.join(str(toCode(varInfo[u].ub) if varInfo[u].ub != float('inf') else "PLUS_INFINITY") for u in self.uVars)}}},  // ub u
             {{{', '.join(str(toCode(varInfo[p].initialGuess)) for p in self.pVars)}}},  // p0 initial guesses for optimization
@@ -670,7 +671,7 @@ int main() {{
                 self.setSteps(steps)
                 self.setRkSteps(rksteps)
             else:  # purely parametric
-                print("\nSetting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.")
+                print("Setting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.\n")
                 self.setFinalTime(0)
                 self.setSteps(1)
                 self.setRkSteps(1)
@@ -792,8 +793,9 @@ int main() {{
     def printResultParameters(self, meshIteration=None):
         meshIteration = self.checkMeshIteration(meshIteration)
         self.getResults(meshIteration)
-        print("")
-        print(self.resultHistory[meshIteration][self.pVarNames].iloc[0].to_string())
+        print("Optimal parameters:")
+        for p, pValue in self.resultHistory[meshIteration][self.pVarNames].iloc[0].items():
+            print(f"{p} = {pValue}")
         print("")
 
     def checkMeshIteration(self, meshIteration):

@@ -18,7 +18,7 @@ enum class RefinementMethod { POLYNOMIAL, LINEAR_SPLINE };
  * and calculates the steepness difference between adjacent intervals. If these identifier are above some eps -> insert the interval + the adjacent intervals
  */
 
-// TODO: add L2BN variants: quadsection, non bisective -> blurry split, remove consts
+// TODO: add L2BN variants: quadsection, non bisective -> blurry split, remove consts!
 enum class MeshAlgorithm { NONE, BASIC, L2_BOUNDARY_NORM };
 
 struct SolverPrivate;
@@ -49,7 +49,7 @@ public:
 
     // detection methods
     std::vector<int> basicStrategy() const;
-    std::vector<int> l2BoundaryNorm() const;
+    std::vector<int> L2BoundaryNorm() const;
 
     // interpolation type for the new initial solution
     void refinePolynomial(std::vector<int>& markedIntervals);
@@ -80,7 +80,7 @@ public:
     void initSolvingProcess();
     void setTolerance(double tol);
     void setRefinementParameters();
-    void setl2BoundaryNorm();
+    void setL2BoundaryNorm();
     void setBasicStrategy();
     void setMeshParameter(const std::string& field, double value);
     void setSolverFlags(Ipopt::IpoptApplication& app);

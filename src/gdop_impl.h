@@ -38,7 +38,7 @@ public:
     const int offXUTotal = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals;  // first parameter variable
     const int numberVars = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals + problem->sizeP;
 
-    // block hessians as sparse map: (i,j) -> it, it-th index in COO format, (i,j) var indices
+    // block hessians as sparse map: (i,j) -> idxCOO - index in COO format with the var indices (i,j)
     // note that A, At, C only contain the lower triangle
 
     /**
@@ -109,7 +109,7 @@ public:
 
     void updateDenseHessianMR(const Expression&, std::vector<std::vector<int>>&, std::vector<std::vector<int>>&, std::vector<std::vector<int>>&) const;
 
-    static void updateDenseHessianA(const ParamExpression&, std::vector<std::vector<int>>&);
+    void updateDenseHessianA(const ParamExpression&, std::vector<std::vector<int>>&) const;
 
     void createSparseHessian(std::vector<std::vector<int>>&, std::vector<std::vector<int>>&, std::vector<std::vector<int>>&, std::vector<std::vector<int>>&,
                              std::vector<std::vector<int>>&, Index&);
