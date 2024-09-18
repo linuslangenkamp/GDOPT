@@ -340,7 +340,7 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Numb
                         const int uij = i * offXUBlock + j * offXU + offX;  // index of 1st u var at collocation point (i,j)
 
                         for (int dimX = 0; dimX < problem->sizeX; dimX++) {
-                            x[xij + dimX] = initialStates[rk.steps * i + j][dimX + 1];
+                            x[xij + dimX] = initialStates[rk.steps * i + j][dimX];  // JUMP1: add 1 to dimX if timeColumn is contained
                         }
 
                         std::vector<double> uGuess = problem->uInitialGuess(tij);

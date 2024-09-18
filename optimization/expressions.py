@@ -22,6 +22,7 @@ from symengine import (
     acosh,
     atanh,
     pi,
+    Abs,
     Max, 
     Min,
     Piecewise,
@@ -29,6 +30,16 @@ from symengine import (
 
 # global map varInfo: symbol -> info
 varInfo = {}
+
+# definition of the global time symbol
+t = Symbol("t")
+time = t
+TIME_SYMBOL = t # use this in code to recognize it as a symbol
+
+# definition of global final time symbol, has macro FINAL_TIME as name -> will be substituted at compile time
+tf = Symbol("FINAL_TIME")
+finalTime = tf
+FINAL_TIME_SYMBOL = tf # use this in code to recognize it as a symbol
 
 
 class Expression:

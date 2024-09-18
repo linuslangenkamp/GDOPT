@@ -28,19 +28,14 @@ end BatchReactor;
 model = Model("batchReactor")
 
 x1 = model.addState(symbol="Reactant", start=1)
-depl = model.addState(symbol="deplReactant", start=0)
-x2 = model.addState(symbol="objProduct", start=0)
+x2 = model.addState(symbol="Product", start=0)
 
-u = model.addInput(symbol="u", lb=0, ub=5, guess=guessPiecewise((0.7, t <= 1/2), (guessQuadratic(0.7, 0.8, 5), 1/2 < t)))
+u = model.addInput(symbol="u", lb=0, ub=5, guess=0.5)
 
-R_v = model.addRuntimeParameter(default=1, symbol="REACT_SPEED")
-D_v = model.addRuntimeParameter(default=1, symbol="DEPLETION_SPEED")
+model.addDynamic(x1, -(u + u**2 / 2) * x1)
+model.addDynamic(x2, u * x1)
 
 model.addMayer(x2, Objective.MAXIMIZE)
-
-model.addDynamic(depl, u**2 / 2 * D_v * x1)
-model.addDynamic(x1, -(u * R_v + u**2 / 2 * D_v) * x1)
-model.addDynamic(x2, u * x1 * R_v)
 
 model.hasLinearObjective()
 
@@ -53,13 +48,10 @@ model.optimize(
     flags={
         "outputPath": "/tmp",
         "linearSolver": LinearSolver.MA57,
-        "initVars": InitVars.SOLVE,
-        "exportJacobianPath": "/tmp",
+        "initVars": InitVars.SOLVE
     },
     meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 6},
 )
 
-model.plotInputs(dots=Dots.ALL)
-model.plotSparseMatrix(MatrixType.JACOBIAN)
 model.printResults()
 model.plotInputsAndRefinement()

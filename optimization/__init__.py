@@ -1,6 +1,7 @@
 import os
 from optimization.variables import *
 from optimization.expressions import *
+from optimization.guesses import *
 from optimization.structures import *
 from optimization.radauHandling import *
 from scipy.integrate import solve_ivp
@@ -335,7 +336,7 @@ class Model:
         ]
         
         # dirty uFuncs hack, if standard functions for the guess are provided
-        uFuncs = [Lambdify([t], varInfo[u].initialGuess.subs(TF, self.tf) 
+        uFuncs = [Lambdify([t], varInfo[u].initialGuess.subs(FINAL_TIME_SYMBOL, self.tf) 
                            if hasattr(varInfo[u].initialGuess, 'subs') 
                            else varInfo[u].initialGuess) for u in self.uVars]
 
@@ -524,7 +525,6 @@ class Model:
             self.userScaling = True
 
     def initAnalysis(self):
-        print("") # print empty line to properly align the analysis section
         with open("/tmp/modelinfo.txt", "r") as file:
             for line in file:
                 line = line.strip()
@@ -775,7 +775,7 @@ int main() {{
             print(f"Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...\n")
             with open(self.initialStatesPath + "/initialValues.csv", "w") as file:
                 for i in range(len(timeVals)):
-                    row = [str(timeVals[i])]
+                    row = [] # could add timeColumn for debugging by adding: row = [str(timeVals[i])] -> change JUMP1 as well
                     for dim in range(len(self.xVars)):
                         row.append(str(stateVals[dim][i]))
 
@@ -826,10 +826,12 @@ int main() {{
         os.system(
             f"g++ .generated/{self.name}/{filename}.cpp -O3 -ffast-math -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}"
         )
-        print(f"Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.")
+        print(f"Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.\n")
 
+        print(f"Executing...\n")
         os.system(f"LD_LIBRARY_PATH=../cmake-build-release/src/ ./.generated/{self.name}/{self.name}")
-
+        print("")
+        
         self.initAnalysis()
 
         return 0
@@ -1199,34 +1201,3 @@ int main() {{
         plt.tight_layout()
         plt.subplots_adjust(left=0.075, right=0.95, top=0.925, bottom=0.075, hspace=0.1)
         plt.show()
-
-
-# time symbol, final time symbol with name like in macro!
-t = Symbol("t")
-time = t
-TF = Symbol("FINAL_TIME")
-
-# standard guess functions
-def guessLinear(u0, uf):
-    
-    # u0 = u(0), uf = u(tf)
-
-    return u0 + t * (uf - u0) / TF
-
-def guessQuadratic(u0, um, uf):
-
-    # u0 = u(0), um = u(tf/2), uf = u(tf)
-
-    return TF**2 * u0 + TF * t * (-3 * u0 - uf + 4 * um) + 2 * t**2 * (u0 + uf - 2 * um)
-
-def guessExponential(u0, uf):
-
-    # u0 = u(0), uf = u(tf)
-
-    return u0 * (uf / u0) ** (t / TF)
-
-def guessPiecewise(*args):
-
-    # *args = (val1, condition1), (val2, condition2), ...
-
-    return Piecewise(*args, (0, True))
