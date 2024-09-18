@@ -44,7 +44,7 @@ class Model:
         self.tolerance = 1e-14
         self.exportHessianPath = None
         self.exportJacobianPath = None
-        self.initialStatesPath = "/tmp"
+        self.initialStatesPath = f".generated/{self.name}"
         self.meshLevel = None
         self.meshCTol = None
         self.meshSigma = None
@@ -76,6 +76,12 @@ class Model:
         self.checkNominalNone(nominal)
         return variable
 
+    def addX(self, start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None):
+
+        # alias for addState()
+
+        return self.addState(start, symbol=symbol, lb=lb, ub=ub, nominal=nominal)
+
     def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
 
         # adds an input / control u for optimization
@@ -88,6 +94,24 @@ class Model:
         self.uVars.append(variable)
         self.checkNominalNone(nominal)
         return variable
+    
+    def addControl(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
+
+        # alias for addInput()
+
+        return self.addInput(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
+
+    def addContinuous(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
+        
+        # alias for addInput()
+
+        return self.addInput(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
+
+    def addU(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
+        
+        # alias for addInput()
+
+        return self.addInput(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
 
     def addBinaryInput(self, lb=0, ub=1, symbol=None, guess=None, nominal=None):
 
@@ -118,6 +142,12 @@ class Model:
         self.checkNominalNone(nominal)
         return variable
 
+    def addP(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
+        
+        # alias for addParameter()
+
+        return self.addParameter(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
+
     def addBinaryParameter(self, lb=0, ub=1, symbol=None, guess=None, nominal=None):
 
         # dangerous, might break the code
@@ -147,6 +177,12 @@ class Model:
         self.rpVars.append(variable)
         return variable
 
+    def addRP(self, default, symbol):
+
+        # alias for addRuntimeParameter()
+
+        return self.addRuntimeParameter(default, symbol)
+
     def setValue(self, runtimeParameter, value):
 
         # sets a runtime parameter value
@@ -160,7 +196,7 @@ class Model:
 
         self.addMayer(mayer, obj, nominal=nominal)
         self.addLagrange(lagrange, obj, nominal=nominal)
-
+    
     def addMayer(self, expr, obj=Objective.MINIMIZE, nominal=None):
 
         # adds the mayer term: min/max expr(tf)
@@ -175,6 +211,12 @@ class Model:
             else:
                 self.M = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
+
+    def addM(self, expr, obj=Objective.MINIMIZE, nominal=None):
+
+        # alias for addMayer()
+
+        self.addMayer(expr, obj=obj, nominal=nominal)
 
     def addLagrange(self, expr, obj=Objective.MINIMIZE, nominal=None):
 
@@ -191,6 +233,12 @@ class Model:
                 self.L = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
 
+    def addL(self, expr, obj=Objective.MINIMIZE, nominal=None):
+
+        # alias for addLagrange()
+
+        self.addLagrange(expr, obj=obj, nominal=nominal)
+
     def addDynamic(self, diffVar, expr, nominal=None):
 
         # adds a dynamic constraint: diffVar' = expr
@@ -202,6 +250,19 @@ class Model:
         self.F.append(DynExpression(diffVar, expr, nominal=nominal))
         self.checkNominalNone(nominal)
 
+    def addF(self, diffVar, expr, nominal=None):
+
+        # alias for addDynamic()
+
+        self.addDynamic(diffVar, expr, nominal=nominal)
+
+    def addOde(self, diffVar, expr, nominal=None):
+
+        # alias for addDynamic()
+
+        self.addDynamic(diffVar, expr, nominal=nominal)
+
+
     def addPath(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
 
         # adds a path constraint: lb <= g(.(t)) <= ub or g(.(t)) == eq
@@ -210,6 +271,12 @@ class Model:
             raise InvalidModel("Can't set eq and lb or ub.")
         self.G.append(Constraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
         self.checkNominalNone(nominal)
+
+    def addG(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
+        
+        # alias for addPath()
+
+        self.addPath(expr, lb=lb, ub=ub, eq=eq, nominal=nominal)
 
     def addFinal(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
 
@@ -220,6 +287,12 @@ class Model:
         self.R.append(Constraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
         self.checkNominalNone(nominal)
 
+    def addR(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
+        
+        # alias for addFinal()
+
+        self.addFinal(expr, lb=lb, ub=ub, eq=eq, nominal=nominal)
+
     def addParametric(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
 
         # adds a parametric constraint: lb <= a(p) <= ub or a(p) == eq
@@ -229,6 +302,12 @@ class Model:
         else:
             raise InvalidModel("Parametric constraints only allow parametric variables")
         self.checkNominalNone(nominal)
+
+    def addA(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
+        
+        # alias for addParametric()
+
+        self.addParametric(expr, lb=lb, ub=ub, eq=eq, nominal=nominal)
 
     def _addDummy(self):
 
@@ -254,7 +333,11 @@ class Model:
             )
             for eq in range(len(self.F))
         ]
-        uFuncs = [Lambdify([t], varInfo[u].initialGuess) for u in self.uVars]
+        
+        # dirty uFuncs hack, if standard functions for the guess are provided
+        uFuncs = [Lambdify([t], varInfo[u].initialGuess.subs(TF, self.tf) 
+                           if hasattr(varInfo[u].initialGuess, 'subs') 
+                           else varInfo[u].initialGuess) for u in self.uVars]
 
         # define rhs as an actual function
         ode = lambda T, x: [
@@ -1118,27 +1201,32 @@ int main() {{
         plt.show()
 
 
-# time symbol
+# time symbol, final time symbol with name like in macro!
 t = Symbol("t")
 time = t
+TF = Symbol("FINAL_TIME")
 
-### GLOBAL ALIAS AND GLOBAL VAR DEFINITIONS
+# standard guess functions
+def guessLinear(u0, uf):
+    
+    # u0 = u(0), uf = u(tf)
 
-# variables
-Model.addControl = Model.addInput
-Model.addContinuous = Model.addInput
-Model.addX = Model.addState
-Model.addU = Model.addInput
-Model.addP = Model.addParameter
-Model.addRP = Model.addRuntimeParameter
+    return u0 + t * (uf - u0) / TF
 
-# objective
-Model.addM = Model.addMayer
-Model.addL = Model.addLagrange
+def guessQuadratic(u0, um, uf):
 
-# constraints
-Model.addOde = Model.addDynamic
-Model.addF = Model.addDynamic
-Model.addG = Model.addPath
-Model.addR = Model.addFinal
-Model.addA = Model.addParametric
+    # u0 = u(0), um = u(tf/2), uf = u(tf)
+
+    return TF**2 * u0 + TF * t * (-3 * u0 - uf + 4 * um) + 2 * t**2 * (u0 + uf - 2 * um)
+
+def guessExponential(u0, uf):
+
+    # u0 = u(0), uf = u(tf)
+
+    return u0 * (uf / u0) ** (t / TF)
+
+def guessPiecewise(*args):
+
+    # *args = (val1, condition1), (val2, condition2), ...
+
+    return Piecewise(*args, (0, True))

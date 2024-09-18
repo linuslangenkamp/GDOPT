@@ -22,6 +22,9 @@ from symengine import (
     acosh,
     atanh,
     pi,
+    Max, 
+    Min,
+    Piecewise,
 )
 
 # global map varInfo: symbol -> info

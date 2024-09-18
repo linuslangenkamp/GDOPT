@@ -31,7 +31,7 @@ x1 = model.addState(symbol="Reactant", start=1)
 depl = model.addState(symbol="deplReactant", start=0)
 x2 = model.addState(symbol="objProduct", start=0)
 
-u = model.addInput(symbol="u", lb=0, ub=5, guess=1)
+u = model.addInput(symbol="u", lb=0, ub=5, guess=guessPiecewise((0.7, t <= 1/2), (guessQuadratic(0.7, 0.8, 5), 1/2 < t)))
 
 R_v = model.addRuntimeParameter(default=1, symbol="REACT_SPEED")
 D_v = model.addRuntimeParameter(default=1, symbol="DEPLETION_SPEED")
