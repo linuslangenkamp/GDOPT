@@ -195,8 +195,8 @@ class Model:
         # adds the mayer and lagrange term
         # if mayer and lagrange have a nominal -> sum is used as nominal value
 
-        self.addMayer(mayer, obj, nominal=nominal)
-        self.addLagrange(lagrange, obj, nominal=nominal)
+        self.addMayer(mayer, obj, nominal=nominal/2)
+        self.addLagrange(lagrange, obj, nominal=nominal/2)
     
     def addMayer(self, expr, obj=Objective.MINIMIZE, nominal=None):
 
@@ -742,6 +742,13 @@ int main() {{
         )
         return 0
 
+    def solve(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
+
+        # generate and optimize pipelines sequentially
+
+        self.generate()
+        self.optimize(tf=tf, steps=steps, rksteps=rksteps, flags=flags, meshFlags=meshFlags, resimulate=resimulate)
+     
     def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
 
         # generate corresponding main function with flags, mesh, refinement

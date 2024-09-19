@@ -1,0 +1,751 @@
+\documentclass[12pt]{article}
+\usepackage{geometry} % For setting page margins
+\usepackage{hyperref} % For hyperlinks
+\usepackage{listings} % For code listings
+\usepackage{amsmath, amssymb, amsthm} % For math symbols, theorems
+\usepackage{graphicx} % For including images
+\usepackage{fancyhdr} % For headers and footers
+\usepackage{xcolor} % For color definitions
+\usepackage{titling}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{bm}
+\usepackage{mdframed}
+
+\usepackage{etoolbox}
+
+% Prevent widow and orphan lines
+\widowpenalty=10000
+\clubpenalty=10000
+
+% Avoid extra page breaks after sections
+\makeatletter
+\patchcmd{\@startsection} 
+{\@afterindenttrue}
+{\@afterindentfalse}
+{}{}
+\makeatother
+
+% Use ragged bottom to reduce vertical stretching
+\raggedbottom
+
+% subsubsubsection = paragraph
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+
+% Define gray color
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+
+% Adjust spacing in itemize environment globally
+\usepackage{enumitem}
+\setlist[itemize]{itemsep=0.2em, parsep=0em, topsep=0em}
+
+% Page layout
+\geometry{a4paper, margin=1in}
+\setlength{\parskip}{1em} % Add space between paragraphs
+\setlength{\parindent}{0pt} % No indentation for new paragraphs
+
+% Header and Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{User's Guide: Dynamic Optimization}
+\fancyfoot[C]{\thepage}
+
+% Colors for code
+\definecolor{commentgreen}{rgb}{0,0.6,0}
+\definecolor{keywordblue}{rgb}{0,0,0.9}
+\definecolor{stringred}{rgb}{0.6,0,0}
+
+% Python code listing
+\lstset{
+	language=Python,
+	basicstyle=\ttfamily\small,
+	keywordstyle=\color{keywordblue},
+	stringstyle=\color{stringred},
+	commentstyle=\color{commentgreen}, % Removed \itshape to avoid italics
+	showstringspaces=false,
+	columns=flexible,
+	breaklines=true,
+	breakatwhitespace=true,
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	frame=single,
+	captionpos=b,
+	xleftmargin=2em,
+	xrightmargin=2em,
+	aboveskip=1em
+}
+
+\newtheorem{definition}{Definition}
+\newcommand{\dd}{\mathrm{d}}
+\renewcommand{\v}{\bm}
+\title{User's Guide for Local Collocation Dynamic Optimization with Adaptive Mesh Refinement}
+\author{Linus Langenkamp}
+\date{\today}
+
+\begin{document}
+	
+	\maketitle
+	
+	\tableofcontents
+	\newpage
+	
+	\section{Introduction}
+	
+	Dynamic optimization is a branch of mathematical optimization that deals with systems evolving over time. It aims to find the optimal trajectory of a system's state variables by adjusting control inputs while respecting constraints over a defined time horizon. Such problems arise in various fields, including control theory, economics, and engineering.
+	
+	This guide presents a high level Python modeling environment for solving dynamic optimization problems using local collocation methods and adaptive mesh refinement techniques. The following sections provide step-by-step instructions on setting up, modeling and optimizing dynamic models along with analyzing the optimal solution.
+	
+	\subsection{How Does the Framework Solve Dynamic Models?}
+	
+	
+	\section{Installation}
+	Clone the repository from GitHub:
+	
+	\begin{lstlisting}[language=bash]
+git clone https://github.com/linuslangenkamp/DynamicOptimization.git
+	\end{lstlisting}
+	
+	\subsection{Requirements}
+	Ensure that the following dependencies are installed:
+	\begin{itemize}
+		
+	\item[$\bullet$] Optimizer
+	
+		\begin{itemize}
+			\item[$\bullet$] IPOPT
+		\end{itemize}
+	
+	\item[$\bullet$] Linear Solver (one of the below)
+	
+		\begin{itemize}
+			\item[$\bullet$] MUMPS
+			\item[$\bullet$] HSL solvers, such as MA27, MA57, MA86, \ldots
+		\end{itemize}
+
+	\item[$\bullet$] Frontend Python Packages
+	
+		\begin{itemize}
+			\item[$\bullet$] SymEngine
+			\item[$\bullet$] NumPy
+			\item[$\bullet$] SciPy
+			\item[$\bullet$] pandas
+			\item[$\bullet$] Matplotlib
+		\end{itemize}
+	\end{itemize}
+
+	\section{Getting Started}
+	This section will show how to set up and solve a simple dynamic optimization problem with the proposed framework.
+	
+	\subsection{Basic Example}
+	Here is a minimal working example for a bang-bang control problem, adapted from the OpenModelica User's Guide\footnote{\url{https://openmodelica.org/doc/OpenModelicaUsersGuide/latest/optimization.html}}:
+	
+	\begin{lstlisting}
+from optimization import *
+
+model = Model("bangBang")
+
+# states x1(t), x2(t) with x1(0) = x2(0) = 0
+x1 = model.addState(start=0, symbol="obj") 
+x2 = model.addState(start=0, symbol="obj'")
+
+# control: u(t) with |u(t)| <= 10
+u = model.addControl(lb=-10, ub=10, symbol="control") 
+
+# dynamic: x1''(t) = u(t)
+model.addDynamic(x1, x2) # x1'(t) = x2(t)
+model.addDynamic(x2, u)  # x2'(t) = u(t)
+
+# algebraic constraints
+model.addPath(x2 * u, lb=-30, ub=30) # -30 <= x2(t) * u(t) <= 30
+model.addFinal(x2, eq=0) # x2(tf) = 0
+
+# objective = x1(tf) -> max
+model.addMayer(x1, Objective.MAXIMIZE) 
+
+# generate the C++ code
+model.generate() 
+
+# tf=0.5s, 150 intervals, using RadauIIA 3 step order 5 scheme
+model.optimize(tf=0.5, steps=150, rksteps=3)
+
+model.plot()
+	\end{lstlisting}
+
+	\subsection{Explanation}
+	Example procedure:
+	\begin{itemize}
+		\item Import the package and create a \texttt{Model} object with a given name
+		\item Add the states with given starting values (and optionally assign a symbol)
+		\item Add the control with lower and upper bounds (and optionally assign a symbol)
+		\item Define the dynamic, path, final constraints
+		\item Add a objective
+		\item Generate the C++ code
+		\item Optimize for a given final time, number of steps and collocation knots
+		\item Plot the model
+	\end{itemize}
+
+	\subsection{Solution}
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=\textwidth]{images/bangBang.png}
+		\caption{Optimal bang-bang solution provided by the framework}
+		\label{fig:bangBang}
+	\end{figure}
+
+
+	\section{Mathematical Problem Formulation}
+	
+	\begin{definition}[General Dynamic Optimization Problem]
+		\begin{align*}
+			\min_{\v{u}(t), \v{p}} ~ & M(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f) + \int_{t_0}^{t_f} L(\v{x}(t), \v{u}(t), \v{p}, t) \, \mathrm{d}t \\
+			\text{s.t.}& \\
+			\dot{\v{x}}(t) &= \v{f}(\v{x}(t), \v{u}(t), \v{p}, t)\ \forall t \in [t_0, t_f] \\
+			\v{x}(t_0) &= \v{x}_0 \\
+			\v{g}^{L} &\leq \v{g}(\v{x}(t), \v{u}(t), \v{p}, t) \leq \v{g}^{U}\ \forall t \in [t_0, t_f] \\
+			\v{r}^{L} &\leq \v{r}(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f) \leq \v{r}^{U} \\
+			\v{a}^{L} &\leq \v{a}(\v{p}) \leq \v{a}^{U}
+		\end{align*}
+	\end{definition}
+	
+	
+	\subsection{Variables}
+	
+	\subsection{Constraints}
+	
+	\subsection{Objective}
+	Variables:
+	\\
+	$u(t)$ is the time-dependent control, $p$ is a set of static parameters, $t_f$ is the final time.
+	\\
+	Objective:
+	\\
+	With the Mayer term $M(\cdot)$ evaluating the final state, and the Lagrange term $L(\cdot)$ aggregating desired combinations of states.
+	\\
+	Constraints:
+	\\
+	With $\dot{x} = f(\cdot)$ and $x(t_0) = x_0$ as the initial value problem for the states, $g^L \leq g(\cdot) \leq g^U$ as the path constraints for the states and control over the entire time horizon, $h^L_k \leq h_k(\cdot) \leq h^U_k$ as the path constraints for subsets of the time horizon, $r^L \leq r(\cdot) \leq r^U$ as the final constraints for the states and control, and $a^L \leq a(p) \leq a^U$ as the algebraic constraints for the parameters.
+	
+	\section{Modeling}
+	
+	The first step is to create a new Python file and to import the \texttt{optimization} package.
+	\begin{lstlisting}
+from optimization import *
+	\end{lstlisting}
+
+	Additionally a \texttt{Model} object has to be created. This \texttt{Model} is the basis for any modeling and has to have an associated model name.
+	\begin{lstlisting}
+model = Model("Model Name")
+	\end{lstlisting}
+
+	The variables, constraints and objectives will be added to this \texttt{Model} object.
+
+	\subsection{Variables} 
+	
+	\subsubsection{States}
+	
+	States are time-dependant functions, that will be calculated in the solving process. The value of the state is completely determined by a starting value and an ordinary differential equation.
+	
+	
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+	
+	Adding a state to a \texttt{Model} object.
+	
+	\begin{lstlisting}
+x = model.addState(start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None)
+	\end{lstlisting}
+
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{float start}: The initial value of the state variable.
+		\item \texttt{str symbol} \emph{(optional)}: A symbolic representation of the state. The state will be represented by this symbol in further analysis.
+		\item \texttt{float lb} \emph{(optional)}: Lower bound for the state variable.
+		\item \texttt{float ub} \emph{(optional)}: Upper bound for the state variable.
+		\item \texttt{float nominal} \emph{(optional)}: A nominal value for scaling.
+	\end{itemize}
+	
+	\textbf{Returns:} 
+	\texttt{Symbol variable}: The symbolic representation of the state variable, which can be used in constraints.
+	
+	\textbf{Aliases:} \texttt{model.addX}
+\end{mdframed}
+
+
+	\subsubsection{Inputs}
+	
+	Input are time-dependant functions, that will be calculated in the solving process and are not differentiated in the model.
+	
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+	
+	Adding a input variable $u(t)$, that changes over time, to a \texttt{Model} object.
+
+	\begin{lstlisting}
+u = model.addInput(symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None)
+	\end{lstlisting}
+	\label{addInput}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{str symbol} \emph{(optional)}: A symbolic representation of the input. The input will be represented by this symbol in further analysis.
+		\item \texttt{float lb} \emph{(optional)}: Lower bound for the input variable.
+		\item \texttt{float ub} \emph{(optional)}: Upper bound for the input variable.
+		\item \texttt{Expression guess} \emph{(optional)}: An initial guess for the input. Further explanation in \ref{p:cguesses}.
+		\item \texttt{float nominal} \emph{(optional)}: A nominal value for scaling.
+	\end{itemize}
+	
+	\textbf{Returns:} 
+	\texttt{Symbol variable}: The symbolic representation of the input, which can be used in constraints.
+	
+	\textbf{Aliases:}  \texttt{model.addU}, \texttt{model.addControl}, \texttt{model.addContinuous} 
+\end{mdframed}
+
+	\paragraph{Input Guesses}
+	\label{p:cguesses}
+	The guess parameter in \texttt{model.addInput} (\ref{addInput}) can be any \texttt{Expression} that contains the global time or final time symbols \ref{c:globaltime}, but can also be a regular constant \texttt{float} or \texttt{int}. This guess trajectory is only used if the 
+	\texttt{"initVars"} flag \ref{p:initVars} is chosen to be \texttt{InitVars.SOLVE} \ref{c:initVarsEnum}. This trajectory will be used to solve the dynamic and provide an initial, feasible guess for the state variables. Note that any valid SymEngine \texttt{Expression} can be provided as a guess, although there are several standard functions to provide better initial guesses for the control.
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+	
+	Providing a constant control guess trajectory.
+
+	\begin{lstlisting}
+guessConstant(const)
+	\end{lstlisting}
+	
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{float const}: Constant value for the control guess, i.e. $u(t) \equiv const ~ \forall t \in [0, t_f]$.
+	\end{itemize}
+	
+	\textbf{Remarks:} It's also possible to just write \texttt{guess=const} in the \texttt{model.addInput} arguments.
+\end{mdframed}
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+	
+	Providing a linear control guess trajectory. The provided values will be interpolated accordingly.
+	
+		\begin{lstlisting}
+guessLinear(u0, uf)
+	\end{lstlisting}
+	
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{float u0}: Value for the control guess at $t=0$, i.e. $u(0)$.
+		\item \texttt{float uf}: Value for the control guess at $t=t_f$, i.e. $u(t_f)$.
+	\end{itemize}
+
+\end{mdframed}
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+	
+	Providing a quadratic control guess trajectory. The provided values will be interpolated accordingly.
+	
+	\begin{lstlisting}
+guessQuadratic(u0, um, uf)
+	\end{lstlisting}
+	
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{float u0}: Value for the control guess at $t=0$, i.e. $u(0)$.
+		\item \texttt{float um}: Value for the control guess at $t=\frac{t_f}{2}$, i.e. $u(\frac{t_f}{2})$.
+		\item \texttt{float uf}: Value for the control guess at $t=t_f$, i.e. $u(t_f)$.
+	\end{itemize}
+	
+\end{mdframed}
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+	
+	Providing a exponential control guess trajectory. The provided values will be interpolated accordingly.
+	
+	\begin{lstlisting}
+guessExponential(u0, uf)
+	\end{lstlisting}
+	
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{float u0}: Value for the control guess at $t=0$, i.e. $u(0)$.
+		\item \texttt{float uf}: Value for the control guess at $t=t_f$, i.e. $u(t_f)$.
+	\end{itemize}
+	
+\end{mdframed}
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+	
+	Providing a piecewise defined control guess trajectory.
+	
+	\begin{lstlisting}
+guessPiecewise(*args)
+	\end{lstlisting}
+	
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{*(Expression, Condition) *args}: Arbitrary number of tuples with an Expression as the first and the corresponding interval its defined on as second argument.
+	\end{itemize}
+
+	\textbf{Example:} \texttt{guessPiecewise((0.6, t <= 0.5), (2 + t**2, 0.5 < t))} represents the initial control guess $u(t) = 
+	\begin{cases}
+		0.6,& t \leq \frac{1}{2} \\
+		2 + t^2,& t > \frac{1}{2}
+	\end{cases}$. Note that these expressions can be standard expressions such as \texttt{guessQuadratic}, \texttt{guessLinear} or any arbitrary SymEngine \texttt{Expression}.
+\end{mdframed}
+
+	\subsubsection{Parameters}
+	
+	Parameters are time-invariant constants, that will be calculated in the solving process.
+		
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Adding a parameter variable, that is time-invariant constant, to a \texttt{Model} object.
+		
+		\begin{lstlisting}
+p = model.addParameter(symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None)
+		\end{lstlisting}
+		\label{addParameter}
+		\textbf{Parameters:}
+		\begin{itemize}
+			\item \texttt{str symbol} \emph{(optional)}: A symbolic representation of the parameter. The parameter will be represented by this symbol in further analysis.
+			\item \texttt{float lb} \emph{(optional)}: Lower bound for the parameter variable.
+			\item \texttt{float ub} \emph{(optional)}: Upper bound for the parameter variable.
+			\item \texttt{Expression guess} \emph{(optional)}: An initial guess for the parameter.
+			\item \texttt{float nominal} \emph{(optional)}: A nominal value for scaling.
+		\end{itemize}
+		
+		\textbf{Returns:} 
+		\texttt{Symbol variable}: The symbolic representation of the parameter, which can be used in constraints.
+		
+		\textbf{Aliases:} \texttt{model.addP}
+	\end{mdframed}
+	
+	\subsubsection{Runtime Parameters}
+	\label{c:runtimeParameters}
+	Runtime parameter are time-invariant global constants, that can be changed after code generation via \texttt{model.setValue}. The value of the runtime parameter will be resolved at compile time. These are equivalent to usual parameters in standard modeling environments. A runtime parameter can be used literally anywhere in the \texttt{Model} object, e.g. in objectives or constraints, as a starting value, a lower or upper bound and even as a nominal value.
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Adding a runtime parameter to the model. This is a constant in the model, that will be substituted by its associated value at compile time. Thus this parameter will not be optimized like the standard parameter.
+		
+		\begin{lstlisting}
+rp = model.addRuntimeParameter(default, symbol)
+		\end{lstlisting}
+		\label{addRuntimeParameter}
+		\textbf{Parameters:}
+		\begin{itemize}
+			\item \texttt{float default}: A default value for the runtime parameter.
+			\item \texttt{str symbol}: A symbolic representation of the runtime parameter.
+		\end{itemize}
+		
+		\textbf{Returns:} 
+		\texttt{Symbol variable}: The symbolic representation of the runtime parameter.
+		
+		\textbf{Aliases:} \texttt{model.addRP}
+	\end{mdframed}
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Changing the associated value of a runtime parameter.
+		
+		\begin{lstlisting}
+model.setValue(runtimeParameter, value)
+		\end{lstlisting}
+		\label{setValue}
+		\textbf{Parameters:}
+		\begin{itemize}
+			\item \texttt{Symbol runtimeParameter}: A symbolic representation of the runtime parameter.
+			\item \texttt{float value}: The new associated value for the runtime parameter.
+		\end{itemize}
+	\end{mdframed}
+	
+	
+	\subsection{Constraints}
+	
+	Any constraint can contain compile time constants such as the global final time \ref{finalTimeSymbol} or runtime parameters \ref{c:runtimeParameters}.
+	
+	\subsubsection{Dynamic Constraints}
+	
+	Dynamic constraints are explicit ordinary differential equations with the derivative of a state on the left hand side and the corresponding rate of change on the right hand side. This equation must hold at every moment.
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Adding a dynamic constraint $\frac{\dd y(t)}{\dd t} = f(\v{x}(t), \v{u}(t), \v{p}, t) \forall t \in [t_0, t_f]$ to the \texttt{Model} object, where $y(t)$ is a previously added state.
+		
+		\begin{lstlisting}
+model.addDynamic(diffVar, expr, nominal=None)
+		\end{lstlisting}
+		\label{addDynamic}
+		\textbf{Parameters:}
+		\begin{itemize}
+			\item \texttt{Symbol diffVar}: The state variable that gets differentiated, i.e. $y(t)$.
+			\item \texttt{Expression expr}: The right hand side of the ordinary differential equation, i.e. $f(\cdot)$.
+			\item \texttt{float nominal} \emph{(optional)}: A nominal value of $f(\cdot)$ for scaling.
+		\end{itemize}
+
+		\textbf{Aliases:}  \texttt{model.addF}, \texttt{model.addOde}
+		
+		\textbf{Example:} \texttt{model.addDynamic(x1, x1 * u1 + p + t)} represents the differential equation
+		$\frac{\dd x_1(t)}{\dd t} = x_1(t) u_1(t) + p + t$. (Using the global time symbol \ref{c:globaltime})
+	\end{mdframed}
+	
+	\subsubsection{Path Constraints}
+	
+	Path constraints are algebraic constraints on states, inputs, parameters and time, that must hold at every moment. 
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Adding a path constraint ${g}^{L} \leq {g}(\v{x}(t), \v{u}(t), \v{p}, t) \leq {g}^{U}\ \forall t \in [t_0, t_f]$ to the \texttt{Model} object.
+		
+		\begin{lstlisting}
+model.addPath(expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None)
+		\end{lstlisting}
+		\label{addPath}
+		\textbf{Parameters:}
+		\begin{itemize}
+			\item \texttt{Expression expr}: The algebraic expression, i.e. $g(\cdot)$.
+			\item \texttt{float lb} \emph{(optional)}: Lower bound for the path constraint.
+			\item \texttt{float ub} \emph{(optional)}: Upper bound for the path constraint.
+			\item \texttt{float eq} \emph{(optional)}: Equality parameter for the path constraint. Can not be chosen simultaneously with \texttt{lb} nor \texttt{ub}.
+			\item \texttt{float nominal} \emph{(optional)}: A nominal value of $g(\cdot)$ for scaling.
+		\end{itemize}
+		
+		\textbf{Aliases:}  \texttt{model.addG}
+		
+		\textbf{Example:} \texttt{model.addPath(x1**2 + u1**2, ub=5)} represents the path constraint
+		$x_1^2 + u_1^2 \leq 5$.
+	\end{mdframed}
+	
+	
+	\subsubsection{Final Constraints}
+		
+	Final constraints are algebraic constraints on states, control and parameters, that must hold at the final time $t_f$.
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Adding a final constraint ${r}^{L} \leq {r}(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f) \leq {r}^{U}$ to the \texttt{Model} object.
+		
+		\begin{lstlisting}
+model.addFinal(expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None)
+		\end{lstlisting}
+		\label{addFinal}
+		\textbf{Parameters:}
+		\begin{itemize}
+			\item \texttt{Expression expr}: The algebraic expression, i.e. $r(\cdot)$.
+			\item \texttt{float lb} \emph{(optional)}: Lower bound for the final constraint.
+			\item \texttt{float ub} \emph{(optional)}: Upper bound for the final constraint.
+			\item \texttt{float eq} \emph{(optional)}: Equality parameter for the final constraint. Can not be chosen simultaneously with \texttt{lb} nor \texttt{ub}.
+			\item \texttt{float nominal} \emph{(optional)}: A nominal value of $r(\cdot)$ for scaling.
+		\end{itemize}
+		
+		\textbf{Aliases:}  \texttt{model.addR}
+		
+		\textbf{Example:} \texttt{model.addFinal(x1 + u1 - p, eq=0)} represents the final constraint
+		$x_1(t_f) + u_1(t_f) - p = 0$.
+	\end{mdframed}
+	
+	\subsubsection{Parametric Constraints}
+	
+		Parametric constraints are algebraic constraints that can contain only parameters. These are meant to model e.g. physical limitations of given parameters.
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Adding a parametric constraint ${a}^{L} \leq {a}(\v{p}) \leq {a}^{U}$ to the \texttt{Model} object.
+		
+		\begin{lstlisting}
+model.addParametric(expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None)
+		\end{lstlisting}
+		\label{addParametric}
+		\textbf{Parameters:}
+		\begin{itemize}
+			\item \texttt{Expression expr}: The algebraic expression, i.e. $a(\cdot)$.
+			\item \texttt{float lb} \emph{(optional)}: Lower bound for the parametric constraint.
+			\item \texttt{float ub} \emph{(optional)}: Upper bound for the parametric constraint.
+			\item \texttt{float eq} \emph{(optional)}: Equality parameter for the parametric constraint. Can not be chosen simultaneously with \texttt{lb} nor \texttt{ub}.
+			\item \texttt{float nominal} \emph{(optional)}: A nominal value of $a(\cdot)$ for scaling.
+		\end{itemize}
+		
+		\textbf{Aliases:}  \texttt{model.addA}
+		
+		\textbf{Example:} \texttt{model.addParametric(sin(p1) - cos(p2), lb=0)} represents the parametric constraint
+		$0 \leq \sin(p_1) - \cos({p_2})$.
+	\end{mdframed}
+	
+	\subsection{Objective}
+	
+	Any objective can contain compile time constants such as the global final time \ref{finalTimeSymbol} or runtime parameters \ref{c:runtimeParameters}.
+	
+	\subsubsection{Mayer Term}
+		
+	The Mayer term penalizes the final configuration of the system.
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Adding a Mayer term $M(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f)$ to the \texttt{Model} object.
+		
+		\begin{lstlisting}
+model.addMayer(expr, obj=Objective.MINIMIZE, nominal=None)
+		\end{lstlisting}
+		\label{addMayer}
+		\textbf{Parameters:}
+		\begin{itemize} 
+			\item \texttt{Expression expr}: The Mayer term, i.e. $M(\cdot)$.
+			\item \texttt{Objective obj} \emph{(optional)}: The objective goal for the Mayer term, corresponding to an element of the objective enumeration \ref{c:Objective}.
+			\item \texttt{float nominal} \emph{(optional)}: A nominal value of $M(\cdot)$ for scaling.
+		\end{itemize}
+		
+		\textbf{Aliases:}  \texttt{model.addM}
+		
+		\textbf{Example:} \texttt{model.addMayer(x1 + x2**2, obj=Objective.MINIMIZE)} represents the Mayer term
+		$x_1 + x_2^2$.
+	\end{mdframed}
+
+	\subsubsection{Lagrange Term}
+		
+	 The Lagrange term defines a cumulative cost of the system over the entire time horizon.
+	 
+	 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+	 	
+	 	Adding a Lagrange term $\int_{t_0}^{t_f} L(\v{x}(t), \v{u}(t), \v{p}, t) \, \mathrm{d}t$ to the \texttt{Model} object.
+	 	
+	 	\begin{lstlisting}
+model.addLagrange(expr, obj=Objective.MINIMIZE, nominal=None)
+	 	\end{lstlisting}
+	 	\label{addLagrange}
+	 	\textbf{Parameters:}
+	 	\begin{itemize} 
+	 		\item \texttt{Expression expr}: The Lagrange integrand, i.e. $L(\cdot)$.
+	 		\item \texttt{Objective obj} \emph{(optional)}: The objective goal for the Lagrange term, corresponding to an element of the objective enumeration \ref{c:Objective}.
+	 		\item \texttt{float nominal} \emph{(optional)}: A nominal value of $L(\cdot)$ for scaling.
+	 	\end{itemize}
+	 	
+	 	\textbf{Aliases:}  \texttt{model.addL}
+	 	
+	 	\textbf{Example:} \texttt{model.addLagrange(x1 * u1 + t, obj=Objective.MINIMIZE)} represents the Lagrange term
+	 	$\int_{t_0}^{t_f} x_1(t) u_1(t) + t \, \mathrm{d}t$.
+	 \end{mdframed}
+	 
+	\subsubsection{Combined Objectives}
+	
+	If both the Mayer and Lagrange term are contained in a model, there are specific factors that must be taken into account. The objective goal \texttt{obj} is adding a factor of $-1$, if maximization is chosen. If these goals differ between both terms, e.g. $\max M(\cdot)$ and $\min  \int_{t_0}^{t_f} L(\cdot)$, then the full objective is given by $\min -M(\cdot) +  \int_{t_0}^{t_f} L(\cdot)$. Additionally nominal values will be added if both terms have assigned nominals. If only one term has a nominal value, then this value is used for the full objective.
+	
+	Combined objectives can be added individually with \texttt{addMayer} \ref{addMayer} and \texttt{addLagrange} \ref{addLagrange} or with the method \texttt{addObjective}.
+	
+	
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Adding a Mayer $M(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f)$ and Lagrange term $\int_{t_0}^{t_f} L(\v{x}(t), \v{u}(t), \v{p}, t) \, \mathrm{d}t$ to the \texttt{Model} object.
+		
+		\begin{lstlisting}
+model.addObjective(mayer, lagrange, obj=Objective.MINIMIZE, nominal=None)
+		\end{lstlisting}
+		\label{addObjective}
+		\textbf{Parameters:}
+		\begin{itemize} 
+			\item \texttt{Expression mayer}: The Mayer term, i.e. $M(\cdot)$.
+			\item \texttt{Expression lagrange}: The Lagrange integrand, i.e. $L(\cdot)$.
+			\item \texttt{Objective obj} \emph{(optional)}: The objective goal for the combined cost of $M(\cdot) +  \int_{t_0}^{t_f} L(\cdot)$, corresponding to an element of the objective enumeration \ref{c:Objective}.
+			\item \texttt{float nominal} \emph{(optional)}: A nominal value of the full objective for scaling.
+		\end{itemize}
+		
+		\textbf{Example:} \texttt{model.addObjective(x1, x2 * u1, obj=Objective.MINIMIZE)} represents the full objective
+		$x_1(t_f) + \int_{t_0}^{t_f} x_2(t) u_1(t) \, \mathrm{d}t$.
+	\end{mdframed}
+	\subsection{Constant Derivatives}
+	model.hasQuadraticObjective()
+	model.hasLinearObjective()
+	model.hasLinearConstraints()
+	
+	
+	\subsection{Code Generation}
+	
+	\subsection{Optimization}
+	
+	\subsubsection{Flags}
+	
+	\paragraph{InitVars}
+	\label{p:initVars}
+	
+	\subsubsection{Mesh Flags}
+	
+	\section{Analysis}
+	
+	
+	\section{Utilities}
+	After importing \texttt{optimization} the user has access to several utilities. These contain special functions, global time symbols and many structures to obtain more streamlined flags and arguments.
+	
+	\subsection{Special Functions}
+	\label{c:specialFunction}
+	By importing \texttt{optimization}, these special functions and symbols get automatically imported from SymEngine. These can be used freely in the modeling process, although the user has to be careful with non differentiable and discontinuous functions.
+	\begin{itemize}
+		\item exp, log
+		\item sin, cos, tan
+		\item sqrt
+		\item asin, acos, atan
+		\item sinh, cosh, tanh
+		\item asinh, acosh, atanh
+		\item Abs
+		\item Max, Min	
+		\item Piecewise
+		\item pi	
+	\end{itemize}
+	
+	\subsection{Global Time Symbols}
+	\label{c:globaltime}
+	In every \texttt{Model} the user can use two global time symbols:
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		The global time symbol can be used in objectives, constraints or in input guesses. This represents the time in the model.
+		
+		\begin{lstlisting}
+t = Symbol("t")
+		\end{lstlisting}
+		\label{timeSymbol}
+
+		\textbf{Aliases:} \texttt{time}, \texttt{TIME\_SYMBOL}
+	\end{mdframed}
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		The constant final time symbol can be used in objectives, constraints, starting values, nominal values, lower and upper bounds, etc.
+		This represents the final time of the model. The associated value will be substituted at compile time.
+		
+		\begin{lstlisting}
+tf = Symbol("FINAL_TIME")
+		\end{lstlisting}
+		\label{finalTimeSymbol}
+		
+		\textbf{Aliases:} \texttt{finalTime}, \texttt{FINAL\_TIME\_SYMBOL}
+	\end{mdframed}
+	
+	\subsection{Structures}
+
+	\subsubsection{InitVars}
+	\label{c:initVarsEnum}
+	
+	\subsubsection{Objective}
+	\label{c:Objective}
+	
+	\subsubsection{LinearSolver}
+	\label{c:LinearSolver}
+	
+	\subsubsection{MatrixType}
+	\label{c:MatrixType}
+	
+	\subsubsection{Dots}
+	\label{c:Dots}
+	
+	\subsubsection{IVPSolver}
+	\label{c:IVPSolver}
+	
+	\subsection{Expression Simplification}
+	If the expressions provided by the user are not simplified already, it may be advantageous to enable global expression simplification. This is done by adding the line
+	\begin{lstlisting}
+model.setExpressionSimplification(True)
+	\end{lstlisting}
+	directly after the creation of the \texttt{Model}.
+	 
+	
+	
+	
+	\section{Conclusion}
+	This guide introduced the main features of the dynamic optimization package, including how to set up, solve, and customize dynamic optimization problems. For more detailed usage and s, refer to the official documentation at \url{http://your-docs-link.com}.
+\end{document}
