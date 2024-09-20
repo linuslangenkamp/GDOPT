@@ -235,9 +235,8 @@ Example procedure:
 \end{figure}
 
 \section{Mathematical Problem Formulation}
-
+\label{c:GDOP}
 \begin{definition}[General Dynamic Optimization Problem]
-	\label{def:GDOP}
 	\begin{align*}
 		\min_{\v{u}(t), \v{p}} ~ & M(\v{x}(t_f), \v{u}(t_f),
 		\v{p}, t_f) + \int_{t_0}^{t_f} L(\v{x}(t), \v{u}(t), \v{p}, t)
@@ -890,6 +889,8 @@ model.addObjective(mayer, lagrange, obj=Objective.MINIMIZE, nominal=None)
 
 \label{flag:MeshAlgorithm}
 
+\label{flag:RefinementMethod}:
+
 \section{Analysis}
 
 \section{Utilities}
@@ -959,7 +960,7 @@ Since each expression in the framework is essentially a SymEngine
 \texttt{Expression}, the user is able to use so-called helper expressions
 throughout the entire modeling process.
 
-For example, the user wants to model the following dynamic:
+E.g. the following dynamic has to be modeled:
 \begin{align*}
 	\dot{x} & = \exp\left(x + \frac{u}{1 + y^2}\right) + u y \\
 	\dot{y} & = \exp\left(x + \frac{u}{1 + y^2}\right) + u x
@@ -973,18 +974,18 @@ model.addDynamic(x, expTerm + u * y)  # simple dynamic for x
 model.addDynamic(y, expTerm + u * x)  # simple dynamic for y
 	\end{lstlisting}
 
-These helper expressions can also have the Python standard types
+These helper expressions can also be the Python standard types
 \texttt{float} and \texttt{int}. This allows for the modeling of global
 constants.
 
-For example, consider this simple free fall dynamic:
+E.g. consider this simple free fall dynamic:
 \begin{lstlisting}
 g = -9.80665		      # constant gravitational acceleration  
 model.addDynamic(v, a + g)  # dynamic using the constant
 	\end{lstlisting}
 
 \subsection{Expression Simplification}
-If the expressions provided by the user are not simplified already, it
+If the expressions provided by the user are not simplified yet, it
 may be advantageous to enable global expression simplification. This is done by
 adding the line
 \begin{lstlisting}
@@ -994,7 +995,7 @@ directly after the creation of the \texttt{Model}.
 
 \subsection{Constant Derivatives}
 As mentioned in chapter \ref{c:collocation} the framework reduces the
-continuous formulation of the GDOP \ref{def:GDOP} to a large scale nonlinear
+continuous formulation of the GDOP \ref{c:GDOP} to a large scale nonlinear
 program (NLP). Since the underlying Solver IPOPT requires the 1st and 2nd
 derivatives of this NLP in every iteration, it is beneficial if these
 derivatives are constant and thus have to be calculated only once.
@@ -1130,7 +1131,7 @@ InitVars(Enum)
 		\item \texttt{SOLVE\_EXPLICIT\_EULER}: The initial
 		      states will be computed by solving the dynamic using the
 		      guesses for $\v{u}(t)$
-		      and $\v{p}$. The system is solved by an explicit /
+		      and $\v{p}$. The system is solved by the explicit /
 		      forward Euler method.
 
 	\end{itemize}
@@ -1216,13 +1217,47 @@ MeshAlgorithm(Enum)
 		\item \texttt{L2\_BOUNDARY\_NORM}: An advanced mesh algorithm,
 		      which is based on evaluating specific L2-norms and
 		      comparing derivatives at the
-		      interval boundaries. Additionally this algorithm is
+		      interval boundaries. This algorithm is able to detect
+		      jumps, steep sections and
+		      corners, while being
 		      computationally inexpensive.
 	\end{itemize}
 
 \end{mdframed}
 
 \subsubsection{RefinementMethod}
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+		linewidth=1pt]
+	Enumeration for the mesh flag \texttt{"refinementMethod"}
+	\ref{flag:RefinementMethod}:
+	Sets the refinement method, which determines how the initial values for
+	$\v{x}(t)$ and $\v{u}(t)$ are evaluated from the previous iteration, if
+	a mesh refinement is executed.
+
+	\begin{lstlisting}
+RefinementMethod(Enum)
+	\end{lstlisting}
+	\label{enum:RefinementMethod}
+	\textbf{Elements:}
+	\begin{itemize}
+		\item \texttt{LINEAR\_SPLINE}: The variables will be
+		      interpolated by a linear spline on each subinterval. The
+		      initial solution
+		      should contain no oscillations at discontinuities, but
+		      might be poor for smooth
+		      sections.
+		\item \texttt{POLYNOMIAL}: The variables will be
+		      interpolated by a interpolating polynomial on each
+		      subinterval.
+		      The initial solution
+		      is likely to contain oscillations at discontinuities,
+		      although
+		      being advantageous for smooth
+		      sections.
+	\end{itemize}
+
+\end{mdframed}
 
 \subsubsection{MatrixType}
 \label{c:MatrixType}

@@ -44,6 +44,6 @@
 \contentsline {subsubsection}{\numberline {7.6.4}IVPSolver}{19}{subsubsection.7.6.4}%
 \contentsline {subsubsection}{\numberline {7.6.5}MeshAlgorithm}{20}{subsubsection.7.6.5}%
 \contentsline {subsubsection}{\numberline {7.6.6}RefinementMethod}{20}{subsubsection.7.6.6}%
-\contentsline {subsubsection}{\numberline {7.6.7}MatrixType}{20}{subsubsection.7.6.7}%
-\contentsline {subsubsection}{\numberline {7.6.8}Dots}{20}{subsubsection.7.6.8}%
-\contentsline {section}{\numberline {8}Conclusion}{20}{section.8}%
+\contentsline {subsubsection}{\numberline {7.6.7}MatrixType}{21}{subsubsection.7.6.7}%
+\contentsline {subsubsection}{\numberline {7.6.8}Dots}{21}{subsubsection.7.6.8}%
+\contentsline {section}{\numberline {8}Conclusion}{21}{section.8}%
