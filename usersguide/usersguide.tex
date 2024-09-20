@@ -11,7 +11,6 @@
 \usepackage{float}
 \usepackage{bm}
 \usepackage{mdframed}
-
 \usepackage{etoolbox}
 
 % Prevent widow and orphan lines
@@ -62,7 +61,7 @@
 	basicstyle=\ttfamily\small,
 	keywordstyle=\color{keywordblue},
 	stringstyle=\color{stringred},
-	commentstyle=\color{commentgreen}, % Removed \itshape to avoid italics
+	commentstyle=\color{commentgreen},
 	showstringspaces=false,
 	columns=flexible,
 	breaklines=true,
@@ -73,31 +72,53 @@
 	captionpos=b,
 	xleftmargin=2em,
 	xrightmargin=2em,
-	aboveskip=1em
+	aboveskip=1em,
 }
 
 \newtheorem{definition}{Definition}
 \newcommand{\dd}{\mathrm{d}}
+\newcommand{\coloredtextbf}[1]{\textbf{\textcolor{blue}{#1}}} % maybe use in the future or different: good, neutral, evil :)
 \renewcommand{\v}{\bm}
-\title{User's Guide for Local Collocation Dynamic Optimization with Adaptive Mesh Refinement}
-\author{Linus Langenkamp}
 \date{\today}
 
 \begin{document}
 	
-	\maketitle
+	\begin{titlepage}
+		\centering
+		
+		\vspace*{2cm}
+
+		{\Huge\bfseries User's Guide:}\\[1em]
+		
+		{\Huge\bfseries Dynamic Optimization Framework}\\[0.5em]
+		\textcolor{gray}{\large A Python-based Environment for Solving Dynamic Models}\\[1em]
+		
+		\vspace{2cm}
+		\includegraphics[width=1\textwidth]{images/refinement.png}\par\vspace{1cm}
+		\vspace{2cm}
+		
+		{\large \textit{Author:}}\\[0.5em]
+		{\large Linus Langenkamp}
+		
+		\vfill
+		
+		{\large \today}
+		
+		\vspace*{1cm}
+	\end{titlepage}
 	
+	\newpage
 	\tableofcontents
 	\newpage
 	
 	\section{Introduction}
 	
-	Dynamic optimization is a branch of mathematical optimization that deals with systems evolving over time. It aims to find the optimal trajectory of a system's state variables by adjusting control inputs while respecting constraints over a defined time horizon. Such problems arise in various fields, including control theory, economics, and engineering.
+	Dynamic optimization is a branch of mathematical optimization that deals with systems evolving over time. It aims to find the optimal trajectory of a system's state variables by adjusting control inputs while respecting constraints over a defined time horizon. Such problems arise in various fields, including control theory, economics, engineering or industrial biochemistry.
 	
 	This guide presents a high level Python modeling environment for solving dynamic optimization problems using local collocation methods and adaptive mesh refinement techniques. The following sections provide step-by-step instructions on setting up, modeling and optimizing dynamic models along with analyzing the optimal solution.
 	
 	\subsection{How Does the Framework Solve Dynamic Models?}
-	
+	\label{c:collocation}
 	
 	\section{Installation}
 	Clone the repository from GitHub:
@@ -181,7 +202,7 @@ model.plot()
 		\item Define the dynamic, path, final constraints
 		\item Add a objective
 		\item Generate the C++ code
-		\item Optimize for a given final time, number of steps and collocation knots
+		\item Optimize for a given final time, number of steps and collocation nodes
 		\item Plot the model
 	\end{itemize}
 
@@ -197,7 +218,7 @@ model.plot()
 
 	\section{Mathematical Problem Formulation}
 	
-	\begin{definition}[General Dynamic Optimization Problem]
+	\begin{definition}[General Dynamic Optimization Problem] \label{def:GDOP}
 		\begin{align*}
 			\min_{\v{u}(t), \v{p}} ~ & M(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f) + \int_{t_0}^{t_f} L(\v{x}(t), \v{u}(t), \v{p}, t) \, \mathrm{d}t \\
 			\text{s.t.}& \\
@@ -245,7 +266,7 @@ model = Model("Model Name")
 	
 	\subsubsection{States}
 	
-	States are time-dependant functions, that will be calculated in the solving process. The value of the state is completely determined by a starting value and an ordinary differential equation.
+	States are time-dependent functions, that will be calculated in the solving process. The value of the state is completely determined by a starting value and an ordinary differential equation.
 	
 	
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
@@ -274,7 +295,7 @@ x = model.addState(start, symbol=None, lb=-float("inf"), ub=float("inf"), nomina
 
 	\subsubsection{Inputs}
 	
-	Input are time-dependant functions, that will be calculated in the solving process and are not differentiated in the model.
+	Input are time-dependent functions, that will be calculated in the solving process and are not differentiated in the model.
 	
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
 	
@@ -418,11 +439,11 @@ p = model.addParameter(symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, 
 	
 	\subsubsection{Runtime Parameters}
 	\label{c:runtimeParameters}
-	Runtime parameter are time-invariant global constants, that can be changed after code generation via \texttt{model.setValue}. The value of the runtime parameter will be resolved at compile time. These are equivalent to usual parameters in standard modeling environments. A runtime parameter can be used literally anywhere in the \texttt{Model} object, e.g. in objectives or constraints, as a starting value, a lower or upper bound and even as a nominal value.
+	Runtime parameter are time-invariant global constants, that can be changed after code generation via \texttt{model.setValue}. The value of the runtime parameter will be resolved at compile time. These represent usual parameters of standard modeling environments. A runtime parameter can be used literally anywhere in the \texttt{Model} object, e.g. in objectives or constraints, as a starting value, a lower or upper bound and even as a nominal value.
 	
 	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
 		
-		Adding a runtime parameter to the model. This is a constant in the model, that will be substituted by its associated value at compile time. Thus this parameter will not be optimized like the standard parameter.
+		Adding a runtime parameter to the model. This is a constant in the model, that will be substituted by its associated value at compile time.
 		
 		\begin{lstlisting}
 rp = model.addRuntimeParameter(default, symbol)
@@ -542,8 +563,8 @@ model.addFinal(expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None)
 	
 	\subsubsection{Parametric Constraints}
 	
-		Parametric constraints are algebraic constraints that can contain only parameters. These are meant to model e.g. physical limitations of given parameters.
-	
+		Parametric constraints are algebraic constraints that can contain only parameters.
+		
 	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
 		
 		Adding a parametric constraint ${a}^{L} \leq {a}(\v{p}) \leq {a}^{U}$ to the \texttt{Model} object.
@@ -623,7 +644,7 @@ model.addLagrange(expr, obj=Objective.MINIMIZE, nominal=None)
 	 
 	\subsubsection{Combined Objectives}
 	
-	If both the Mayer and Lagrange term are contained in a model, there are specific factors that must be taken into account. The objective goal \texttt{obj} is adding a factor of $-1$, if maximization is chosen. If these goals differ between both terms, e.g. $\max M(\cdot)$ and $\min  \int_{t_0}^{t_f} L(\cdot)$, then the full objective is given by $\min -M(\cdot) +  \int_{t_0}^{t_f} L(\cdot)$. Additionally nominal values will be added if both terms have assigned nominals. If only one term has a nominal value, then this value is used for the full objective.
+	If both the Mayer and Lagrange term are contained in a model, there are specific factors that must be taken into account. The objective goal \texttt{obj} is multiplying the associated term with a factor of $-1$, if maximization is chosen. If these goals differ between both terms, e.g. $\max M(\cdot)$ and $\min  \int_{t_0}^{t_f} L(\cdot) \, \dd t$, then the full objective is given by $\min -M(\cdot) + \int_{t_0}^{t_f} L(\cdot) \, \dd t$ and vice versa. Additionally nominal values will be added if both terms have assigned nominals. If only one term has a nominal value, then this value is used for the full objective.
 	
 	Combined objectives can be added individually with \texttt{addMayer} \ref{addMayer} and \texttt{addLagrange} \ref{addLagrange} or with the method \texttt{addObjective}.
 	
@@ -641,17 +662,63 @@ model.addObjective(mayer, lagrange, obj=Objective.MINIMIZE, nominal=None)
 		\begin{itemize} 
 			\item \texttt{Expression mayer}: The Mayer term, i.e. $M(\cdot)$.
 			\item \texttt{Expression lagrange}: The Lagrange integrand, i.e. $L(\cdot)$.
-			\item \texttt{Objective obj} \emph{(optional)}: The objective goal for the combined cost of $M(\cdot) +  \int_{t_0}^{t_f} L(\cdot)$, corresponding to an element of the objective enumeration \ref{c:Objective}.
+			\item \texttt{Objective obj} \emph{(optional)}: The objective goal for the combined cost of $M(\cdot) +  \int_{t_0}^{t_f} L(\cdot) \, \dd t$, corresponding to an element of the objective enumeration \ref{c:Objective}.
 			\item \texttt{float nominal} \emph{(optional)}: A nominal value of the full objective for scaling.
 		\end{itemize}
 		
 		\textbf{Example:} \texttt{model.addObjective(x1, x2 * u1, obj=Objective.MINIMIZE)} represents the full objective
 		$x_1(t_f) + \int_{t_0}^{t_f} x_2(t) u_1(t) \, \mathrm{d}t$.
 	\end{mdframed}
+
 	\subsection{Constant Derivatives}
-	model.hasQuadraticObjective()
-	model.hasLinearObjective()
-	model.hasLinearConstraints()
+	As mentioned in chapter \ref{c:collocation} the framework reduces the continuous formulation of the GDOP \ref{def:GDOP} to a large scale nonlinear program (NLP). Since the underlying Solver IPOPT requires the 1st and 2nd derivatives of this NLP in every iteration, it is beneficial if these derivatives are constant and thus have to be calculated only once. 
+	
+	The user can call three methods depending on the structure of the continuous problem formulation. These will set the corresponding parameters in the backend of the framework and therefore reduce the execution time. 
+	
+	Only call these methods if the requirements are met, otherwise the Solver will converge very slowly or diverge.
+	
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Tells the solver that the Mayer term $M(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f)$ and Lagrange integrand $L(\v{x}(t), \v{u}(t), \v{p}, t)$ are at most linear.
+		
+		\begin{lstlisting}
+model.hasLinearObjective()
+		\end{lstlisting}
+		\label{hasLinearObjective}
+	\end{mdframed}
+
+
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+		
+		Tells the solver that the Mayer term $M(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f)$ and Lagrange integrand $L(\v{x}(t), \v{u}(t), \v{p}, t)$ are at most quadratic.
+		
+		\begin{lstlisting}
+model.hasQuadraticObjective()
+		\end{lstlisting}
+		\label{hasQuadraticObjective}
+
+	\end{mdframed}
+
+
+	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
+	
+		Tells the solver that all constraints are at most linear, i.e. $\v{f}(\cdot), \v{g}(\cdot), \v{r}(\cdot), \v{a}(\cdot)$ are linear or constant.
+		
+		\begin{lstlisting}
+model.hasLinearConstraints()
+		\end{lstlisting}
+		\label{hasLinearConstraints}
+		
+	\end{mdframed}
+
+
+	Depending on the above mentioned methods, the following derivatives of the NLP will be constant:
+	
+	\begin{itemize}
+		\item Gradient of the objective function, if \texttt{model.hasLinearObjective()}
+		\item Jacobian of the constraint vector, if \texttt{model.hasLinearConstraints()}
+		\item Hessian of the augmented Lagrangian, if \texttt{model.hasLinearConstraints()} and (\texttt{model.hasLinearObjective()} or \texttt{model.hasQuadraticObjective()})
+	\end{itemize}
 	
 	
 	\subsection{Code Generation}
@@ -689,11 +756,11 @@ model.addObjective(mayer, lagrange, obj=Objective.MINIMIZE, nominal=None)
 	
 	\subsection{Global Time Symbols}
 	\label{c:globaltime}
-	In every \texttt{Model} the user can use two global time symbols:
+	In every \texttt{Model} the user has access to two global time symbols:
 	
 	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
 		
-		The global time symbol can be used in objectives, constraints or in input guesses. This represents the time in the model.
+		The time symbol can be used in objectives, constraints or in input guesses. This represents the time in the model, i.e. $t \in [t_0, t_f]$.
 		
 		\begin{lstlisting}
 t = Symbol("t")
@@ -706,7 +773,7 @@ t = Symbol("t")
 	\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
 		
 		The constant final time symbol can be used in objectives, constraints, starting values, nominal values, lower and upper bounds, etc.
-		This represents the final time of the model. The associated value will be substituted at compile time.
+		This represents the final time $t_f$ of the model. The associated value will be substituted at compile time.
 		
 		\begin{lstlisting}
 tf = Symbol("FINAL_TIME")
@@ -716,8 +783,42 @@ tf = Symbol("FINAL_TIME")
 		\textbf{Aliases:} \texttt{finalTime}, \texttt{FINAL\_TIME\_SYMBOL}
 	\end{mdframed}
 	
-	\subsection{Structures}
-
+	\subsection{Helper Expressions}
+	
+	Since each expression in the framework is essentially a SymEngine \texttt{Expression}, the user is able to use so-called helper expressions throughout the entire modeling process.
+	
+	For example, the user wants to model the following dynamic:
+	\begin{align*}
+		\dot{x} &= \exp\left(x + \frac{u}{1 + y^2}\right) + u y \\
+		\dot{y} &= \exp\left(x + \frac{u}{1 + y^2}\right) + u x
+	\end{align*}
+	
+	By introducing a helper variable, the model becomes way more readable.
+	
+	\begin{lstlisting}
+expTerm = exp(x + u / (1 + y**2))	 # helper expression
+model.addDynamic(x, expTerm + u * y)  # simple dynamic for x
+model.addDynamic(y, expTerm + u * x)  # simple dynamic for y
+	\end{lstlisting}
+	
+	These helper expressions can also have the Python standard types \texttt{float} and \texttt{int}. This allows for the modeling of global constants.
+	
+	For example, consider this simple free fall dynamic:
+	\begin{lstlisting}
+g = -9.80665		      # constant gravitational acceleration  
+model.addDynamic(v, a + g)  # dynamic using the constant
+	\end{lstlisting}
+	
+	\subsection{Expression Simplification}
+	If the expressions provided by the user are not simplified already, it may be advantageous to enable global expression simplification. This is done by adding the line
+	\begin{lstlisting}
+model.setExpressionSimplification(True)
+	\end{lstlisting}
+	directly after the creation of the \texttt{Model}.
+	 
+	
+	\subsection{Enumerations}
+	
 	\subsubsection{InitVars}
 	\label{c:initVarsEnum}
 	
@@ -735,17 +836,7 @@ tf = Symbol("FINAL_TIME")
 	
 	\subsubsection{IVPSolver}
 	\label{c:IVPSolver}
-	
-	\subsection{Expression Simplification}
-	If the expressions provided by the user are not simplified already, it may be advantageous to enable global expression simplification. This is done by adding the line
-	\begin{lstlisting}
-model.setExpressionSimplification(True)
-	\end{lstlisting}
-	directly after the creation of the \texttt{Model}.
 	 
-	
-	
-	
 	\section{Conclusion}
-	This guide introduced the main features of the dynamic optimization package, including how to set up, solve, and customize dynamic optimization problems. For more detailed usage and s, refer to the official documentation at \url{http://your-docs-link.com}.
+	
 \end{document}

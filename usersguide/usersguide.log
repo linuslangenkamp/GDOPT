@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.3) (preloaded format=pdflatex 2024.3.22)  20 SEP 2024 00:21
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.3) (preloaded format=pdflatex 2024.3.22)  20 SEP 2024 02:48
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -525,24 +525,24 @@ File: lstlang1.sty 2024/03/11 1.10a listings language file
 (usersguide.aux)
 \openout1 = `usersguide.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 86.
-LaTeX Font Info:    ... okay on input line 86.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 86.
-LaTeX Font Info:    ... okay on input line 86.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 86.
-LaTeX Font Info:    ... okay on input line 86.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 86.
-LaTeX Font Info:    ... okay on input line 86.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 86.
-LaTeX Font Info:    ... okay on input line 86.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 86.
-LaTeX Font Info:    ... okay on input line 86.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 86.
-LaTeX Font Info:    ... okay on input line 86.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 86.
-LaTeX Font Info:    ... okay on input line 86.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 86.
-LaTeX Font Info:    ... okay on input line 86.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 84.
+LaTeX Font Info:    ... okay on input line 84.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -578,7 +578,7 @@ LaTeX Font Info:    ... okay on input line 86.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-Package hyperref Info: Link coloring OFF on input line 86.
+Package hyperref Info: Link coloring OFF on input line 84.
 (usersguide.out) (usersguide.out)
 \@outlinefile=\write3
 \openout3 = `usersguide.out'.
@@ -610,20 +610,25 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 fg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
-LaTeX Font Info:    Trying to load font information for U+msa on input line 88.
+<images/refinement.png, id=195, 1378.1889pt x 693.792pt>
+File: images/refinement.png Graphic file (type png)
+<use images/refinement.png>
+Package pdftex.def Info: images/refinement.png  used on input line 97.
+(pdftex.def)             Requested size: 452.9679pt x 228.03105pt.
+ [1
 
- (C:\Users\Linus\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
+{C:/Users/Linus/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map} <./images/ref
+inement.png>] (usersguide.toc
+LaTeX Font Info:    Trying to load font information for U+msa on input line 2.
+
+(C:\Users\Linus\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 88.
-
+LaTeX Font Info:    Trying to load font information for U+msb on input line 2.
 
 (C:\Users\Linus\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-(usersguide.toc [1
-
-{C:/Users/Linus/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -632,7 +637,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[2])
+
+pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
+been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.25 ...erline {5.3}Objective}{12}{subsection.5.3}
+                                                  % [1])
 \tf@toc=\write4
 \openout4 = `usersguide.toc'.
 
@@ -645,13 +656,22 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
+[2]
+(C:\Users\Linus\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstlang1.sty
+File: lstlang1.sty 2024/03/11 1.10a listings language file
+)
+(C:\Users\Linus\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstlang1.sty
+File: lstlang1.sty 2024/03/11 1.10a listings language file
+)
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
 [3]
-(C:\Users\Linus\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstlang1.sty
-File: lstlang1.sty 2024/03/11 1.10a listings language file
-)
-(C:\Users\Linus\AppData\Local\Programs\MiKTeX\tex/latex/listings\lstlang1.sty
-File: lstlang1.sty 2024/03/11 1.10a listings language file
-)
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -661,19 +681,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [4]
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 14.49998pt, for example:
-(fancyhdr)                \setlength{\headheight}{14.49998pt}.
-(fancyhdr)                You might also make \topmargin smaller to compensate:
-
-(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
-
-[5]
-<images/bangBang.png, id=305, 1378.1889pt x 693.792pt>
+<images/bangBang.png, id=312, 1378.1889pt x 693.792pt>
 File: images/bangBang.png Graphic file (type png)
 <use images/bangBang.png>
-Package pdftex.def Info: images/bangBang.png  used on input line 192.
+Package pdftex.def Info: images/bangBang.png  used on input line 213.
 (pdftex.def)             Requested size: 452.9679pt x 228.03105pt.
 
 
@@ -684,16 +695,29 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[6
+[5
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.229 	
+l.250 	
         <./images/bangBang.png>]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 251.
+(mdframed)              on input line 272.
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[6]
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 300.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -706,7 +730,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [7]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 279.
+(mdframed)              on input line 328.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 344.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 360.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 377.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -719,17 +752,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [8]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 307.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 323.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 339.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 356.
+(mdframed)              on input line 393.
 
+Overfull \hbox (3.64415pt too wide) in paragraph at lines 406--411
+[]\OT1/cmr/bx/n/12 Example: \OT1/cmtt/m/n/12 guessPiecewise((0.6, t <= 0.5), (2
+ + t**2, 0.5 < t)) \OT1/cmr/m/n/12 rep-re-sents
+ []
+
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 417.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -741,16 +773,14 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [9]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 372.
-
-Overfull \hbox (3.64415pt too wide) in paragraph at lines 385--390
-[]\OT1/cmr/bx/n/12 Example: \OT1/cmtt/m/n/12 guessPiecewise((0.6, t <= 0.5), (2
- + t**2, 0.5 < t)) \OT1/cmr/m/n/12 rep-re-sents
- []
-
+(mdframed)              on input line 444.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 396.
+(mdframed)              on input line 464.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 488.
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -762,13 +792,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [10]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 423.
+(mdframed)              on input line 513.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 443.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 467.
+(mdframed)              on input line 541.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -781,26 +808,9 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [11]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 492.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 520.
+(mdframed)              on input line 568.
 
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 14.49998pt, for example:
-(fancyhdr)                \setlength{\headheight}{14.49998pt}.
-(fancyhdr)                You might also make \topmargin smaller to compensate:
-
-(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
-
-[12]
-Package mdframed Info: Not enough space on this page on input line 541.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 547.
-
-Overfull \hbox (2.54918pt too wide) in paragraph at lines 566--568
+Overfull \hbox (2.54918pt too wide) in paragraph at lines 587--589
 []\OT1/cmr/bx/n/12 Example: \OT1/cmtt/m/n/12 model.addParametric(sin(p1) - cos(
 p2), lb=0) \OT1/cmr/m/n/12 rep-re-sents the para-
  []
@@ -813,13 +823,33 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
+[12]
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 599.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 624.
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
 [13]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 578.
+(mdframed)              on input line 653.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 603.
+(mdframed)              on input line 680.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 691.
+Package mdframed Info: Not enough space on this page on input line 700.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -830,14 +860,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [14]
+Package mdframed Info: Not enough space on this page on input line 700.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 632.
-
-Overfull \hbox (8.53705pt too wide) in paragraph at lines 652--655
-\OT1/cmr/m/n/12 model.hasQuadraticObjective() model.hasLinearObjective() model.
-hasLinearConstraints() 
- []
+(mdframed)              on input line 703.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -850,10 +876,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [15]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 694.
+(mdframed)              on input line 761.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 706.
+(mdframed)              on input line 773.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -872,22 +898,31 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[17] (usersguide.aux)
+[17]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[18] (usersguide.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-03-14>
  ***********
 Package rerunfilecheck Info: File `usersguide.out' has not changed.
-(rerunfilecheck)             Checksum: 9E9E47ECAFCC5E518F03664EE8B489BC;5969.
+(rerunfilecheck)             Checksum: 85737E649F5832D71727A995903F0C0E;6130.
  ) 
 Here is how much of TeX's memory you used:
- 14492 strings out of 474424
- 224051 string characters out of 5741739
- 2014496 words of memory out of 5000000
- 36479 multiletter control sequences out of 15000+600000
- 575499 words of font info for 100 fonts, out of 8000000 for 9000
+ 14523 strings out of 474424
+ 224564 string characters out of 5741739
+ 2013496 words of memory out of 5000000
+ 36495 multiletter control sequences out of 15000+600000
+ 574293 words of font info for 95 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 79i,12n,93p,607b,1344s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 79i,12n,93p,669b,1344s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\Linus\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm
 1200.pk><C:/Users/Linus/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
 ts/cm/cmbx12.pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX/fonts/type1/publ
@@ -899,17 +934,16 @@ l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmib10.pfb><C:/Users/Linus/Ap
 pData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cmextra/cmmib8.pfb><C:/
 Users/Linus/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.
 pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
-m/cmr17.pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX/fonts/type1/public/am
-sfonts/cm/cmr6.pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX/fonts/type1/pu
-blic/amsfonts/cm/cmr7.pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX/fonts/t
-ype1/public/amsfonts/cm/cmr8.pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX/
-fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Linus/AppData/Local/Program
-s/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Users/Linus/AppData/Loca
-l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/Linus/App
-Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on usersguide.pdf (17 pages, 335139 bytes).
+m/cmr6.pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
+fonts/cm/cmr7.pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX/fonts/type1/pub
+lic/amsfonts/cm/cmr8.pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX/fonts/ty
+pe1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX
+/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Users/Linus/AppData/Local/Progra
+ms/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/Linus/AppData/Loc
+al/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
+Output written on usersguide.pdf (19 pages, 374387 bytes).
 PDF statistics:
- 530 PDF objects out of 1000 (max. 8388607)
- 145 named destinations out of 1000 (max. 500000)
- 382 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 556 PDF objects out of 1000 (max. 8388607)
+ 160 named destinations out of 1000 (max. 500000)
+ 395 words of extra memory for PDF output out of 10000 (max. 10000000)
 
