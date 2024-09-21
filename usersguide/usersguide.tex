@@ -13,6 +13,7 @@
 \usepackage{mdframed}
 \usepackage{etoolbox}
 
+
 % Prevent widow and orphan lines
 \widowpenalty=10000
 \clubpenalty=10000
@@ -911,7 +912,7 @@ model.optimize(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=Fals
 		\item \texttt{int rksteps} \emph{(optional)}: The number of collocation nodes of the RadauIIA integrator per interval. Valid range: $1 \leq$ \texttt{rksteps} $\leq 36$.
 		\item \texttt{dict<str, arg> flags} \emph{(optional)}: A dictionary of flags. All possible flags are presented in \ref{c:flags}.
 		\item \texttt{dict<str, arg> mesh flags} \emph{(optional)}: A dictionary of mesh flags. All possible mesh flags are presented in \ref{c:meshflags}.
-		\item \texttt{bool resimulate} \emph{(optional)}: If set to \texttt{true}, all arguments and flags of this method will be taking from the previous optimization.
+		\item \texttt{bool resimulate} \emph{(optional)}: If set to \texttt{true}, all arguments and flags of this method will be taken from the previous optimization.
 	\end{itemize}
 	
 	\textbf{Example}:
@@ -936,25 +937,76 @@ model.optimize(
 \end{mdframed}
 
 \subsubsection{Flags}
-
 \label{c:flags}
 
-\label{flag:initVars}
+\paragraph{OutputPath}
+\label{flag:outputPath}
+The \texttt{outputPath} flag specifies the path where all outputs from the optimization process will be stored.
 
-\label{flag:IVPSolver}
-
+\paragraph{LinearSolver}
 \label{flag:linearSolver}
+The \texttt{linearSolver} flag defines the linear solver used to solve the system of equations during optimization.
+
+\paragraph{Tolerance}
+\label{flag:tolerance}
+The \texttt{tolerance} flag sets the tolerance for numerical solvers used in the optimization.
+
+\paragraph{ExportHessianPath}
+\label{flag:exportHessianPath}
+The \texttt{exportHessianPath} flag specifies the path where the Hessian matrix is exported.
+
+\paragraph{ExportJacobianPath}
+\label{flag:exportJacobianPath}
+The \texttt{exportJacobianPath} flag defines the path to export the Jacobian matrix.
+
+\paragraph{InitialStatesPath}
+\label{flag:initialStatesPath}
+The \texttt{initialStatesPath} flag sets the file path for initializing the state variables for the optimization process.
+
+\paragraph{IVPSolver}
+\label{flag:ivpSolver}
+The \texttt{ivpSolver} flag specifies the Initial Value Problem (IVP) solver to use during the simulation.
+
+\paragraph{InitVars}
+\label{flag:initVars}
+The \texttt{initVars} flag specifies how initial variables are handled in the optimization process.
 
 \subsubsection{Mesh Flags}
-
 \label{c:meshflags}
 
+\paragraph{MeshAlgorithm}
 \label{flag:MeshAlgorithm}
+The \texttt{meshAlgorithm} flag specifies the algorithm used for mesh generation in the optimization.
 
-\label{flag:RefinementMethod}:
+\paragraph{MeshIterations}
+\label{flag:meshIterations}
+The \texttt{meshIterations} flag defines the number of iterations for refining the mesh.
+
+\paragraph{RefinementMethod}
+\label{flag:RefinementMethod}
+The \texttt{refinementMethod} flag specifies the refinement method used for optimizing the mesh.
+
+\paragraph{MeshLevel}
+\label{flag:meshLevel}
+The \texttt{meshLevel} flag defines the level of refinement applied to the mesh.
+
+\paragraph{MeshCTol}
+\label{flag:meshCTol}
+The \texttt{meshCTol} flag sets the convergence tolerance for the mesh refinement process.
+
+\paragraph{MeshSigma}
+\label{flag:meshSigma}
+The \texttt{meshSigma} flag controls the smoothing factor applied during mesh generation.
+
 
 \section{Analysis}
 \label{c:Analysis}
+
+\subsection{Results}
+\label{c:Results}
+
+\subsection{Plotting}
+\label{c:Plotting}
 
 \section{Utilities}
 The \texttt{optimization} package provides access to several utilities.
@@ -1094,7 +1146,7 @@ model.hasLinearObjective()
 
 	\begin{lstlisting}
 model.hasQuadraticObjective()
-		\end{lstlisting}
+	\end{lstlisting}
 	\label{hasQuadraticObjective}
 
 \end{mdframed}
@@ -1172,7 +1224,7 @@ Objective(Enum)
 
 	\begin{lstlisting}
 InitVars(Enum)
-		\end{lstlisting}
+	\end{lstlisting}
 	\label{enum:initVars}
 	\textbf{Elements:}
 	\begin{itemize}
@@ -1184,7 +1236,7 @@ InitVars(Enum)
 		      The system is solved by
 		      \texttt{scipy.integrate.solve\_ivp}. The corresponding
 		      \texttt{SciPy} integrator can be set with
-		      \ref{flag:IVPSolver}, which can be
+		      \ref{flag:ivpSolver}, which can be
 		      implicit.
 		\item \texttt{SOLVE\_EXPLICIT}: The initial states will
 		      be computed by solving the dynamic using the guesses for
@@ -1232,7 +1284,7 @@ LinearSolver(Enum)
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
 	Enumeration for the flag \texttt{"ivpSolver"}
-	\ref{flag:IVPSolver}:
+	\ref{flag:ivpSolver}:
 	Sets the \texttt{SciPy} integrator. If the flag
 	\texttt{"initVars"} \ref{flag:initVars} is set to
 	\texttt{InitVars.SOLVE}, this
@@ -1324,10 +1376,221 @@ RefinementMethod(Enum)
 
 \subsubsection{MatrixType}
 \label{c:MatrixType}
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+	linewidth=1pt]
+	Enumeration that specifies a sparse matrix, i.e. Jacobian or Hessian.
+	
+	\begin{lstlisting}
+MatrixType(Enum)
+	\end{lstlisting}
+	\label{enum:MatrixType}
+	\textbf{Elements:}
+	\begin{itemize}
+		\item \texttt{JACOBIAN}: Jacobian matrix.
+		\item \texttt{HESSIAN}: Hessian matrix.
+	\end{itemize}
+	
+\end{mdframed}
 
 \subsubsection{Dots}
 \label{c:Dots}
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+	linewidth=1pt]
+	Enumeration for the \texttt{dots} argument in all plotting methods. \ref{c:Plotting} Determines if and which values will be added to the plot as a dot. 
+	
+	\begin{lstlisting}
+Dots(Enum)
+	\end{lstlisting}
+	\label{enum:Dots}
+	\textbf{Elements:}
+	\begin{itemize}
+		\item \texttt{OFF}: No dots will be added to the plot.
+		\item \texttt{ALL}: The state and input values at all grid points will be added to the plot.
+		\item \texttt{BASE}: The state and input values at the base point of each interval will be added to the plot.
+	\end{itemize}
+	
+\end{mdframed}
 
-\section{Conclusion}
+\section{Example Code}
+
+\subsection{Batch Reactor}
+
+\begin{lstlisting}
+from optimization import *
+
+"""
+* Batch Reactor from Parallel Multiple-Shooting and Collocation Optimization with OpenModelica,
+* Bachmann, Ochel, et. al., 2012
+"""
+
+model = Model("batchReactor")
+
+x1 = model.addState(symbol="Reactant", start=1)
+x2 = model.addState(symbol="Product", start=0)
+
+u = model.addInput(symbol="u", lb=0, ub=5, guess=0.5)
+
+model.addDynamic(x1, -(u + u**2 / 2) * x1)
+model.addDynamic(x2, u * x1)
+
+model.addMayer(x2, Objective.MAXIMIZE)
+
+model.hasLinearObjective()
+
+model.generate()
+
+model.optimize(
+	tf=1,
+	steps=250,
+	rksteps=3,
+	flags={
+		"outputPath": "/tmp",
+		"linearSolver": LinearSolver.MA57,
+		"initVars": InitVars.SOLVE
+	},
+	meshFlags={
+		"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+		"meshIterations": 6
+	}
+)
+
+model.printResults()
+model.plotInputsAndRefinement()
+
+\end{lstlisting}
+
+\subsection{Oil Shale Pyrolysis}
+
+\begin{lstlisting}
+from optimization import *
+
+model = Model("oilShalePyrolysis")
+
+x1 = model.addState(start=1, symbol="kerogen")
+x2 = model.addState(start=0, symbol="bitumen")
+x3 = model.addState(start=0, symbol="oil")
+x4 = model.addState(start=0, symbol="carbon")
+
+T = model.addInput(lb=698.15, ub=748.15, symbol="temperature")
+
+k1 = exp(8.86 - (20300 / 1.9872) / T)
+k2 = exp(24.25 - (37400 / 1.9872) / T)
+k3 = exp(23.67 - (33800 / 1.9872) / T)
+k4 = exp(18.75 - (28200 / 1.9872) / T)
+k5 = exp(20.70 - (31000 / 1.9872) / T)
+
+model.addDynamic(x1, -k1 * x1 - (k3 + k4 + k5) * x1 * x2)
+model.addDynamic(x2, k1 * x1 - k2 * x2 + k3 * x1 * x2)
+model.addDynamic(x3, k2 * x2 + k4 * x1 * x2)
+model.addDynamic(x4, k5 * x1 * x2)
+
+model.addMayer(x2, Objective.MAXIMIZE)
+
+model.generate()
+
+model.optimize(
+	tf=8,
+	steps=200,
+	rksteps=3,
+	flags={
+		"outputPath": "/tmp",
+		"tolerance": 1e-14,
+	        "linearSolver": LinearSolver.MA57
+        },
+	meshFlags={
+		"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+		"meshIterations": 5
+	}
+)
+
+model.printResults()
+model.plot()
+\end{lstlisting}
+
+\subsection{Van der Pol Oscillator}
+
+\begin{lstlisting}
+from optimization import *
+
+model = Model("vanDerPol")
+
+x1 = model.addState(start=0)
+x2 = model.addState(start=1)
+
+u = model.addInput(ub=0.8)
+
+rp = model.addRuntimeParameter(default=1, symbol="RP")
+
+model.addDynamic(x1, (1 - x2**2) * x1 - x2 + u)
+model.addDynamic(x2, x1)
+
+model.addLagrange(x1**2 + x2**2 + rp * u**2)
+
+model.generate()
+
+model.optimize(
+	tf=10,
+	steps=50,
+	rksteps=3,
+	flags={
+		"outputPath": "/tmp",
+		"linearSolver": LinearSolver.MA57
+	},
+	meshFlags={
+		"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+		"meshIterations": 5,
+		"refinementMethod": RefinementMethod.POLYNOMIAL
+	}
+)
+
+model.parametricPlot(x1, x2, dots=Dots.BASE)
+
+model.setValue(rp, 0.1)
+
+model.optimize(resimulate=True)
+model.plotInputsAndRefinement()
+\end{lstlisting}
+
+\subsection{Nominal Batch Reactor}
+
+\begin{lstlisting}	
+from optimization import *
+
+model = Model("nominalBatchReactor")
+
+NOM_SCALED = 1e10
+
+y1 = model.addState(symbol="Reactant", start=NOM_SCALED, nominal=NOM_SCALED)
+y2 = model.addState(symbol="Product", start=0, nominal=1 / NOM_SCALED)
+
+u = model.addInput(symbol="u", lb=0, ub=5, guess=1)
+
+x1 = y1 / NOM_SCALED
+x2 = y2 * NOM_SCALED
+
+model.addDynamic(y1, -(u + u**2 / 2) * x1 * NOM_SCALED, nominal=NOM_SCALED)
+model.addDynamic(y2, u * x1 / NOM_SCALED, nominal=1 / NOM_SCALED)
+
+model.addMayer(y2, Objective.MAXIMIZE, nominal=1 / NOM_SCALED)
+
+model.hasLinearObjective()
+
+model.generate()
+
+model.optimize(
+	tf=1,
+	steps=500,
+	rksteps=3,
+	flags={
+		"outputPath": "/tmp",
+		"linearSolver": LinearSolver.MA57,
+		"initVars": InitVars.SOLVE,
+		"tolerance": 1e-14,
+	}
+)
+
+model.plot(dots=Dots.BASE)
+
+\end{lstlisting}
 
 \end{document}

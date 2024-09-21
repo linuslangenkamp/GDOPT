@@ -29,21 +29,41 @@
 \contentsline {subsection}{\numberline {5.4}Code Generation}{15}{subsection.5.4}%
 \contentsline {subsection}{\numberline {5.5}Optimization}{16}{subsection.5.5}%
 \contentsline {subsubsection}{\numberline {5.5.1}Flags}{17}{subsubsection.5.5.1}%
+\contentsline {paragraph}{\numberline {5.5.1.1}OutputPath}{17}{paragraph.5.5.1.1}%
+\contentsline {paragraph}{\numberline {5.5.1.2}LinearSolver}{17}{paragraph.5.5.1.2}%
+\contentsline {paragraph}{\numberline {5.5.1.3}Tolerance}{17}{paragraph.5.5.1.3}%
+\contentsline {paragraph}{\numberline {5.5.1.4}ExportHessianPath}{17}{paragraph.5.5.1.4}%
+\contentsline {paragraph}{\numberline {5.5.1.5}ExportJacobianPath}{17}{paragraph.5.5.1.5}%
+\contentsline {paragraph}{\numberline {5.5.1.6}InitialStatesPath}{17}{paragraph.5.5.1.6}%
+\contentsline {paragraph}{\numberline {5.5.1.7}IVPSolver}{17}{paragraph.5.5.1.7}%
+\contentsline {paragraph}{\numberline {5.5.1.8}InitVars}{17}{paragraph.5.5.1.8}%
 \contentsline {subsubsection}{\numberline {5.5.2}Mesh Flags}{17}{subsubsection.5.5.2}%
-\contentsline {section}{\numberline {6}Analysis}{17}{section.6}%
-\contentsline {section}{\numberline {7}Utilities}{17}{section.7}%
-\contentsline {subsection}{\numberline {7.1}Special Functions}{17}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}Global Time Symbols}{17}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Helper Expressions}{18}{subsection.7.3}%
-\contentsline {subsection}{\numberline {7.4}Expression Simplification}{18}{subsection.7.4}%
-\contentsline {subsection}{\numberline {7.5}Constant Derivatives}{19}{subsection.7.5}%
-\contentsline {subsection}{\numberline {7.6}Enumerations}{19}{subsection.7.6}%
-\contentsline {subsubsection}{\numberline {7.6.1}Objective}{19}{subsubsection.7.6.1}%
-\contentsline {subsubsection}{\numberline {7.6.2}InitVars}{20}{subsubsection.7.6.2}%
-\contentsline {subsubsection}{\numberline {7.6.3}LinearSolver}{20}{subsubsection.7.6.3}%
-\contentsline {subsubsection}{\numberline {7.6.4}IVPSolver}{21}{subsubsection.7.6.4}%
-\contentsline {subsubsection}{\numberline {7.6.5}MeshAlgorithm}{21}{subsubsection.7.6.5}%
-\contentsline {subsubsection}{\numberline {7.6.6}RefinementMethod}{22}{subsubsection.7.6.6}%
-\contentsline {subsubsection}{\numberline {7.6.7}MatrixType}{22}{subsubsection.7.6.7}%
-\contentsline {subsubsection}{\numberline {7.6.8}Dots}{22}{subsubsection.7.6.8}%
-\contentsline {section}{\numberline {8}Conclusion}{22}{section.8}%
+\contentsline {paragraph}{\numberline {5.5.2.1}MeshAlgorithm}{17}{paragraph.5.5.2.1}%
+\contentsline {paragraph}{\numberline {5.5.2.2}MeshIterations}{17}{paragraph.5.5.2.2}%
+\contentsline {paragraph}{\numberline {5.5.2.3}RefinementMethod}{17}{paragraph.5.5.2.3}%
+\contentsline {paragraph}{\numberline {5.5.2.4}MeshLevel}{18}{paragraph.5.5.2.4}%
+\contentsline {paragraph}{\numberline {5.5.2.5}MeshCTol}{18}{paragraph.5.5.2.5}%
+\contentsline {paragraph}{\numberline {5.5.2.6}MeshSigma}{18}{paragraph.5.5.2.6}%
+\contentsline {section}{\numberline {6}Analysis}{18}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Results}{18}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Plotting}{18}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Utilities}{18}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Special Functions}{18}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Global Time Symbols}{19}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Helper Expressions}{19}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Expression Simplification}{20}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}Constant Derivatives}{20}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}Enumerations}{21}{subsection.7.6}%
+\contentsline {subsubsection}{\numberline {7.6.1}Objective}{21}{subsubsection.7.6.1}%
+\contentsline {subsubsection}{\numberline {7.6.2}InitVars}{21}{subsubsection.7.6.2}%
+\contentsline {subsubsection}{\numberline {7.6.3}LinearSolver}{22}{subsubsection.7.6.3}%
+\contentsline {subsubsection}{\numberline {7.6.4}IVPSolver}{22}{subsubsection.7.6.4}%
+\contentsline {subsubsection}{\numberline {7.6.5}MeshAlgorithm}{22}{subsubsection.7.6.5}%
+\contentsline {subsubsection}{\numberline {7.6.6}RefinementMethod}{23}{subsubsection.7.6.6}%
+\contentsline {subsubsection}{\numberline {7.6.7}MatrixType}{23}{subsubsection.7.6.7}%
+\contentsline {subsubsection}{\numberline {7.6.8}Dots}{23}{subsubsection.7.6.8}%
+\contentsline {section}{\numberline {8}Example Code}{24}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Batch Reactor}{24}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Oil Shale Pyrolysis}{25}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Van der Pol Oscillator}{26}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}Nominal Batch Reactor}{26}{subsection.8.4}%

@@ -464,9 +464,7 @@ class Model:
             self.setIVPSolver(flags["ivpSolver"])
         if "initVars" in flags:
             self.setInitVars(flags["initVars"])
-        if "userScaling" in flags:
-            self.setUserScaling(flags["userScaling"])
-
+             
     def setMeshFlags(self, meshFlags):
         if "meshAlgorithm" in meshFlags:
             self.setMeshAlgorithm(meshFlags["meshAlgorithm"])

@@ -45,9 +45,8 @@ class MeshAlgorithm(Enum):
 
 
 class MatrixType(Enum):
-    DEFAULT = 1
-    JACOBIAN = 2
-    HESSIAN = 3
+    JACOBIAN = 1
+    HESSIAN = 2
 
 
 class Dots(Enum):
