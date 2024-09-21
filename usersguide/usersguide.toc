@@ -27,23 +27,23 @@
 \contentsline {subsubsection}{\numberline {5.3.2}Lagrange Term}{14}{subsubsection.5.3.2}%
 \contentsline {subsubsection}{\numberline {5.3.3}Combined Objectives}{14}{subsubsection.5.3.3}%
 \contentsline {subsection}{\numberline {5.4}Code Generation}{15}{subsection.5.4}%
-\contentsline {subsection}{\numberline {5.5}Optimization}{15}{subsection.5.5}%
-\contentsline {subsubsection}{\numberline {5.5.1}Flags}{15}{subsubsection.5.5.1}%
-\contentsline {subsubsection}{\numberline {5.5.2}Mesh Flags}{15}{subsubsection.5.5.2}%
-\contentsline {section}{\numberline {6}Analysis}{15}{section.6}%
-\contentsline {section}{\numberline {7}Utilities}{15}{section.7}%
-\contentsline {subsection}{\numberline {7.1}Special Functions}{16}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}Global Time Symbols}{16}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Helper Expressions}{16}{subsection.7.3}%
-\contentsline {subsection}{\numberline {7.4}Expression Simplification}{17}{subsection.7.4}%
-\contentsline {subsection}{\numberline {7.5}Constant Derivatives}{17}{subsection.7.5}%
-\contentsline {subsection}{\numberline {7.6}Enumerations}{18}{subsection.7.6}%
-\contentsline {subsubsection}{\numberline {7.6.1}Objective}{18}{subsubsection.7.6.1}%
-\contentsline {subsubsection}{\numberline {7.6.2}InitVars}{18}{subsubsection.7.6.2}%
-\contentsline {subsubsection}{\numberline {7.6.3}LinearSolver}{19}{subsubsection.7.6.3}%
-\contentsline {subsubsection}{\numberline {7.6.4}IVPSolver}{19}{subsubsection.7.6.4}%
-\contentsline {subsubsection}{\numberline {7.6.5}MeshAlgorithm}{20}{subsubsection.7.6.5}%
-\contentsline {subsubsection}{\numberline {7.6.6}RefinementMethod}{20}{subsubsection.7.6.6}%
-\contentsline {subsubsection}{\numberline {7.6.7}MatrixType}{21}{subsubsection.7.6.7}%
-\contentsline {subsubsection}{\numberline {7.6.8}Dots}{21}{subsubsection.7.6.8}%
-\contentsline {section}{\numberline {8}Conclusion}{21}{section.8}%
+\contentsline {subsection}{\numberline {5.5}Optimization}{16}{subsection.5.5}%
+\contentsline {subsubsection}{\numberline {5.5.1}Flags}{17}{subsubsection.5.5.1}%
+\contentsline {subsubsection}{\numberline {5.5.2}Mesh Flags}{17}{subsubsection.5.5.2}%
+\contentsline {section}{\numberline {6}Analysis}{17}{section.6}%
+\contentsline {section}{\numberline {7}Utilities}{17}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Special Functions}{17}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Global Time Symbols}{17}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Helper Expressions}{18}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Expression Simplification}{18}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}Constant Derivatives}{19}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}Enumerations}{19}{subsection.7.6}%
+\contentsline {subsubsection}{\numberline {7.6.1}Objective}{19}{subsubsection.7.6.1}%
+\contentsline {subsubsection}{\numberline {7.6.2}InitVars}{20}{subsubsection.7.6.2}%
+\contentsline {subsubsection}{\numberline {7.6.3}LinearSolver}{20}{subsubsection.7.6.3}%
+\contentsline {subsubsection}{\numberline {7.6.4}IVPSolver}{21}{subsubsection.7.6.4}%
+\contentsline {subsubsection}{\numberline {7.6.5}MeshAlgorithm}{21}{subsubsection.7.6.5}%
+\contentsline {subsubsection}{\numberline {7.6.6}RefinementMethod}{22}{subsubsection.7.6.6}%
+\contentsline {subsubsection}{\numberline {7.6.7}MatrixType}{22}{subsubsection.7.6.7}%
+\contentsline {subsubsection}{\numberline {7.6.8}Dots}{22}{subsubsection.7.6.8}%
+\contentsline {section}{\numberline {8}Conclusion}{22}{section.8}%

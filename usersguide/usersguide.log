@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2024.9.12)  21 SEP 2024 01:01
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2024.9.12)  21 SEP 2024 11:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -836,6 +836,9 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
 (mdframed)              on input line 844.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 884.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -848,10 +851,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [15]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 925.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 940.
+(mdframed)              on input line 899.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -864,8 +864,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [16]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1011.
-Package mdframed Info: Not enough space on this page on input line 1022.
+(mdframed)              on input line 988.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -876,19 +875,9 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [17]
-Package mdframed Info: Not enough space on this page on input line 1022.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1025.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 1040.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 1071.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 1098.
+(mdframed)              on input line 1003.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -899,13 +888,19 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [18]
-Package mdframed Info: Not enough space on this page on input line 1139.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1144.
+(mdframed)              on input line 1074.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1170.
+(mdframed)              on input line 1088.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1103.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1134.
+Package mdframed Info: Not enough space on this page on input line 1157.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -916,12 +911,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [19]
+Package mdframed Info: Not enough space on this page on input line 1157.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1203.
+(mdframed)              on input line 1161.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1231.
+(mdframed)              on input line 1207.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -932,6 +928,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [20]
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1233.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1266.
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -940,18 +943,31 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
-[21] (./usersguide.aux)
+[21]
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1294.
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 14.49998pt, for example:
+(fancyhdr)                \setlength{\headheight}{14.49998pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
+
+[22] (./usersguide.aux)
 Package rerunfilecheck Info: File `usersguide.out' has not changed.
 (rerunfilecheck)             Checksum: B0108EBF113F8EB8BC64EF176F021C3D;6300.
  ) 
 Here is how much of TeX's memory you used:
- 14584 strings out of 478287
- 223177 string characters out of 5849289
- 798630 words of memory out of 5000000
- 32383 multiletter control sequences out of 15000+600000
+ 14616 strings out of 478287
+ 223630 string characters out of 5849289
+ 798797 words of memory out of 5000000
+ 32394 multiletter control sequences out of 15000+600000
  485483 words of font info for 87 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 68i,12n,77p,473b,1339s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 68i,12n,77p,595b,1342s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-ts1.enc}</usr/share/texli
 ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texlive/tex
 mf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dis
@@ -968,10 +984,10 @@ exlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/share/texlive
 /texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texlive/texmf
 -dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb></usr/share/texmf/fonts/type1/p
 ublic/cm-super/sfrm1200.pfb>
-Output written on usersguide.pdf (22 pages, 334863 bytes).
+Output written on usersguide.pdf (23 pages, 340442 bytes).
 PDF statistics:
- 608 PDF objects out of 1000 (max. 8388607)
- 542 compressed objects within 6 object streams
- 176 named destinations out of 1000 (max. 500000)
+ 640 PDF objects out of 1000 (max. 8388607)
+ 573 compressed objects within 6 object streams
+ 197 named destinations out of 1000 (max. 500000)
  403 words of extra memory for PDF output out of 10000 (max. 10000000)
 

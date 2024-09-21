@@ -5,4 +5,5 @@ Makefile
 /examples/.generated/
 .cache/
 .env
+.fleet
 __pycache__/

@@ -836,9 +836,9 @@ vice versa. Additionally nominal values will be added if both terms have
 assigned nominals. If only one term has a nominal value, then this value is
 used for the full objective.
 
-Combined objectives can be added individually with \texttt{addMayer}
-\ref{addMayer} and \texttt{addLagrange} \ref{addLagrange} or with the method
-\texttt{addObjective}.
+Combined objectives can be added individually with \texttt{model.addMayer}
+\ref{addMayer} and \texttt{model} \, \texttt{.addLagrange} \ref{addLagrange} or with the method
+\texttt{model.addObjective}.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
@@ -875,9 +875,69 @@ model.addObjective(mayer, lagrange, obj=Objective.MINIMIZE, nominal=None)
 
 \subsection{Code Generation}
 
+If the modeling process is done, it is possible to generate the C++ code of the model.
+Therefore, the 1st and 2nd derivatives of the objectives and all constraints are calculated symbolically with SymEngine. After that, the framework will search for common subexpressions (CSE) in each derivative, using the symbolic capabilities of SymEngine. The resulting expressions as well as all other problem defining structures are generated to a C++ file. This file makes heavy use of preprocessing macros (e.g. final time, runtime parameters, flags, paths, \ldots), that will be set later in the \texttt{model.optimize} pipeline \ref{optimize}.   
+
+If several optimizations have to be executed, where only flags and runtime parameters are changed, it is advised to call \texttt{model.generate} only once, since all flags will be set in a later stage. Thus, obsolete recalculations will be avoided.
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+	linewidth=1pt]
+	
+	Calculates the 1st and 2nd derivatives. Generates all the problem defining structures to a .cpp file, which includes preprocessing macros.
+	
+\begin{lstlisting}
+model.generate()
+\end{lstlisting}
+
+\end{mdframed}
+
 \subsection{Optimization}
 
+	After code generation, all model parameters (e.g. final time, runtime parameters, flags, paths, \ldots) are written as preprocessing macros to a header file. The resulting code consisting of the .cpp and .h files is compiled, while linking against the dynamic optimization backend. The resulting executable will be run, which solves the NLP. Additionally the optimal solution as well as some metadata will be written to text files. These files can be analyzed with the presented framework \ref{c:Analysis}.  
+	
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+	linewidth=1pt]
+
+	Sets all model parameters (e.g. final time, runtime parameters, flags, paths, \ldots), compiles and runs the optimization.
+	
+	\begin{lstlisting}
+model.optimize(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False)
+	\end{lstlisting}
+	\label{optimize}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{float tf} \emph{(optional)}: The final time $t_f$ of the model.
+		\item \texttt{int steps} \emph{(optional)}: The number of intervals.
+		\item \texttt{int rksteps} \emph{(optional)}: The number of collocation nodes of the RadauIIA integrator per interval. Valid range: $1 \leq$ \texttt{rksteps} $\leq 36$.
+		\item \texttt{dict<str, arg> flags} \emph{(optional)}: A dictionary of flags. All possible flags are presented in \ref{c:flags}.
+		\item \texttt{dict<str, arg> mesh flags} \emph{(optional)}: A dictionary of mesh flags. All possible mesh flags are presented in \ref{c:meshflags}.
+		\item \texttt{bool resimulate} \emph{(optional)}: If set to \texttt{true}, all arguments and flags of this method will be taking from the previous optimization.
+	\end{itemize}
+	
+	\textbf{Example}:
+	\begin{lstlisting}
+model.optimize(
+	tf=1,
+	steps=250,
+	rksteps=3,
+	flags={
+		"outputPath": "/tmp",
+		"linearSolver": LinearSolver.MUMPS,
+		"initVars": InitVars.SOLVE_EXPLICIT,
+		"exportJacobianPath": "/tmp",
+	},
+	meshFlags={
+		"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+		"meshIterations": 6
+	}
+)
+	\end{lstlisting}
+	
+\end{mdframed}
+
 \subsubsection{Flags}
+
+\label{c:flags}
 
 \label{flag:initVars}
 
@@ -887,11 +947,14 @@ model.addObjective(mayer, lagrange, obj=Objective.MINIMIZE, nominal=None)
 
 \subsubsection{Mesh Flags}
 
+\label{c:meshflags}
+
 \label{flag:MeshAlgorithm}
 
 \label{flag:RefinementMethod}:
 
 \section{Analysis}
+\label{c:Analysis}
 
 \section{Utilities}
 The \texttt{optimization} package provides access to several utilities.
@@ -1242,14 +1305,14 @@ RefinementMethod(Enum)
 	\textbf{Elements:}
 	\begin{itemize}
 		\item \texttt{LINEAR\_SPLINE}: The variables will be
-		      interpolated by a linear spline on each subinterval. The
+		      interpolated by a linear spline on each interval. The
 		      initial solution
 		      should contain no oscillations at discontinuities, but
 		      might be poor for smooth
 		      sections.
 		\item \texttt{POLYNOMIAL}: The variables will be
 		      interpolated by a interpolating polynomial on each
-		      subinterval.
+		      interval.
 		      The initial solution
 		      is likely to contain oscillations at discontinuities,
 		      although
