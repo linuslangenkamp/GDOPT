@@ -11,7 +11,7 @@ u = model.addInput(lb=-100, ub=100)
 model.addDynamic(x1, x2)
 model.addDynamic(x2, u)
 
-model.addPath(x2 * u * piecewise((1, t < 0.25), (0, t >= 0.25)), lb=-30, ub=30)
+model.addPath(x2 * u * piecewise((1, t < 0.25), (0, t >= 0.25)), lb=-30, ub=30) # constraint only has to hold for time < 0.25
 
 model.addFinal(x2, eq=0)
 

@@ -35,21 +35,21 @@
 \contentsline {subsection}{\numberline {6.2}Plotting}{18}{subsection.6.2}%
 \contentsline {section}{\numberline {7}Utilities}{18}{section.7}%
 \contentsline {subsection}{\numberline {7.1}Special Functions}{18}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}Global Time Symbols}{18}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.2}Global Time Symbols}{19}{subsection.7.2}%
 \contentsline {subsection}{\numberline {7.3}Helper Expressions}{19}{subsection.7.3}%
-\contentsline {subsection}{\numberline {7.4}Expression Simplification}{19}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.4}Expression Simplification}{20}{subsection.7.4}%
 \contentsline {subsection}{\numberline {7.5}Constant Derivatives}{20}{subsection.7.5}%
-\contentsline {subsection}{\numberline {7.6}Enumerations}{20}{subsection.7.6}%
-\contentsline {subsubsection}{\numberline {7.6.1}Objective}{20}{subsubsection.7.6.1}%
+\contentsline {subsection}{\numberline {7.6}Enumerations}{21}{subsection.7.6}%
+\contentsline {subsubsection}{\numberline {7.6.1}Objective}{21}{subsubsection.7.6.1}%
 \contentsline {subsubsection}{\numberline {7.6.2}InitVars}{21}{subsubsection.7.6.2}%
-\contentsline {subsubsection}{\numberline {7.6.3}LinearSolver}{21}{subsubsection.7.6.3}%
+\contentsline {subsubsection}{\numberline {7.6.3}LinearSolver}{22}{subsubsection.7.6.3}%
 \contentsline {subsubsection}{\numberline {7.6.4}IVPSolver}{22}{subsubsection.7.6.4}%
-\contentsline {subsubsection}{\numberline {7.6.5}MeshAlgorithm}{22}{subsubsection.7.6.5}%
+\contentsline {subsubsection}{\numberline {7.6.5}MeshAlgorithm}{23}{subsubsection.7.6.5}%
 \contentsline {subsubsection}{\numberline {7.6.6}RefinementMethod}{23}{subsubsection.7.6.6}%
 \contentsline {subsubsection}{\numberline {7.6.7}MatrixType}{23}{subsubsection.7.6.7}%
-\contentsline {subsubsection}{\numberline {7.6.8}Dots}{23}{subsubsection.7.6.8}%
+\contentsline {subsubsection}{\numberline {7.6.8}Dots}{24}{subsubsection.7.6.8}%
 \contentsline {section}{\numberline {8}Example Code}{24}{section.8}%
 \contentsline {subsection}{\numberline {8.1}Batch Reactor}{24}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Oil Shale Pyrolysis}{24}{subsection.8.2}%
-\contentsline {subsection}{\numberline {8.3}Van der Pol Oscillator}{25}{subsection.8.3}%
-\contentsline {subsection}{\numberline {8.4}Nominal Batch Reactor}{26}{subsection.8.4}%
+\contentsline {subsection}{\numberline {8.2}Oil Shale Pyrolysis}{25}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Van der Pol Oscillator}{26}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}Nominal Batch Reactor}{27}{subsection.8.4}%

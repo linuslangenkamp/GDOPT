@@ -1031,17 +1031,33 @@ get automatically imported from SymEngine. These can be used freely in the
 modeling process, although the user has to be careful with non differentiable
 and discontinuous functions.
 \begin{itemize}
-	\item exp, log
-	\item sin, cos, tan
-	\item sqrt
-	\item asin, acos, atan
-	\item sinh, cosh, tanh
-	\item asinh, acosh, atanh
-	\item Abs
-	\item Max, Min
-	\item Piecewise
-	\item pi
+	\item \texttt{exp}, \texttt{log}
+	\item \texttt{sin}, \texttt{cos}, \texttt{tan}
+	\item \texttt{sqrt}
+	\item \texttt{asin}, \texttt{acos}, \texttt{atan}
+	\item \texttt{sinh}, \texttt{cosh}, \texttt{tanh}
+	\item \texttt{asinh}, \texttt{acosh}, \texttt{atanh}
+	\item \texttt{Abs}
+	\item \texttt{Max}, \texttt{Min}
+	\item \texttt{Piecewise} / \texttt{piecewise}
+	\item \texttt{pi}
 \end{itemize}
+
+Note that \texttt{Piecewise} is the native SymEngine function to define piecewise functions. For code generation to work, this has to have the fallback case \texttt{(0, True)}, i.e. the function is constant $0$ anywhere, where it was not explicitly defined. This inconvenience will be addressed with the custom \texttt{piecewise} function. It is a basic wrapper around \texttt{Piecewise}, where the argument \texttt{(0, True)} is added implicitly. Piecewise functions allow for greater expressibility in objectives and constraints, e.g. 
+
+\begin{lstlisting}
+# constraint only has to hold for time < 0.25
+binaryTrigger = piecewise((1, t < 0.25), (0, t >= 0.25))
+model.addPath(x1 * u1 * binaryTrigger, lb=-30, ub=30) 
+\end{lstlisting}
+
+The formulated path constraint is given by
+$\begin{cases}
+	-30 \leq x_1  u_1 \leq 30,& t < 0.25 \\
+	-30 \leq 0 \leq 30,& t \geq 0.25 \\
+\end{cases}$
+and obviously holds for $t \geq 0.25$. It is therefore possible to restrict the domain of constraints to a subinterval $I \subset [t_0, t_f]$. Piecewise functions can be useful in many scenarios, e.g. if the Lagrange integrand only matters on a subset of the entire time horizon, i.e. $\min \int_{t_1}^{t_2} L(\cdot) \, \dd t$ with $[t_1, t_2] \subset [t_0, t_f]$.
+
 
 \subsection{Global Time Symbols}
 \label{c:globaltime}

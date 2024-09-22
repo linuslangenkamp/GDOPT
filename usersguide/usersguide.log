@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.3) (preloaded format=pdflatex 2024.3.22)  22 SEP 2024 12:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.3) (preloaded format=pdflatex 2024.3.22)  22 SEP 2024 14:38
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -894,13 +894,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [17]
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 1051.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 1066.
-
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -910,7 +903,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [18]
-Package mdframed Info: Not enough space on this page on input line 1081.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1067.
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1082.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -923,17 +921,14 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [19]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1137.
+(mdframed)              on input line 1153.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1151.
+(mdframed)              on input line 1167.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1166.
-Package mdframed Info: mdframed detected package amsthm 
- changed the theorem header of amsthm
-(mdframed)              on input line 1197.
-Package mdframed Info: Not enough space on this page on input line 1220.
+(mdframed)              on input line 1182.
+Package mdframed Info: Not enough space on this page on input line 1193.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -944,13 +939,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [20]
-Package mdframed Info: Not enough space on this page on input line 1220.
+Package mdframed Info: Not enough space on this page on input line 1193.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1224.
+(mdframed)              on input line 1213.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1270.
+(mdframed)              on input line 1240.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -963,10 +958,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [21]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1296.
+(mdframed)              on input line 1286.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1329.
+(mdframed)              on input line 1312.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -979,13 +974,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [22]
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1357.
+(mdframed)              on input line 1345.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1391.
+(mdframed)              on input line 1373.
 Package mdframed Info: mdframed detected package amsthm 
  changed the theorem header of amsthm
-(mdframed)              on input line 1409.
+(mdframed)              on input line 1407.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -996,6 +991,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-2.49998pt}.
 
 [23]
+Package mdframed Info: mdframed detected package amsthm 
+ changed the theorem header of amsthm
+(mdframed)              on input line 1425.
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 14.49998pt, for example:
@@ -1040,10 +1039,10 @@ Package rerunfilecheck Info: File `usersguide.out' has not changed.
 (rerunfilecheck)             Checksum: 2AD0CA1E88D5E09099CFBD499CB2BD93;7135.
  ) 
 Here is how much of TeX's memory you used:
- 14817 strings out of 474424
- 228908 string characters out of 5741739
- 2040496 words of memory out of 5000000
- 36561 multiletter control sequences out of 15000+600000
+ 14824 strings out of 474424
+ 229006 string characters out of 5741739
+ 2038496 words of memory out of 5000000
+ 36564 multiletter control sequences out of 15000+600000
  574293 words of font info for 95 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  79i,12n,93p,597b,2017s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1065,9 +1064,9 @@ pe1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Linus/AppData/Local/Programs/MiKTeX
 /fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Users/Linus/AppData/Local/Progra
 ms/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/Linus/AppData/Loc
 al/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on usersguide.pdf (28 pages, 436044 bytes).
+Output written on usersguide.pdf (28 pages, 438908 bytes).
 PDF statistics:
- 903 PDF objects out of 1000 (max. 8388607)
- 388 named destinations out of 1000 (max. 500000)
+ 908 PDF objects out of 1000 (max. 8388607)
+ 392 named destinations out of 1000 (max. 500000)
  451 words of extra memory for PDF output out of 10000 (max. 10000000)
 
