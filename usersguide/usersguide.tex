@@ -939,42 +939,47 @@ model.optimize(
 \subsubsection{Flags}
 \label{c:flags}
 
+The entire flag dictionary and therefore all flags are optional and do not have to provided by the user. Nevertheless, some flags set values that are mandatory to the solver. The corresponding attributes have internal default values, which are presented below.
+
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 	linewidth=1pt]
 	
-\phantomsection
-\label{flag:tolerance}
-The \texttt{"tolerance"} flag sets the tolerance for numerical solvers used in the optimization.
-
-\phantomsection
-\label{flag:linearSolver}
-The \texttt{"linearSolver"} flag defines the linear solver used to solve the system of equations during optimization.
-
-\phantomsection
-\label{flag:initVars}
-The \texttt{"initVars"} flag specifies how initial variables are handled in the optimization process.
-
-\phantomsection
-\label{flag:ivpSolver}
-The \texttt{"ivpSolver"} flag specifies the Initial Value Problem (IVP) solver to use during the simulation.
-
-\phantomsection
-\label{flag:outputPath}
-The \texttt{"outputPath"} flag specifies the path where all outputs from the optimization process will be stored.
-
-\phantomsection
-\label{flag:exportHessianPath}
-The \texttt{"exportHessianPath"} flag specifies the path where the Hessian matrix is exported.
-
-\phantomsection
-\label{flag:exportJacobianPath}
-The \texttt{"exportJacobianPath"} flag defines the path to export the Jacobian matrix.
-
-\phantomsection
-\label{flag:initialStatesPath}
-The \texttt{"initialStatesPath"} flag sets the file path for initializing the state variables for the optimization process.
-
-
+\begin{itemize}
+	
+	\phantomsection
+	\label{flag:tolerance}
+	\item \texttt{"tolerance" $\rightarrow$ float} (\emph{default}=\texttt{1e-14}): Sets the optimization tolerance in IPOPT. The acceptable tolerance is always defined as \texttt{1e3} $\cdot$ "tolerance".
+	
+	\phantomsection
+	\label{flag:linearSolver}
+	\item \texttt{"linearSolver" $\rightarrow$ LinearSolver} (\emph{default}=\texttt{LinearSolver.MUMPS}): Sets the linear solver used in IPOPT. The linear solver has to be an element of the \texttt{LinearSolver} enumeration \ref{enum:LinearSolver}.
+	
+	\phantomsection
+	\label{flag:initVars}
+	\item \texttt{"initVars" $\rightarrow$ InitVars} (\emph{default}=\texttt{InitVars.SOLVE}): Sets the way in which the variables are initialized. The value has to be an element of the \texttt{InitVars} enumeration \ref{enum:initVars}.
+	
+	\phantomsection
+	\label{flag:ivpSolver}
+	\item \texttt{"ivpSolver" $\rightarrow$ IVPSolver} (\emph{default}=\texttt{IVPSolver.RADAU}): Sets the \texttt{SciPy} integrator, that solves the arising initial value problem, if \texttt{"initVars"} is set to \texttt{InitVars.SOLVE}. The value has to be an element of the \texttt{IVPSolver} enumeration \ref{enum:IVPSolver}.
+	
+	\phantomsection
+	\label{flag:outputPath}
+	\item \texttt{"outputPath" $\rightarrow$ str}: Sets the path to which the optimal solution is output as a text file. If this value is not provided, the optimal solution can not be accessed. This flag does not have a standard path, since I/O operations can slow down the framework and are obsolete in some cases.
+	
+	\phantomsection
+	\label{flag:exportHessianPath}
+	\item \texttt{"exportHessianPath" $\rightarrow$ str}: Sets the path to which the Hessian sparsity pattern is output as a text file. If this value is not provided, the sparsity can not be accessed.
+	
+	\phantomsection
+	\label{flag:exportJacobianPath}
+	\item \texttt{"exportJacobianPath" $\rightarrow$ str}: Sets the path to which the Jacobian sparsity pattern is output as a text file. If this value is not provided, the sparsity can not be accessed.
+	
+	\phantomsection
+	\label{flag:initialStatesPath}
+	\item \texttt{"initialStatesPath" $\rightarrow$ str} (\emph{default}=\texttt{"/.generated"}): Sets the path to which the solution of the initial value problem, which arises if \texttt{"initVars"} is set to \texttt{InitVars.SOLVE}, is written.
+	
+	
+\end{itemize}
 \end{mdframed}
 
 
@@ -1235,6 +1240,33 @@ Objective(Enum)
 
 \end{mdframed}
 
+
+\subsubsection{LinearSolver}
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+	linewidth=1pt]
+	Enumeration for the flag \texttt{"linearSolver"}
+	\ref{flag:linearSolver}:
+	Specifies the linear solver used by IPOPT.
+	
+	\begin{lstlisting}
+		LinearSolver(Enum)
+	\end{lstlisting}
+	\label{enum:LinearSolver}
+	\textbf{Elements:}
+	\begin{itemize}
+		\item \texttt{MUMPS}: MUMPS.
+		\item \texttt{MA27}: MA27 (HSL solver).
+		\item \texttt{MA57}: MA57 (HSL solver).
+		\item \texttt{MA77}: MA77 (HSL solver).
+		\item \texttt{MA86}: MA86 (HSL solver).
+		\item \texttt{MA97}: MA97 (HSL solver).
+		\item \texttt{PARDISO}: Intel PARDISO (currently not
+		supported).
+	\end{itemize}
+	
+\end{mdframed}
+
 \subsubsection{InitVars}
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
@@ -1276,32 +1308,6 @@ InitVars(Enum)
 		      and $\v{p}$. The system is solved by the explicit /
 		      forward Euler method.
 
-	\end{itemize}
-
-\end{mdframed}
-
-\subsubsection{LinearSolver}
-
-\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
-		linewidth=1pt]
-	Enumeration for the flag \texttt{"linearSolver"}
-	\ref{flag:linearSolver}:
-	Specifies the linear solver used by IPOPT.
-
-	\begin{lstlisting}
-LinearSolver(Enum)
-		\end{lstlisting}
-	\label{enum:LinearSolver}
-	\textbf{Elements:}
-	\begin{itemize}
-		\item \texttt{MUMPS}: MUMPS.
-		\item \texttt{MA27}: MA27 (HSL solver).
-		\item \texttt{MA57}: MA57 (HSL solver).
-		\item \texttt{MA77}: MA77 (HSL solver).
-		\item \texttt{MA86}: MA86 (HSL solver).
-		\item \texttt{MA97}: MA97 (HSL solver).
-		\item \texttt{PARDISO}: Intel PARDISO (currently not
-		      supported).
 	\end{itemize}
 
 \end{mdframed}
@@ -1472,7 +1478,7 @@ model.optimize(
 	rksteps=3,
 	flags={
 		"outputPath": "/tmp",
-		"linearSolver": LinearSolver.MA57,
+		"linearSolver": LinearSolver.MUMPS,
 		"initVars": InitVars.SOLVE
 	},
 	meshFlags={
@@ -1561,7 +1567,7 @@ model.optimize(
 	rksteps=3,
 	flags={
 		"outputPath": "/tmp",
-		"linearSolver": LinearSolver.MA57
+		"linearSolver": LinearSolver.MUMPS
 	},
 	meshFlags={
 		"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,

@@ -95,7 +95,7 @@ class Model:
         self.uVars.append(variable)
         self.checkNominalNone(nominal)
         return variable
-    
+
     def addControl(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
 
         # alias for addInput()
@@ -103,13 +103,13 @@ class Model:
         return self.addInput(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
 
     def addContinuous(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-        
+
         # alias for addInput()
 
         return self.addInput(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
 
     def addU(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-        
+
         # alias for addInput()
 
         return self.addInput(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
@@ -144,7 +144,7 @@ class Model:
         return variable
 
     def addP(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-        
+
         # alias for addParameter()
 
         return self.addParameter(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
@@ -195,9 +195,9 @@ class Model:
         # adds the mayer and lagrange term
         # if mayer and lagrange have a nominal -> sum is used as nominal value
 
-        self.addMayer(mayer, obj, nominal=nominal/2)
-        self.addLagrange(lagrange, obj, nominal=nominal/2)
-    
+        self.addMayer(mayer, obj, nominal=nominal / 2)
+        self.addLagrange(lagrange, obj, nominal=nominal / 2)
+
     def addMayer(self, expr, obj=Objective.MINIMIZE, nominal=None):
 
         # adds the mayer term: min/max expr(tf)
@@ -263,7 +263,6 @@ class Model:
 
         self.addDynamic(diffVar, expr, nominal=nominal)
 
-
     def addPath(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
 
         # adds a path constraint: lb <= g(.(t)) <= ub or g(.(t)) == eq
@@ -274,7 +273,7 @@ class Model:
         self.checkNominalNone(nominal)
 
     def addG(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-        
+
         # alias for addPath()
 
         self.addPath(expr, lb=lb, ub=ub, eq=eq, nominal=nominal)
@@ -289,7 +288,7 @@ class Model:
         self.checkNominalNone(nominal)
 
     def addR(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-        
+
         # alias for addFinal()
 
         self.addFinal(expr, lb=lb, ub=ub, eq=eq, nominal=nominal)
@@ -305,7 +304,7 @@ class Model:
         self.checkNominalNone(nominal)
 
     def addA(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-        
+
         # alias for addParametric()
 
         self.addParametric(expr, lb=lb, ub=ub, eq=eq, nominal=nominal)
@@ -334,11 +333,19 @@ class Model:
             )
             for eq in range(len(self.F))
         ]
-        
+
         # dirty uFuncs hack, if standard functions for the guess are provided
-        uFuncs = [Lambdify([t], varInfo[u].initialGuess.subs(FINAL_TIME_SYMBOL, self.tf) 
-                           if hasattr(varInfo[u].initialGuess, 'subs') 
-                           else varInfo[u].initialGuess) for u in self.uVars]
+        uFuncs = [
+            Lambdify(
+                [t],
+                (
+                    varInfo[u].initialGuess.subs(FINAL_TIME_SYMBOL, self.tf)
+                    if hasattr(varInfo[u].initialGuess, "subs")
+                    else varInfo[u].initialGuess
+                ),
+            )
+            for u in self.uVars
+        ]
 
         # define rhs as an actual function
         ode = lambda T, x: [
@@ -464,7 +471,7 @@ class Model:
             self.setIVPSolver(flags["ivpSolver"])
         if "initVars" in flags:
             self.setInitVars(flags["initVars"])
-             
+
     def setMeshFlags(self, meshFlags):
         if "meshAlgorithm" in meshFlags:
             self.setMeshAlgorithm(meshFlags["meshAlgorithm"])
@@ -746,7 +753,7 @@ int main() {{
 
         self.generate()
         self.optimize(tf=tf, steps=steps, rksteps=rksteps, flags=flags, meshFlags=meshFlags, resimulate=resimulate)
-     
+
     def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
 
         # generate corresponding main function with flags, mesh, refinement
@@ -780,7 +787,9 @@ int main() {{
             print(f"Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...\n")
             with open(self.initialStatesPath + "/initialValues.csv", "w") as file:
                 for i in range(len(timeVals)):
-                    row = [] # could add timeColumn for debugging by adding: row = [str(timeVals[i])] -> change JUMP1 as well
+                    row = (
+                        []
+                    )  # could add timeColumn for debugging by adding: row = [str(timeVals[i])] -> change JUMP1 as well
                     for dim in range(len(self.xVars)):
                         row.append(str(stateVals[dim][i]))
 
@@ -836,7 +845,7 @@ int main() {{
         print(f"Executing...\n")
         os.system(f"LD_LIBRARY_PATH=../cmake-build-release/src/ ./.generated/{self.name}/{self.name}")
         print("")
-        
+
         self.initAnalysis()
 
         return 0
@@ -856,7 +865,9 @@ int main() {{
                     self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", delimiter=","
                 )
             except:
-                raise Exception("meshIteration out of range. Set Model.maxMeshIteration to the maximum mesh iteration!")
+                raise Exception(
+                    "File does not exist or meshIteration out of range. Provide an exportOptimum path or set Model.maxMeshIteration to the maximum mesh iteration!"
+                )
 
             # remove dummy column for purely parametric models
             if self.addedDummy:
