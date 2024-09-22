@@ -1,7 +1,7 @@
 import os
 from optimization.variables import *
 from optimization.expressions import *
-from optimization.guesses import *
+from optimization.functions import *
 from optimization.structures import *
 from optimization.radauHandling import *
 from scipy.integrate import solve_ivp

@@ -459,7 +459,9 @@ class ParametricConstraint(Expression):
 
 
 def toCode(expr):
-    return ccode(expr)
+    code = ccode(expr)
+    code = code.replace('True', 'true').replace('False', 'false') # for piecewise functions, since ccode(True) = True not true
+    return code
 
 
 def cseCustom(expressions):

@@ -939,65 +939,76 @@ model.optimize(
 \subsubsection{Flags}
 \label{c:flags}
 
-\paragraph{OutputPath}
-\label{flag:outputPath}
-The \texttt{outputPath} flag specifies the path where all outputs from the optimization process will be stored.
-
-\paragraph{LinearSolver}
-\label{flag:linearSolver}
-The \texttt{linearSolver} flag defines the linear solver used to solve the system of equations during optimization.
-
-\paragraph{Tolerance}
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+	linewidth=1pt]
+	
+\phantomsection
 \label{flag:tolerance}
-The \texttt{tolerance} flag sets the tolerance for numerical solvers used in the optimization.
+The \texttt{"tolerance"} flag sets the tolerance for numerical solvers used in the optimization.
 
-\paragraph{ExportHessianPath}
-\label{flag:exportHessianPath}
-The \texttt{exportHessianPath} flag specifies the path where the Hessian matrix is exported.
+\phantomsection
+\label{flag:linearSolver}
+The \texttt{"linearSolver"} flag defines the linear solver used to solve the system of equations during optimization.
 
-\paragraph{ExportJacobianPath}
-\label{flag:exportJacobianPath}
-The \texttt{exportJacobianPath} flag defines the path to export the Jacobian matrix.
-
-\paragraph{InitialStatesPath}
-\label{flag:initialStatesPath}
-The \texttt{initialStatesPath} flag sets the file path for initializing the state variables for the optimization process.
-
-\paragraph{IVPSolver}
-\label{flag:ivpSolver}
-The \texttt{ivpSolver} flag specifies the Initial Value Problem (IVP) solver to use during the simulation.
-
-\paragraph{InitVars}
+\phantomsection
 \label{flag:initVars}
-The \texttt{initVars} flag specifies how initial variables are handled in the optimization process.
+The \texttt{"initVars"} flag specifies how initial variables are handled in the optimization process.
+
+\phantomsection
+\label{flag:ivpSolver}
+The \texttt{"ivpSolver"} flag specifies the Initial Value Problem (IVP) solver to use during the simulation.
+
+\phantomsection
+\label{flag:outputPath}
+The \texttt{"outputPath"} flag specifies the path where all outputs from the optimization process will be stored.
+
+\phantomsection
+\label{flag:exportHessianPath}
+The \texttt{"exportHessianPath"} flag specifies the path where the Hessian matrix is exported.
+
+\phantomsection
+\label{flag:exportJacobianPath}
+The \texttt{"exportJacobianPath"} flag defines the path to export the Jacobian matrix.
+
+\phantomsection
+\label{flag:initialStatesPath}
+The \texttt{"initialStatesPath"} flag sets the file path for initializing the state variables for the optimization process.
+
+
+\end{mdframed}
+
 
 \subsubsection{Mesh Flags}
 \label{c:meshflags}
 
-\paragraph{MeshAlgorithm}
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+	linewidth=1pt]
+	
+\phantomsection
 \label{flag:MeshAlgorithm}
-The \texttt{meshAlgorithm} flag specifies the algorithm used for mesh generation in the optimization.
+The \texttt{"meshAlgorithm"} flag specifies the algorithm used for mesh generation in the optimization.
 
-\paragraph{MeshIterations}
+\phantomsection
 \label{flag:meshIterations}
-The \texttt{meshIterations} flag defines the number of iterations for refining the mesh.
+The \texttt{"meshIterations"} flag defines the number of iterations for refining the mesh.
 
-\paragraph{RefinementMethod}
+\phantomsection
 \label{flag:RefinementMethod}
-The \texttt{refinementMethod} flag specifies the refinement method used for optimizing the mesh.
+The \texttt{"refinementMethod"} flag specifies the refinement method used for optimizing the mesh.
 
-\paragraph{MeshLevel}
+\phantomsection
 \label{flag:meshLevel}
-The \texttt{meshLevel} flag defines the level of refinement applied to the mesh.
+The \texttt{"meshLevel"} flag defines the level of refinement applied to the mesh.
 
-\paragraph{MeshCTol}
+\phantomsection
 \label{flag:meshCTol}
-The \texttt{meshCTol} flag sets the convergence tolerance for the mesh refinement process.
+The \texttt{"meshCTol"} flag sets the convergence tolerance for the mesh refinement process.
 
-\paragraph{MeshSigma}
+\phantomsection
 \label{flag:meshSigma}
-The \texttt{meshSigma} flag controls the smoothing factor applied during mesh generation.
-
+The \texttt{"meshSigma"} flag controls the smoothing factor applied during mesh generation.
+	
+\end{mdframed}
 
 \section{Analysis}
 \label{c:Analysis}

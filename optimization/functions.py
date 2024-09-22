@@ -1,5 +1,12 @@
 from optimization.expressions import *
 
+# custom piecewise function
+def piecewise(*args):
+
+    # *args = (val1, condition1), (val2, condition2), ...
+
+    return Piecewise(*args, (0, True))
+
 # standard guess functions
 def guessConstant(const):
 
