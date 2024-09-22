@@ -989,30 +989,36 @@ The entire flag dictionary and therefore all flags are optional and do not have 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 	linewidth=1pt]
 	
-\phantomsection
-\label{flag:MeshAlgorithm}
-The \texttt{"meshAlgorithm"} flag specifies the algorithm used for mesh generation in the optimization.
-
-\phantomsection
-\label{flag:meshIterations}
-The \texttt{"meshIterations"} flag defines the number of iterations for refining the mesh.
-
-\phantomsection
-\label{flag:RefinementMethod}
-The \texttt{"refinementMethod"} flag specifies the refinement method used for optimizing the mesh.
-
-\phantomsection
-\label{flag:meshLevel}
-The \texttt{"meshLevel"} flag defines the level of refinement applied to the mesh.
-
-\phantomsection
-\label{flag:meshCTol}
-The \texttt{"meshCTol"} flag sets the convergence tolerance for the mesh refinement process.
-
-\phantomsection
-\label{flag:meshSigma}
-The \texttt{"meshSigma"} flag controls the smoothing factor applied during mesh generation.
 	
+\begin{itemize}
+		
+	\phantomsection
+	\label{flag:MeshAlgorithm}
+	\item \texttt{"meshAlgorithm" $\rightarrow$ MeshAlgorithm} (\emph{default}=\texttt{MeshAlgorithm.L2\_BOUNDARY} \texttt{\_NORM}): Sets the mesh algorithm, which is used to update the mesh and consequently create high resolution solutions at important sections. The mesh algorithm has to be an element of the \texttt{MeshAlgorithm} enumeration \ref{enum:MeshAlgorithm}.
+	
+	\phantomsection
+	\label{flag:meshIterations}
+	\item \texttt{"meshIterations" $\rightarrow$ int} (\emph{default}=\texttt{0}): Sets the number of mesh refinement iterations. The default value is 0, implying that no mesh refinement is executed. 
+	A typical range for \texttt{"meshIterations"} is between 3 and 10.
+	
+	\phantomsection
+	\label{flag:RefinementMethod}
+	\item \texttt{"refinementMethod" $\rightarrow$ RefinementMethod} (\emph{default}=\texttt{RefinementMethod.LI} \texttt{NEAR\_SPLINE}): Sets the refinement method, which is used to interpolate the optimal solution from the previous optimization and provide new initial values. The refinement method has to be an element of the \texttt{RefinementMethod} enumeration \ref{enum:RefinementMethod}.
+	
+	\phantomsection
+	\label{flag:meshLevel}
+	The \texttt{"meshLevel"} flag defines the level of refinement applied to the mesh.
+	
+	\phantomsection
+	\label{flag:meshCTol}
+	The \texttt{"meshCTol"} flag sets the convergence tolerance for the mesh refinement process.
+	
+	\phantomsection
+	\label{flag:meshSigma}
+	The \texttt{"meshSigma"} flag controls the smoothing factor applied during mesh generation.
+
+\end{itemize}
+		
 \end{mdframed}
 
 \section{Analysis}

@@ -2,29 +2,34 @@ from optimization import *
 
 model = Model("piecewiseBangBang")
 
-x1 = model.addState(start=0)
-x2 = model.addState(start=0)
+x = model.addState(start=0, symbol="position")
+v = model.addState(start=0, symbol="velocity")
 
-u = model.addInput(lb=-100, ub=100)
+a = model.addInput(lb=-100, ub=100, symbol="acceleration")
 
-# x1'' = u
-model.addDynamic(x1, x2)
-model.addDynamic(x2, u)
+# x'' = a
+model.addDynamic(x, v)
+model.addDynamic(v, a)
 
-model.addPath(x2 * u * piecewise((1, t < 0.25), (0, t >= 0.25)), lb=-30, ub=30) # constraint only has to hold for time < 0.25
+model.addPath(
+    v * a * piecewise((1, t < 0.25), (0, t >= 0.25)), lb=-30, ub=30
+)  # constraint only has to hold for time < 0.25
 
-model.addFinal(x2, eq=0)
+model.addFinal(v, eq=0)
 
-model.addMayer(x1, Objective.MAXIMIZE)
+model.addMayer(x, Objective.MAXIMIZE)
 
 model.generate()
 
+model.hasLinearObjective()
+
 # optimizer attributes can be set directly as well
 model.meshAlgorithm = MeshAlgorithm.L2_BOUNDARY_NORM
-model.meshIterations = 3
+model.meshIterations = 6
 model.outputFilePath = "/tmp"
+model.tolerance = 1e-12
 
-model.optimize(tf=0.5, steps=150, rksteps=3)
+model.optimize(tf=0.5, steps=100, rksteps=2)
 
 model.plot(dots=Dots.BASE)
 model.plotMeshRefinement()

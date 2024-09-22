@@ -36,7 +36,7 @@ class Model:
         self.steps = None
         self.rksteps = None
         self.outputFilePath = None
-        self.ivpSolver = IVPSolver.Radau
+        self.ivpSolver = IVPSolver.RADAU
         self.initVars = InitVars.SOLVE
         self.refinementMethod = RefinementMethod.LINEAR_SPLINE
         self.linearSolver = LinearSolver.MUMPS
@@ -928,6 +928,8 @@ int main() {{
                 "axes.labelpad": 10,
             }
         )
+
+    # TODO: add plotting features for path constraints
 
     def plotStates(self, meshIteration=None, interval=None, dots=Dots.OFF):
         self.initVarNames()

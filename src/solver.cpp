@@ -9,11 +9,11 @@
  * TODO:
 
     main todos:
-    1 add, construct, test more mesh refinement algorithms!             4, 4
-    2 OpenModelica interface                                            4, 5
-    3 test framework for huge examples / industry relevant              3, 2
-    4 play with setting in ipopt / pivoting etc.                        2, 3
-    5 check long double to double cast in evals?!                       1, 2
+    1 add, construct, test more mesh refinement algorithms!              4, 4
+    2 OpenModelica interface                                             4, 5
+    3 test framework for huge examples / industry relevant               3, 2
+    4 play with setting in ipopt / pivoting etc.                         2, 3
+    5 check long double to double cast in evals?!                        1, 2
 
     delayed:
     6 tf as free variable                                                2, 4.5
@@ -26,6 +26,10 @@
     abandoned:
     10 saving of local hessian and jacobian structures (contained in 4?) 0, 1
     11 creation of local jacobian structure (contained in 4?)            0, 1
+
+    others:
+    12 plotting features for path constraints                            1, 1
+    13 splitting const jacobian equality / inequality                    1, 1
 */
 
 struct SolverPrivate {
