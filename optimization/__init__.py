@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# set global precision
+# set global pd settings
 pd.set_option("display.precision", 8)
 
 
@@ -882,6 +882,11 @@ int main() {{
         self.initVarNames()
         return self.resultHistory[meshIteration]
 
+    def getAllResults(self):
+        for it in range(self.modelInfo["maxMeshIteration"] + 1):
+            self.getResults(meshIteration=it)
+        return self.resultHistory
+
     def printResults(self, meshIteration=None):
         if meshIteration is None:
             meshIteration = self.modelInfo["maxMeshIteration"]
@@ -889,7 +894,7 @@ int main() {{
         self.getResults(meshIteration)
         meshIteration = self.modelInfo["maxMeshIteration"]
         print("")
-        print(self.resultHistory[meshIteration])
+        self._printFull(self.resultHistory[meshIteration])
 
     def printResultParameters(self, meshIteration=None):
         meshIteration = self.checkMeshIteration(meshIteration)
@@ -898,6 +903,12 @@ int main() {{
         for p, pValue in self.resultHistory[meshIteration][self.pVarNames].iloc[0].items():
             print(f"{p} = {pValue}")
         print("")
+
+    def _printFull(self, data):
+        with pd.option_context(
+            "display.max_rows", None, "display.max_columns", None, "display.width", 2000, "display.max_colwidth", None
+        ):
+            print(data)
 
     def checkMeshIteration(self, meshIteration):
         maxMeshIteration = self.modelInfo["maxMeshIteration"]
@@ -931,13 +942,13 @@ int main() {{
 
     # TODO: add plotting features for path constraints
 
-    def plotStates(self, meshIteration=None, interval=None, dots=Dots.OFF):
-        self.initVarNames()
-        self.plotGeneral(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.xVarNames)
-
     def plot(self, specifCols=None, meshIteration=None, interval=None, dots=Dots.OFF):
         self.initVarNames()
         self.plotGeneral(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=specifCols)
+
+    def plotStates(self, meshIteration=None, interval=None, dots=Dots.OFF):
+        self.initVarNames()
+        self.plotGeneral(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.xVarNames)
 
     def plotInputs(self, meshIteration=None, interval=None, dots=Dots.OFF):
         self.initVarNames()

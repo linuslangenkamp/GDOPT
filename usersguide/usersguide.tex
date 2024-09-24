@@ -365,7 +365,7 @@ value and an ordinary differential equation.
 
 	\begin{lstlisting}
 x = model.addState(start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None)
-	\end{lstlisting}
+	\end{lstlisting}\label{addState}
 
 	\textbf{Parameters:}
 	\begin{itemize}
@@ -1186,12 +1186,151 @@ are presented below.
 
 \section{Analysis}
 \label{c:Analysis}
+The \texttt{optimization} package offers the possibility to directly analyze the optimal solution with  \texttt{pandas} and \texttt{Matplotlib} functions. To access the features described in this section, it is mandatory to set the \texttt{"outputPath"} flag \ref{flag:outputPath} in \texttt{model.optimize} \ref{optimize}. Otherwise, the solution will not be written to a file.
 
 \subsection{Results}
 \label{c:Results}
+In any case the framework generates a metadata file "\textbackslash tmp\textbackslash modelinfo.txt", which includes basic information about the solving process. This file is automatically read in as a \texttt{dict} after a successful optimization and includes the time taken by the solver as well as the number of mesh iterations. The modelinfo can be accessed via \texttt{model.modelInfo}, e.g.
+\begin{lstlisting}
+print(model.modelInfo)
+out: {'maxMeshIteration': 6, 'totalTimeInSolver': 0.6753, 'actualTimeInSolver': 0.600671, 'totalTimeInIO': 0.0746288}
+\end{lstlisting}
+The file's main purpose is to do benchmarks, although it is used internally as well. The elements of the dictionary are
+\begin{itemize}
+\item 'maxMeshIteration': number of mesh iterations that have been executed
+\item 'totalTimeInSolver': total time taken in the back-end
+\item 'totalTimeInIO': total time to read and write files in the back-end
+\item 'actualTimeInSolver': time taken in back-end excluding read and write operations
+\end{itemize}
 
+If the \texttt{"outputPath"} flag \ref{flag:outputPath} is set, the framework can directly import the optimal solution from the back-end as a \texttt{pandas.DataFrame}. Note that the names of the variables are taken from the \texttt{symbol} argument in \texttt{addState} \ref{addState}, \texttt{addInput} \ref{addInput} and  \texttt{addParameter} \ref{addParameter}, if no \texttt{symbol} is provided a dummy name will be used.
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+		linewidth=1pt]
+	
+	Reads in the result file from a specific mesh iteration and saves it to the dictionary \texttt{model.resultHistory} at the key \texttt{meshIteration}. The value \texttt{model.resultHisto\\ ry[meshIteration]}, that is set in the process, is returned. If no mesh iteration is provided, the last mesh iteration is used automatically.
+ 
+	\begin{lstlisting}
+model.getResults(meshIteration=None)
+		\end{lstlisting}
+	\label{getResults}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{int meshIteration} \emph{(optional)}: The mesh iteration from which the results are to be analyzed. 
+	\end{itemize}
+	
+	\textbf{Returns:} \texttt{pandas.DataFrame model.resultHistory[meshIteration]}
+
+\end{mdframed}
+
+It is also possible to read in the results from all mesh iterations with \texttt{getAllResults}.
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+		linewidth=1pt]
+	
+	Reads in the result file from all mesh iterations and saves them to the dictionary \texttt{model.resultHistory} at the keys \texttt{0, \ldots, maxMeshIteration}. The entire dictionary \texttt{model.resultsHistory} is returned in the process.
+ 
+	\begin{lstlisting}
+model.getAllResults()
+		\end{lstlisting}
+	\label{getAllResults}
+	
+	\textbf{Returns:} \texttt{dict<int, pandas.DataFrame> model.resultHistory}
+	
+	\textbf{Example:} \begin{lstlisting}
+# read in all result files and set the resultHistory
+model.getAllResults()
+# e.g. get the results from mesh iteration 2
+results = model.resultHistory[2]  
+	\end{lstlisting}
+
+\end{mdframed}
+
+The results can be printed with the two following method.
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+		linewidth=1pt]
+	
+	Prints the results from a given mesh iteration to the console. If no mesh iteration is provided, the last mesh iteration is used automatically.
+ 
+	\begin{lstlisting}
+model.printResults(meshIteration=None)
+		\end{lstlisting}
+	\label{printResults}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{int meshIteration} \emph{(optional)}: The mesh iteration from which the results have to be printed. 
+	\end{itemize}
+\begin{lstlisting}
+# example soultion from the Batch Reactor
+# printing the last mesh iteration
+model.printResults()
+out:
+           time    Reactant     Product           u
+0    0.00000000  1.00000000  0.00000000  0.74354337
+1    0.00620204  0.99367796  0.00460616  0.74654578
+2    0.02579796  0.97375329  0.01908967  0.75623418
+3    0.04000000  0.95936074  0.02951972  0.76344758
+4    0.04620204  0.95308805  0.03405685  0.76665199
+...
+\end{lstlisting}
+\end{mdframed}
+
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+		linewidth=1pt]
+	
+	Prints the optimal parameters from a given mesh iteration to the console. If no mesh iteration is provided, the last mesh iteration is used automatically.
+ 
+	\begin{lstlisting}
+model.printResultParameters(meshIteration=None)
+		\end{lstlisting}
+	\label{printResultParameters}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{int meshIteration} \emph{(optional)}: The mesh iteration from which the parameters have to be printed. 
+	\end{itemize}
+
+\end{mdframed}
+ 
 \subsection{Plotting}
 \label{c:Plotting}
+The framework includes several functions to draw standard plots of states and inputs, sparsity patterns, parametric plots and of the mesh refinement process as well. 
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+		linewidth=1pt]
+	
+	Draws a plot of the optimal solution.
+ 
+	\begin{lstlisting}
+model.plot(specifCols=None, meshIteration=None, interval=None, dots=Dots.OFF):      
+		\end{lstlisting}
+	\label{plot}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{list<str> specifCols} \emph{(optional)}: Sets the list of variables that will be drawn. These strings have to match the columns names in \texttt{model.resultHistory} or equivalently the \texttt{symbol} argument of the variables. If no value is provided, all variables will be drawn in the plot.
+		
+		\item \texttt{int meshIteration} \emph{(optional)}: Sets the mesh iteration of which the optimal values originate. If no value is provided, the last iteration is used.
+
+		\item \texttt{[float, float] interval} \emph{(optional)}: Sets the time range of the plot. Defaults to the interval $[t_0, t_f]$.
+
+		\item \texttt{Dots dots} \emph{(optional)}: Adds dots of the discrete solution to the plot. This has to be an element of \ref{enum:Dots} and in the default case no dots are added.
+	\end{itemize}
+
+	\textbf{Special cases:}
+		There are two methods that use \texttt{model.plot} directly. These share all arguments with the standard plot function but only plot the state variables or the input variables respectively.
+		\begin{lstlisting}
+model.plotStates(meshIteration=None, interval=None, dots=Dots.OFF)     
+		\end{lstlisting}
+		
+		\begin{lstlisting}
+model.plotInputs(meshIteration=None, interval=None, dots=Dots.OFF)     
+		\end{lstlisting}
+		
+			\textbf{Example:} 	\begin{lstlisting}
+		model.plot(specifCols=["x", "v"], meshIteration=5, interval=[0.2, 0.3], dots=Dots.ALL)   
+					\end{lstlisting}
+\end{mdframed}
 
 \section{Utilities}
 The \texttt{optimization} package provides access to several utilities.
@@ -1623,7 +1762,7 @@ Dots(Enum)
 	\end{itemize}
 
 \end{mdframed}
-
+\newpage
 \section{Example Code}
 
 \subsection{Batch Reactor}
@@ -1674,7 +1813,7 @@ model.printResults()
 model.plotInputsAndRefinement()
 
 \end{lstlisting}
-
+\newpage
 \subsection{Oil Shale Pyrolysis}
 
 \begin{lstlisting}
@@ -1722,7 +1861,7 @@ model.optimize(
 model.printResults()
 model.plot()
 \end{lstlisting}
-
+\newpage
 \subsection{Van der Pol Oscillator}
 
 \begin{lstlisting}
@@ -1766,7 +1905,7 @@ model.setValue(rp, 0.1)
 model.optimize(resimulate=True)
 model.plotInputsAndRefinement()
 \end{lstlisting}
-
+\newpage
 \subsection{Nominal Batch Reactor}
 
 \begin{lstlisting}	
