@@ -169,7 +169,7 @@ Ensure that the following dependencies are installed:
 \end{itemize}
 
 \section{Getting Started}
-This section will show how to set up and solve a simple dynamic
+This section shows how to set up and solve a simple dynamic
 optimization problem with the proposed framework.
 
 \subsection{Basic Example}
@@ -304,14 +304,14 @@ model name.
 model = Model("Model Name")
 	\end{lstlisting}
 
-The variables, constraints and objectives will be added to this
+The variables, constraints and objectives are added to this
 \texttt{Model} object.
 
 \subsection{Variables}
 
 \subsubsection{States}
 
-States are time-dependent functions, that will be calculated in the
+States are time-dependent functions, that are calculated in the
 solving process. The value of the state is completely determined by a starting
 value and an ordinary differential equation.
 
@@ -328,7 +328,7 @@ x = model.addState(start, symbol=None, lb=-float("inf"), ub=float("inf"), nomina
 		\item \texttt{float start}: The initial value of the state
 		      variable.
 		\item \texttt{str symbol} \emph{(optional)}: A symbolic
-		      representation of the state. The state will be
+		      representation of the state. The state is
 		      represented by this symbol in
 		      further analysis.
 		\item \texttt{float lb} \emph{(optional)}: Lower bound for the
@@ -348,7 +348,7 @@ x = model.addState(start, symbol=None, lb=-float("inf"), ub=float("inf"), nomina
 
 \subsubsection{Inputs}
 
-Input are time-dependent functions, that will be calculated in the
+Input are time-dependent functions, that are calculated in the
 solving process and are not differentiated in the model.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
@@ -363,7 +363,7 @@ u = model.addInput(symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nomi
 	\textbf{Parameters:}
 	\begin{itemize}
 		\item \texttt{str symbol} \emph{(optional)}: A symbolic
-		      representation of the input. The input will be
+		      representation of the input. The input is
 		      represented by this symbol in
 		      further analysis.
 		\item \texttt{float lb} \emph{(optional)}: Lower bound for the
@@ -392,7 +392,7 @@ any \texttt{Expression} that contains the global time or final time symbols
 \ref{c:globaltime}, but can also be a regular constant \texttt{float} or
 \texttt{int}. This guess trajectory is only used if the
 \texttt{"initVars"} flag \ref{flag:initVars} is chosen to be
-\texttt{InitVars.SOLVE} \ref{enum:initVars}. This trajectory will be used to
+\texttt{InitVars.SOLVE} \ref{enum:initVars}. This trajectory is used to
 solve the dynamic and provide an initial, feasible guess for the state
 variables. Note that any valid SymEngine \texttt{Expression} can be provided as
 a guess, although there are several standard functions to provide better
@@ -418,8 +418,8 @@ guessConstant(const)
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
 
-	Providing a linear control guess trajectory. The provided values will
-	be interpolated accordingly.
+	Providing a linear control guess trajectory. The provided values are
+	interpolated accordingly.
 
 	\begin{lstlisting}
 guessLinear(u0, uf)
@@ -438,7 +438,7 @@ guessLinear(u0, uf)
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
 
 	Providing a quadratic control guess trajectory. The provided values
-	will be interpolated accordingly.
+	are interpolated accordingly.
 
 	\begin{lstlisting}
 guessQuadratic(u0, um, uf)
@@ -459,7 +459,7 @@ guessQuadratic(u0, um, uf)
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
 
 	Providing a exponential control guess trajectory. The provided values
-	will be interpolated accordingly.
+	are interpolated accordingly.
 
 	\begin{lstlisting}
 guessExponential(u0, uf)
@@ -504,7 +504,7 @@ guessPiecewise(*args)
 
 \subsubsection{Parameters}
 
-Parameters are time-invariant constants, that will be calculated in the
+Parameters are time-invariant constants, that are calculated in the
 solving process.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
@@ -520,7 +520,7 @@ p = model.addParameter(symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, 
 	\textbf{Parameters:}
 	\begin{itemize}
 		\item \texttt{str symbol} \emph{(optional)}: A symbolic
-		      representation of the parameter. The parameter will be
+		      representation of the parameter. The parameter is
 		      represented by this
 		      symbol in further analysis.
 		\item \texttt{float lb} \emph{(optional)}: Lower bound
@@ -833,7 +833,7 @@ specific factors that must be taken into account. The objective goal
 maximization is chosen. If these goals differ between both terms, e.g. $\max
 	M(\cdot)$ and $\min  \int_{t_0}^{t_f} L(\cdot) \, \dd t$, then the full
 objective is given by $\min -M(\cdot) + \int_{t_0}^{t_f} L(\cdot) \, \dd t$ and
-vice versa. Additionally nominal values will be added if both terms have
+vice versa. Additionally nominal values are added if both terms have
 assigned nominals. If only one term has a nominal value, then this value is
 used for the full objective.
 
@@ -879,7 +879,7 @@ model.addObjective(mayer, lagrange, obj=Objective.MINIMIZE, nominal=None)
 If the modeling process is done, it is possible to generate the C++ code of the model.
 Therefore, the 1st and 2nd derivatives of the objectives and all constraints are calculated symbolically with SymEngine. After that, the framework will search for common subexpressions (CSE) in each derivative, using the symbolic capabilities of SymEngine. The resulting expressions as well as all other problem defining structures are generated to a C++ file. This file makes heavy use of preprocessing macros (e.g. final time, runtime parameters, flags, paths, \ldots), that will be set later in the \texttt{model.optimize} pipeline \ref{optimize}.   
 
-If several optimizations have to be executed, where only flags and runtime parameters are changed, it is advised to call \texttt{model.generate} only once, since all flags will be set in a later stage. Thus, obsolete recalculations will be avoided.
+If several optimizations have to be executed, where only flags and runtime parameters are changed, it is advised to call \texttt{model.generate} only once, since all flags will be set in a later stage. Thus, obsolete recalculations can be avoided.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 	linewidth=1pt]
@@ -894,7 +894,7 @@ model.generate()
 
 \subsection{Optimization}
 
-	After code generation, all model parameters (e.g. final time, runtime parameters, flags, paths, \ldots) are written as preprocessing macros to a header file. The resulting code consisting of the .cpp and .h files is compiled, while linking against the dynamic optimization backend. The resulting executable will be run, which solves the NLP. Additionally the optimal solution as well as some metadata will be written to text files. These files can be analyzed with the presented framework \ref{c:Analysis}.  
+	After code generation, all model parameters (e.g. final time, runtime parameters, flags, paths, \ldots) are written as preprocessing macros to a header file. The resulting code consisting of the .cpp and .h files is compiled, while linking against the dynamic optimization backend. The resulting executable will be run, which solves the NLP. Additionally the optimal solution as well as some metadata can be written to text files. These files can be analyzed with the presented framework \ref{c:Analysis}.  
 	
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 	linewidth=1pt]
@@ -1007,15 +1007,17 @@ The entire flag dictionary and therefore all flags are optional and do not have 
 	
 	\phantomsection
 	\label{flag:meshLevel}
-	The \texttt{"meshLevel"} flag defines the level of refinement applied to the mesh.
+	\item \texttt{"meshLevel" $\rightarrow$ float} (\emph{default}=0): Sets the level of \texttt{MeshAlgorithm.L2\_BOUN\\DARY\_NORM}. This is only used, if \texttt{"meshAlgorithm"} is set accordingly. The \texttt{"meshLevel"} describes how sensitive the algorithm is to abnormal behavior on an interval. Positive values make the algorithm more sensitive, and negative values less so. The \texttt{"meshLevel"} operates on a logarithmic scale with base 10, meaning that an increase by 1 corresponds to a 10-fold increase in sensitivity. The typical range for \texttt{"meshLevel"} is between -2.5 and 2.5.
 	
 	\phantomsection
 	\label{flag:meshCTol}
-	The \texttt{"meshCTol"} flag sets the convergence tolerance for the mesh refinement process.
+	\item \texttt{"meshCTol" $\rightarrow$ float $> 0$} (\emph{default}=0.2): Sets the P1-error threshold / corner tolerance in \texttt{MeshAlgorithm.L2\_BOUNDARY\_NORM}. This is only used, if \texttt{"meshAlgo\\rithm"} is set accordingly. This argument specifies a threshold for the error in derivatives of adjacent intervals at the boundary. Large values make the algorithm less sensitive and values close to 0 make it more sensitive.
+	The typical range for \texttt{"meshCTol"} is between 0.1 and 1.
 	
 	\phantomsection
 	\label{flag:meshSigma}
-	The \texttt{"meshSigma"} flag controls the smoothing factor applied during mesh generation.
+	\item \texttt{"meshSigma" $\rightarrow$ float $> 0$} (\emph{default}=2.5): Sets the sigma in \texttt{MeshAlgorithm.\\BASIC\_STRATEGY}. Indicates how many standard deviations away from the mean value is considered abnormal behavior. This is only used, if \texttt{"meshSigma"} is set accordingly.
+	The typical range for \texttt{"meshSigma"} is between 1.5 and 5.
 
 \end{itemize}
 		
@@ -1054,7 +1056,7 @@ and discontinuous functions.
 	\item \texttt{pi}
 \end{itemize}
 
-Note that \texttt{Piecewise} is the native SymEngine function to define piecewise functions. For code generation to work, this has to have the fallback case \texttt{(0, True)}, i.e. the function is constant $0$ anywhere, where it was not explicitly defined. This inconvenience will be addressed with the custom \texttt{piecewise} function. It is a basic wrapper around \texttt{Piecewise}, where the argument \texttt{(0, True)} is added implicitly. Piecewise functions allow for greater expressibility in objectives and constraints, e.g. 
+Note that \texttt{Piecewise} is the native SymEngine function to define piecewise functions. For code generation to work, this has to have the fallback case \texttt{(0, True)}, i.e. the function is constant $0$ anywhere, where it was not explicitly defined. This inconvenience is addressed with the custom \texttt{piecewise} function. It is a basic wrapper around \texttt{Piecewise}, where the argument \texttt{(0, True)} is added implicitly. Piecewise functions allow for greater expressibility in objectives and constraints, e.g. 
 
 \begin{lstlisting}
 # constraint only has to hold for time < 0.25
@@ -1154,11 +1156,11 @@ derivatives of this NLP in every iteration, it is beneficial if these
 derivatives are constant and thus have to be calculated only once.
 
 The user can call three methods depending on the structure of the
-continuous problem formulation. These will set the corresponding parameters in
+continuous problem formulation. These set the corresponding parameters in
 the backend of the framework and therefore reduce the execution time.
 
 Only call these methods if the requirements are met, otherwise the
-Solver will converge very slowly or diverge.
+Solver converges very slowly or diverges.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
@@ -1204,7 +1206,7 @@ model.hasLinearConstraints()
 \end{mdframed}
 
 Depending on the above mentioned methods, the following derivatives of
-the NLP will be constant:
+the NLP are assumed to be constant:
 
 \begin{itemize}
 	\item Gradient of the objective function, if
@@ -1256,7 +1258,7 @@ Objective(Enum)
 	Specifies the linear solver used by IPOPT.
 	
 	\begin{lstlisting}
-		LinearSolver(Enum)
+LinearSolver(Enum)
 	\end{lstlisting}
 	\label{enum:LinearSolver}
 	\textbf{Elements:}
@@ -1295,21 +1297,20 @@ InitVars(Enum)
 	\begin{itemize}
 		\item \texttt{CONST}: The initial states are given by
 		      $\v{x}(t) \equiv \v{x}_0$.
-		\item \texttt{SOLVE}: The initial states will be
-		      computed by solving the dynamic using the guesses for
+		\item \texttt{SOLVE}: The initial states are computed by solving the dynamic using the guesses for
 		      $\v{u}(t)$ and $\v{p}$.
 		      The system is solved by
 		      \texttt{scipy.integrate.solve\_ivp}. The corresponding
 		      \texttt{SciPy} integrator can be set with
 		      \ref{flag:ivpSolver}, which can be
 		      implicit.
-		\item \texttt{SOLVE\_EXPLICIT}: The initial states will
-		      be computed by solving the dynamic using the guesses for
+		\item \texttt{SOLVE\_EXPLICIT}: The initial states are
+		      computed by solving the dynamic using the guesses for
 		      $\v{u}(t)$ and
 		      $\v{p}$. The system is solved by the classic Runge–Kutta
 		      method.
 		\item \texttt{SOLVE\_EXPLICIT\_EULER}: The initial
-		      states will be computed by solving the dynamic using the
+		      states are computed by solving the dynamic using the
 		      guesses for $\v{u}(t)$
 		      and $\v{p}$. The system is solved by the explicit /
 		      forward Euler method.
@@ -1395,13 +1396,13 @@ RefinementMethod(Enum)
 	\label{enum:RefinementMethod}
 	\textbf{Elements:}
 	\begin{itemize}
-		\item \texttt{LINEAR\_SPLINE}: The variables will be
+		\item \texttt{LINEAR\_SPLINE}: The variables are being
 		      interpolated by a linear spline on each interval. The
 		      initial solution
 		      should contain no oscillations at discontinuities, but
 		      might be poor for smooth
 		      sections.
-		\item \texttt{POLYNOMIAL}: The variables will be
+		\item \texttt{POLYNOMIAL}: The variables are being
 		      interpolated by a interpolating polynomial on each
 		      interval.
 		      The initial solution
@@ -1435,7 +1436,7 @@ MatrixType(Enum)
 \label{c:Dots}
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 	linewidth=1pt]
-	Enumeration for the \texttt{dots} argument in all plotting methods. \ref{c:Plotting} Determines if and which values will be added to the plot as a dot. 
+	Enumeration for the \texttt{dots} argument in all plotting methods. \ref{c:Plotting} Determines if and which values are added to the plot as a dot. 
 	
 	\begin{lstlisting}
 Dots(Enum)
@@ -1443,9 +1444,9 @@ Dots(Enum)
 	\label{enum:Dots}
 	\textbf{Elements:}
 	\begin{itemize}
-		\item \texttt{OFF}: No dots will be added to the plot.
-		\item \texttt{ALL}: The state and input values at all grid points will be added to the plot.
-		\item \texttt{BASE}: The state and input values at the base point of each interval will be added to the plot.
+		\item \texttt{OFF}: No dots are added to the plot.
+		\item \texttt{ALL}: The state and input values at all grid points are added to the plot.
+		\item \texttt{BASE}: The state and input values at the base point of each interval are added to the plot.
 	\end{itemize}
 	
 \end{mdframed}
@@ -1467,7 +1468,10 @@ model = Model("batchReactor")
 x1 = model.addState(symbol="Reactant", start=1)
 x2 = model.addState(symbol="Product", start=0)
 
-u = model.addInput(symbol="u", lb=0, ub=5, guess=0.5)
+# a non trivial guess for the control variable
+controlGuess = guessPiecewise((0.7, t <= 1/2),
+			         (guessQuadratic(0.6, 0.7, 5), 1/2 < t))
+u = model.addInput(symbol="u", lb=0, ub=5, guess=controlGuess)
 
 model.addDynamic(x1, -(u + u**2 / 2) * x1)
 model.addDynamic(x2, u * x1)

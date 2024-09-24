@@ -7,3 +7,13 @@ Makefile
 .env
 .fleet
 __pycache__/
+
+# all the latex stuff
+*.aux
+*.log
+*.synctex.gz
+*.toc
+*.out
+
+*.bak
+*.tmp
