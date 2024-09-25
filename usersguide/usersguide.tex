@@ -1303,7 +1303,7 @@ The framework includes several functions to draw standard plots of states and in
 	Draws a plot of the optimal solution.
  
 	\begin{lstlisting}
-model.plot(specifCols=None, meshIteration=None, interval=None, dots=Dots.OFF):      
+model.plot(specifCols=None, meshIteration=None, interval=None, dots=Dots.OFF) 
 		\end{lstlisting}
 	\label{plot}
 	\textbf{Parameters:}
@@ -1314,7 +1314,7 @@ model.plot(specifCols=None, meshIteration=None, interval=None, dots=Dots.OFF):
 
 		\item \texttt{[float, float] interval} \emph{(optional)}: Sets the time range of the plot. Defaults to the interval $[t_0, t_f]$.
 
-		\item \texttt{Dots dots} \emph{(optional)}: Adds dots of the discrete solution to the plot. This has to be an element of \ref{enum:Dots} and in the default case no dots are added.
+		\item \texttt{Dots dots} \emph{(optional)}: Adds dots of the discrete solution to the plot. This has to be an element of the enumeration \ref{enum:Dots} and in the default case no dots are added.
 	\end{itemize}
 
 	\textbf{Special cases:}
@@ -1328,8 +1328,124 @@ model.plotInputs(meshIteration=None, interval=None, dots=Dots.OFF)
 		\end{lstlisting}
 		
 			\textbf{Example:} 	\begin{lstlisting}
-		model.plot(specifCols=["x", "v"], meshIteration=5, interval=[0.2, 0.3], dots=Dots.ALL)   
+model.plot(specifCols=["x", "v"], meshIteration=5, interval=[0.2, 0.3], dots=Dots.ALL)   
 					\end{lstlisting}
+\end{mdframed}
+
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+		linewidth=1pt]
+	
+	Draws a parametric plot of the optimal solution.
+ 
+	\begin{lstlisting}
+model.parametricPlot(varX, varY, meshIteration=None, interval=None, dots=Dots.OFF)
+		\end{lstlisting}
+	\label{parametricPlot}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{Symbol varX}: Symbol of the variable on the x-axis.
+		
+		\item \texttt{Symbol varY}: Symbol of the variable on the y-axis.
+		
+		\item \texttt{int meshIteration} \emph{(optional)}: Sets the mesh iteration of which the optimal values originate. If no value is provided, the last iteration is used.
+
+		\item \texttt{[float, float] interval} \emph{(optional)}: Sets the time range of the plot. Defaults to the interval $[t_0, t_f]$.
+
+		\item \texttt{Dots dots} \emph{(optional)}: Adds dots of the discrete solution to the plot. This has to be an element of the enumeration \ref{enum:Dots} and in the default case no dots are added.
+	\end{itemize}
+	
+	\textbf{Example:}
+\begin{lstlisting}
+model.parametricPlot(xpos, ypos)   
+\end{lstlisting}
+\end{mdframed}
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+		linewidth=1pt]
+	
+	Draws a plot of the mesh refinement process.
+ 
+	\begin{lstlisting}
+model.plotMeshRefinement(interval=None, markerSize=30, dots=Dots.BASE)
+		\end{lstlisting}
+	\label{plotMeshRefinement}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{[float, float] interval} \emph{(optional)}: Sets the time range of the plot. Defaults to the interval $[t_0, t_f]$.
+		
+		\item \texttt{float markerSize} \emph{(optional)}: Sets the size of the dots in the plot.
+		
+		\item \texttt{Dots dots} \emph{(optional)}: Sets which points are displayed in the plot. This has to be an element of the enumeration \ref{enum:Dots} (excluding \texttt{Dots.NONE}) and in the default case base points are added as a dot.
+	\end{itemize}
+	
+	\textbf{Example:}
+\begin{lstlisting}
+model.plotMeshRefinement()
+\end{lstlisting}
+	\includegraphics[width=1\textwidth]{images/refinementVDP.png}
+\end{mdframed}
+
+The plot of the mesh refinement is not very useful on its own. It is therefore possible to combine it with standard plots. In this way, the sections that have been recognized as important or conspicuous by the  algorithm can be observed.
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+		linewidth=1pt]
+	
+	Draws a combined plot of the mesh refinement and given standard plots.
+ 
+	\begin{lstlisting}
+model.plotVarsAndRefinement(meshIteration=None, interval=None, specifCols=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.OFF)
+		\end{lstlisting}
+	\label{plotVarsAndRefinement}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{int meshIteration} \emph{(optional)}: Sets the mesh iteration of which the optimal values for the standard plots originate. If no value is provided, the last iteration is used.
+
+		\item \texttt{[float, float] interval} \emph{(optional)}: Sets the time range of the plot. Defaults to the interval $[t_0, t_f]$.
+		
+		\item \texttt{list<str> specifCols} \emph{(optional)}: Sets the list of variables that will be drawn. These strings have to match the columns names in \texttt{model.resultHistory} or equivalently the \texttt{symbol} argument of the variables. If no value is provided, all variables will be drawn in the plot.
+
+		\item \texttt{float markerSize} \emph{(optional)}: Sets the size of the dots in the refinement plot.		
+
+		\item \texttt{Dots dotsMesh} \emph{(optional)}: Sets which points are displayed in the refinement plot. This has to be an element of the enumeration \ref{enum:Dots} (excluding \texttt{Dots.NONE}) and in the default case base points are added as a dot.
+		
+		\item \texttt{Dots dotsGraph} \emph{(optional)}: Adds dots of the discrete solution to the standard plot. This has to be an element of the enumeration \ref{enum:Dots} and in the default case no dots are added.
+	\end{itemize}
+	
+	\textbf{Special cases:}
+		There is also a special case for input variables. This shares all arguments with \texttt{model.plotVarsAndRefinement}, but only contains the plots of the input variables by default.
+		\begin{lstlisting}
+model.plotInputsAndRefinement(meshIteration=None, interval=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.BASE)    
+		\end{lstlisting}
+			
+	\textbf{Example:}
+\begin{lstlisting}
+model.plotInputsAndRefinement()
+\end{lstlisting}
+	\includegraphics[width=1\textwidth]{images/refinement.png}
+\end{mdframed}
+
+Additionally, the framework is capable of drawing sparsity patterns. To be able to draw a given sparsity pattern the flag \texttt{"exportjacobianPath"} \ref{flag:exportJacobianPath} or \texttt{"exportHessianPath"} \ref{flag:exportHessianPath} has to be set.
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+		linewidth=1pt]
+	
+	Draws the Jacobian or Hessian sparsity pattern of the resulting large-scale NLP.
+ 
+	\begin{lstlisting}
+model.plotSparseMatrix(matrixType)
+		\end{lstlisting}
+	\label{plotSparseMatrix}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{MatrixType matrixType}: Sets the matrix. This has to be an element of the enumeration \ref{enum:MatrixType}.
+	\end{itemize}
+	
+	\textbf{Example:}
+\begin{lstlisting}
+model.plotSparseMatrix(MatrixType.JACOBIAN)   
+\end{lstlisting}
+\includegraphics[width=1\textwidth]{images/sparse.png}
 \end{mdframed}
 
 \section{Utilities}

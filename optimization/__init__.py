@@ -974,7 +974,7 @@ int main() {{
             epsilon=epsilon,
         )
 
-    def plotColsAndRefinement(
+    def plotVarsAndRefinement(
         self,
         meshIteration=None,
         interval=None,

@@ -7,7 +7,9 @@ depl = model.addState(symbol="deplReactant", start=0)
 x2 = model.addState(symbol="Product", start=0)
 
 # guesses can be quite complicated
-u = model.addInput(symbol="u", lb=0, ub=5, guess=guessPiecewise((0.6, t <= 1/2), (guessQuadratic(0.7, 0.8, 5), 1/2 < t)))
+u = model.addInput(
+    symbol="u", lb=0, ub=5, guess=guessPiecewise((0.6, t <= 1 / 2), (guessQuadratic(0.7, 0.8, 5), 1 / 2 < t))
+)
 
 R_v = model.addRuntimeParameter(default=1, symbol="REACT_SPEED")
 D_v = model.addRuntimeParameter(default=1, symbol="DEPLETION_SPEED")
