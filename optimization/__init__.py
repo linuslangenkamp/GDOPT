@@ -367,8 +367,8 @@ class Model:
         # scipy.solve_ivp
         solution = solve_ivp(ode, timeHorizon, x0, method=self.ivpSolver.name, dense_output=True, rtol=1e-10)
 
-        # get solution at the RadauIIA knots (based on self.rksteps)
-        timeVals = generate_radau_knots(timeHorizon, self.steps, self.rksteps)
+        # get solution at the RadauIIA nodes (based on self.rksteps)
+        timeVals = generateRadauNodes(timeHorizon, self.steps, self.rksteps)
         stateVals = solution.sol(timeVals)
         return timeVals, stateVals
 

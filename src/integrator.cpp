@@ -232,7 +232,7 @@ std::vector<double> Integrator::interpolateFirstControl(std::vector<double>& uVa
 
 // output values of given interpolating polynomial
 // at  c_0/2, c_1/2, ..., c_m/2 = 1/2, 1/2 + c_0/2, 1/2 + c_1/2, ..., 1
-std::vector<double> Integrator::evalInterpolationNewKnots(std::vector<double>& values) {
+std::vector<double> Integrator::evalInterpolationNewNodes(std::vector<double>& values) {
     std::vector<double> vals;
     for (int j = 1; j < sz(interpolationLagrangeBasis); j++) {
         double sum = 0;
@@ -244,8 +244,8 @@ std::vector<double> Integrator::evalInterpolationNewKnots(std::vector<double>& v
     return vals;
 }
 
-std::vector<double> Integrator::evalLinearSplineNewKnots(std::vector<double>& values) {
-    // evaluates the values input array at the new knots c1/2, ..., cm/2=1/2, c1/2 + 1/2, ...
+std::vector<double> Integrator::evalLinearSplineNewNodes(std::vector<double>& values) {
+    // evaluates the values input array at the new nodes c1/2, ..., cm/2=1/2, c1/2 + 1/2, ...
     // via a linear spline on the entire interval
     std::vector<double> newVals;
     int idx = 0;

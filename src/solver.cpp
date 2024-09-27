@@ -336,7 +336,7 @@ void Solver::refineLinear(std::vector<int>& markedIntervals) {
                     for (int j = -1; j < _priv->gdop->rk.steps; j++) {
                         localVars.push_back(_priv->gdop->optimum[v + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
                     }
-                    auto const splineVals = _priv->gdop->rk.evalLinearSplineNewKnots(localVars);
+                    auto const splineVals = _priv->gdop->rk.evalLinearSplineNewNodes(localVars);
                     for (int k = 0; k < sz(splineVals); k++) {
                         cbValues[v + (i + index) * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = splineVals[k];
                     }
@@ -348,7 +348,7 @@ void Solver::refineLinear(std::vector<int>& markedIntervals) {
                         for (int j = 0; j < _priv->gdop->rk.steps; j++) {
                             localVars.push_back(_priv->gdop->optimum[v + j * _priv->gdop->offXU]);
                         }
-                        auto const splineVals = _priv->gdop->rk.evalLinearSplineNewKnots(localVars);
+                        auto const splineVals = _priv->gdop->rk.evalLinearSplineNewNodes(localVars);
                         for (int k = 0; k < sz(splineVals); k++) {
                             cbValues[v + i * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = splineVals[k];
                         }
@@ -359,7 +359,7 @@ void Solver::refineLinear(std::vector<int>& markedIntervals) {
                             localVars.push_back(_priv->gdop->optimum[v + j * _priv->gdop->offXU]);
                         }
                         localVars.insert(localVars.begin(), Integrator::evalLagrange(_priv->gdop->rk.c, localVars, 0.0));
-                        auto const splineVals = _priv->gdop->rk.evalInterpolationNewKnots(localVars);
+                        auto const splineVals = _priv->gdop->rk.evalInterpolationNewNodes(localVars);
                         for (int k = 0; k < sz(splineVals); k++) {
                             cbValues[v + i * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = splineVals[k];
                         }
@@ -401,7 +401,7 @@ void Solver::refinePolynomial(std::vector<int>& markedIntervals) {
                     for (int j = -1; j < _priv->gdop->rk.steps; j++) {
                         localVars.push_back(_priv->gdop->optimum[v + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
                     }
-                    auto const polyVals = _priv->gdop->rk.evalInterpolationNewKnots(localVars);
+                    auto const polyVals = _priv->gdop->rk.evalInterpolationNewNodes(localVars);
                     for (int k = 0; k < sz(polyVals); k++) {
                         cbValues[v + (i + index) * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = polyVals[k];
                     }
@@ -413,7 +413,7 @@ void Solver::refinePolynomial(std::vector<int>& markedIntervals) {
                         for (int j = 0; j < _priv->gdop->rk.steps; j++) {
                             localVars.push_back(_priv->gdop->optimum[v + j * _priv->gdop->offXU]);
                         }
-                        auto const polyVals = _priv->gdop->rk.evalInterpolationNewKnots(localVars);
+                        auto const polyVals = _priv->gdop->rk.evalInterpolationNewNodes(localVars);
                         for (int k = 0; k < sz(polyVals); k++) {
                             cbValues[v + i * _priv->gdop->offXUBlock + k * _priv->gdop->offXU] = polyVals[k];
                         }

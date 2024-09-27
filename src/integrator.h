@@ -64,11 +64,11 @@ public:
     std::vector<std::vector<double>> interpolationFirstBasisPolynomial();  // inner basis poly, needed for 1st interval of u
     std::vector<std::vector<double>> interpolationBasisPolynomial();       // standard collocation polynomial
     std::vector<double> interpolateFirstControl(std::vector<double>& uValues);
-    std::vector<double> evalInterpolationNewKnots(std::vector<double>& values);
+    std::vector<double> evalInterpolationNewNodes(std::vector<double>& values);
     const std::vector<std::vector<double>> interpolationFirstLagrangeBasis;
     const std::vector<std::vector<double>> interpolationLagrangeBasis;
 
-    std::vector<double> evalLinearSplineNewKnots(std::vector<double>& values);
+    std::vector<double> evalLinearSplineNewNodes(std::vector<double>& values);
 
     // all basis coefficients at all c_j for p_u, p_u', p_u''
     std::vector<std::vector<double>> basisPolynomialDiff();
