@@ -14,7 +14,7 @@
             },
             "group": "build",
             "options": {
-                "cwd": "${workspaceFolder}/usersguide"
+                "cwd": "${workspaceFolder}/usersguide",
             }
         }
     ]

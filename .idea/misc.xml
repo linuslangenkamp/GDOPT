@@ -4,4 +4,7 @@
     <option name="/Default/Housekeeping/GlobalSettingsUpgraded/IsUpgraded/@EntryValue" value="true" type="bool" />
     <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="3" type="long" />
   </component>
+  <component name="Black">
+    <option name="sdkName" value="Python 3.11" />
+  </component>
 </project>

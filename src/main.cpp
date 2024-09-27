@@ -15,14 +15,7 @@ int main() {
     int meshIterations = 5;
 
     Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
-
-    // set solver flags
-    // "/home/linus/Documents/outputsGDOP"
-    solver.setExportOptimumPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/VariableData");
-    // solver.setExportHessianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/hessianSparsity.csv");
-    // solver.setExportJacobianPath("/mnt/c/Users/Linus/Desktop/Studium/Master/Masterarbeit/Sparsity/jacobianSparsity.csv");
-    solver.setTolerance(1e-13);
-
+    
     // set solver mesh parameters
     solver.setMeshParameter("level", 0);
     solver.setMeshParameter("ctol", 0.1);

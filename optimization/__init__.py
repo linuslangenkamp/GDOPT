@@ -560,15 +560,14 @@ class Model:
 
         print("Starting .cpp codegen...\n")
 
-        OUTPUT = f"""
-// CODEGEN FOR MODEL "{self.name}"\n
+        OUTPUT = f"""// CODEGEN FOR MODEL "{self.name}"\n
 // includes
 #define _USE_MATH_DEFINES
 #include "{filename}Params.h"
 #include <cmath>
 #include <string>
 #include "constants.h"
-#include <problem.h>
+#include "problem.h"
 #include "integrator.h"
 #include "mesh.h"
 #include "gdop.h"
@@ -964,7 +963,7 @@ int main() {{
         self, meshIteration=None, interval=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.BASE, epsilon=1e-14
     ):
         self.initVarNames()
-        self.plotColsAndRefinement(
+        self.plotVarsAndRefinement(
             meshIteration=meshIteration,
             interval=interval,
             specifCols=self.uVarNames,

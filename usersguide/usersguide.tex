@@ -130,8 +130,7 @@
 
 \section{Introduction}
 
-Dynamic optimization is a branch of mathematical optimization that deals with systems that evolve over time. The goal is to find optimal state trajectories satisfying given differential equations by adjusting the controls over a certain time horizon. These so-called optimal control problems are of great importance in industrial applications and occur in various areas
-such as industrial biochemistry, economics and aerospace engineering.
+Dynamic optimization is a branch of mathematical optimization that deals with systems that evolve over time. The goal is to find optimal state trajectories satisfying given differential equations by adjusting the controls over a certain time horizon. These so-called optimal control problems are of great importance in industrial applications and occur in various areas such as industrial biochemistry, economics and aerospace engineering.
 
 This guide presents a high level Python modeling environment for
 solving dynamic optimization problems using local collocation methods and
@@ -186,9 +185,19 @@ Clone the repository from GitHub:
 git clone https://github.com/linuslangenkamp/DynamicOptimization.git
 \end{lstlisting}
 
+This repository contains the entire framework, i.e. the front-end (Python modeling environment) and the back-end (C++ implementation of local collocation dynamic optimization with mesh refinements).
+
 \subsection{Requirements}
 Ensure that the following dependencies are installed:
+
+	
+TODO: make this better -> what is built automatically?! what is needed ...? 
+HSL LIB\_HSL path ... env |grep LIB\_HSL
+make the path of running models generic in cmake!
+
+
 \begin{itemize}
+
 	
 	\item[$\bullet$] Optimizer
 	\begin{itemize}
@@ -206,13 +215,11 @@ Ensure that the following dependencies are installed:
 		\item[$\bullet$] SymEngine\cite{symengine}
 		\item[$\bullet$] NumPy\cite{harris2020array}
 		\item[$\bullet$] SciPy\cite{virtanen2020scipy}
-		\item[$\bullet$] pandas\cite{mckinney2010data}
-		\item[$\bullet$] Matplotlib\cite{hunter2007matplotlib}
+		\item[$\bullet$] pandas\cite{mckinney2010data} (\emph{optional}: only used for importing solutions)
+		\item[$\bullet$] Matplotlib\cite{hunter2007matplotlib} (\emph{optional}: only used for plotting solutions)
 	\end{itemize}
 	
 \end{itemize}
-
-This section will be extended at a later point: TODO.
 
 
 \section{Getting Started}
@@ -1343,7 +1350,7 @@ model.plot(specifCols=["Product", "u"], interval=[0.5, 1], dots=Dots.ALL)
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1\textwidth]{images/plotstd.png}
-	\caption{Optimal product and control the Batch Reactor example}
+	\caption{Optimal product and control the "Batch Reactor" example}
 	\label{fig:batch}
 \end{figure}
 	
@@ -1403,7 +1410,7 @@ model.plotMeshRefinement()
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1\textwidth]{images/refinementVDP.png}
-	\caption{Mesh refinement in the Van der Pol example}
+	\caption{Mesh refinement in the "Van der Pol" example}
 	\label{fig:vdp}
 \end{figure}
 \end{mdframed}
@@ -1447,7 +1454,7 @@ model.plotInputsAndRefinement()
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1\textwidth]{images/refinement.png}
-	\caption{Mesh refinement and temperature control in an Oil Shale Pyrolysis}
+	\caption{Mesh refinement and temperature control in an "Oil Shale Pyrolysis"}
 	\label{fig:osp}
 \end{figure}
 \end{mdframed}
@@ -1475,7 +1482,7 @@ model.plotSparseMatrix(MatrixType.JACOBIAN)
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1\textwidth]{images/sparse.png}
-	\caption{Jacobian sparsity pattern of the Batch Reactor example}
+	\caption{Jacobian sparsity pattern of the "Batch Reactor" example}
 	\label{fig:sparseBatch}
 \end{figure}
 \end{mdframed}
@@ -2111,8 +2118,13 @@ model.plot(dots=Dots.BASE)
 	\bibitem{hsl2013collection}
 	HSL. (2013). A collection of Fortran codes for large-scale scientific computation. \url{http://www.hsl.rl.ac.uk}.
 	
+	
 	\bibitem{symengine}
-	SymEngine Development Team. (2015). SymEngine: A fast symbolic manipulation library, \url{https://github.com/symengine/symengine}.
+	SymEngine Developers, 
+	\textit{SymEngine: A Fast Symbolic Manipulation Library}, 
+	GitHub repository, 
+	\url{https://github.com/symengine/symengine}, 
+	accessed September 27, 2024.
 	
 	\bibitem{harris2020array}
 	Harris, C. R., Millman, K. J., et al. (2020). Array programming with NumPy. \textit{Nature}, 585(7825), 357-362.

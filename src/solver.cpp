@@ -12,7 +12,7 @@
     1 add, construct, test more mesh refinement algorithms!              4, 4
     2 OpenModelica interface                                             4, 5
     3 test framework for huge examples / industry relevant               3, 2
-    4 play with setting in ipopt / pivoting etc.                         2, 3
+    4 play with setting in ipopt / pivoting etc. -> basically done       2, 3
     5 check long double to double cast in evals?!                        1, 2
 
     delayed:
@@ -28,7 +28,7 @@
     11 creation of local jacobian structure (contained in 4?)            0, 1
 
     others:
-    12 plotting features for path constraints                            1, 1
+    12 plotting features for path constraints, lagrange terms            1, 1
     13 splitting const jacobian equality / inequality                    1, 1
 */
 
@@ -591,9 +591,23 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
     app.Options()->SetStringValue("timing_statistics", "yes");
 
     // linear solver
-    app.Options()->SetStringValue("linear_solver", getLinearSolverName(linearSolver));
-    app.Options()->SetStringValue("hsllib", "/home/linus/masterarbeit/ThirdParty-HSL/.libs/libcoinhsl.so.2.2.5");
-
+    auto const libHSLPath = getenv("LIB_HSL");
+    auto const linSolver = getLinearSolverName(linearSolver);
+    if (libHSLPath != nullptr) {
+        // HSL found -> set chosen solver
+        app.Options()->SetStringValue("hsllib", libHSLPath);
+        app.Options()->SetStringValue("linear_solver", linSolver);
+    }
+    else if ((libHSLPath == nullptr and linSolver != "MUMPS")){ 
+        // HSL not found but set -> set MUMPS as fallback
+        std::cout << "\nEnvironment variable 'LIB_HSL' not found! Fallback to standard linear solver 'MUMPS'\n" << std::endl;
+        app.Options()->SetStringValue("linear_solver", "MUMPS");
+    }
+    else {
+        // set chosen solver
+        app.Options()->SetStringValue("linear_solver", linSolver);
+    }
+ 
     // scaling
     if (userScaling) {
         app.Options()->SetStringValue("nlp_scaling_method", "user-scaling");
