@@ -1,3 +1,21 @@
+/**
+ * GDOPT - General Dynamic Optimization Problem Optimizer
+ * Copyright (C) 2024  Linus Langenkamp
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+
 #include "solver.h"
 
 #include <chrono>
@@ -598,7 +616,7 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
         app.Options()->SetStringValue("hsllib", libHSLPath);
         app.Options()->SetStringValue("linear_solver", linSolver);
     }
-    else if ((libHSLPath == nullptr and linSolver != "MUMPS")){ 
+    else if ((libHSLPath == nullptr and linSolver != "MUMPS")) {
         // HSL not found but set -> set MUMPS as fallback
         std::cout << "\nEnvironment variable 'LIB_HSL' not found! Fallback to standard linear solver 'MUMPS'\n" << std::endl;
         app.Options()->SetStringValue("linear_solver", "MUMPS");
@@ -607,7 +625,7 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
         // set chosen solver
         app.Options()->SetStringValue("linear_solver", linSolver);
     }
- 
+
     // scaling
     if (userScaling) {
         app.Options()->SetStringValue("nlp_scaling_method", "user-scaling");

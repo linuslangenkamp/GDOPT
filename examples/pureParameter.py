@@ -1,4 +1,4 @@
-from optimization import *
+from gdopt import *
 import random
 
 model = Model("pureParameter")

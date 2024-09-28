@@ -1,4 +1,4 @@
-from optimization import *
+from gdopt import *
 
 model = Model("vanDerPol")
 

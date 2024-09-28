@@ -192,8 +192,13 @@ Ensure that the following dependencies are installed:
 
 	
 TODO: make this better -> what is built automatically?! what is needed ...? 
+install python package
 HSL LIB\_HSL path ... env |grep LIB\_HSL
 make the path of running models generic in cmake!
+install:
+sudo cp libgdopt.so /usr/local/lib/ 
+sudo ldconfig
+set GDOPT\_SOURCES
 
 
 \begin{itemize}
@@ -208,6 +213,7 @@ make the path of running models generic in cmake!
 	\begin{itemize}
 		\item[$\bullet$] MUMPS\cite{amestoy2001fully}
 		\item[$\bullet$] HSL solvers, such as MA27, MA57, MA86,\ldots\cite{hsl2013collection}
+		\item[$\rightarrow$] set the environment variable "LIB\_HSL"
 	\end{itemize}
 	
 	\item[$\bullet$] Front-end Python Packages
@@ -229,7 +235,7 @@ optimization problem with the proposed framework.
 \subsection{Basic Example}
 Here is a minimal working example for a bang-bang control problem, adapted from the OpenModelica User's Guide \cite{openmodelica}
 \begin{lstlisting}
-from optimization import *
+from gdopt import *
 
 model = Model("bangBang")
 
@@ -356,7 +362,7 @@ where $L, M, \v{f}, \v{g}, \v{r}, \v{a} \in C^2$, i.e. are continuously differen
 The first step is to create a new Python file and to import the
 \texttt{optimization} package.
 \begin{lstlisting}
-from optimization import *
+from gdopt import *
 	\end{lstlisting}
 
 Additionally a \texttt{Model} object has to be created. This
@@ -1925,7 +1931,7 @@ Note that the previously mentioned GitHub repository offers many more examples t
 \subsection{Batch Reactor}
 
 \begin{lstlisting}
-from optimization import *
+from gdopt import *
 
 """
 * Batch Reactor from Parallel Multiple-Shooting and Collocation Optimization with OpenModelica,
@@ -1970,7 +1976,7 @@ model.plotInputsAndRefinement()
 \subsection{Oil Shale Pyrolysis}
 
 \begin{lstlisting}
-from optimization import *
+from gdopt import *
 
 model = Model("oilShalePyrolysis")
 
@@ -2018,7 +2024,7 @@ model.plot()
 \subsection{Van der Pol Oscillator}
 
 \begin{lstlisting}
-from optimization import *
+from gdopt import *
 
 model = Model("vanDerPol")
 
@@ -2062,7 +2068,7 @@ model.plotInputsAndRefinement()
 \subsection{Nominal Batch Reactor}
 
 \begin{lstlisting}	
-from optimization import *
+from gdopt import *
 
 model = Model("nominalBatchReactor")
 

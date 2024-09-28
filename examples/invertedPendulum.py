@@ -1,4 +1,4 @@
-from optimization import *
+from gdopt import *
 
 # choose implicit Euler, since it's the most stable
 

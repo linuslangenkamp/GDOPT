@@ -1,4 +1,22 @@
-from optimization.variables import *
+###############################################################################
+#  GDOPT - General Dynamic Optimization Problem Optimizer
+# Copyright (C) 2024  Linus Langenkamp
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+###############################################################################
+
+from .variables import *
 from symengine import (
     Symbol,
     cse,
@@ -23,7 +41,7 @@ from symengine import (
     atanh,
     pi,
     Abs,
-    Max, 
+    Max,
     Min,
     Piecewise,
 )
@@ -34,12 +52,12 @@ varInfo = {}
 # definition of the global time symbol
 t = Symbol("t")
 time = t
-TIME_SYMBOL = t # use this in code to recognize it as a symbol
+TIME_SYMBOL = t  # use this in code to recognize it as a symbol
 
 # definition of global final time symbol, has macro FINAL_TIME as name -> will be substituted at compile time
 tf = Symbol("FINAL_TIME")
 finalTime = tf
-FINAL_TIME_SYMBOL = tf # use this in code to recognize it as a symbol
+FINAL_TIME_SYMBOL = tf  # use this in code to recognize it as a symbol
 
 
 class Expression:
@@ -60,6 +78,12 @@ class Expression:
             sort_symbols(self.adj, varInfo)
         except:
             self.adj = []
+
+    def __str__(self):
+        return str(self.expr)
+
+    def __repr__(self):
+        return str(self.expr)
 
     def codegen(self, name):
 
@@ -205,6 +229,12 @@ class DynExpression(Expression):
         super().__init__(expr, nominal=nominal)
         self.diffVar = diffVar
 
+    def __str__(self):
+        return f"{self.diffVar}' = {self.expr}"
+
+    def __repr__(self):
+        return f"{self.diffVar}' = {self.expr}"
+
 
 class Constraint(Expression):
 
@@ -216,6 +246,18 @@ class Constraint(Expression):
         else:
             self.lb = lb
             self.ub = ub
+
+    def __str__(self):
+        if self.lb == self.ub:
+            return f"{self.expr} == {self.lb}"
+        else:
+            return f"{self.lb} <= {self.expr} <= {self.ub}"
+
+    def __repr__(self):
+        if self.lb == self.ub:
+            return f"{self.expr} == {self.lb}"
+        else:
+            return f"{self.lb} <= {self.expr} <= {self.ub}"
 
     def codegen(self, name):
 
@@ -369,6 +411,18 @@ class ParametricConstraint(Expression):
             self.lb = lb
             self.ub = ub
 
+    def __str__(self):
+        if self.lb == self.ub:
+            return f"{self.expr} == {self.lb}"
+        else:
+            return f"{self.lb} <= {self.expr} <= {self.ub}"
+
+    def __repr__(self):
+        if self.lb == self.ub:
+            return f"{self.expr} == {self.lb}"
+        else:
+            return f"{self.lb} <= {self.expr} <= {self.ub}"
+
     def codegen(self, name):
 
         subst0, exprEval = cseCustom([self.expr])
@@ -460,7 +514,9 @@ class ParametricConstraint(Expression):
 
 def toCode(expr):
     code = ccode(expr)
-    code = code.replace('True', 'true').replace('False', 'false') # for piecewise functions, since ccode(True) = True not true
+    code = code.replace("True", "true").replace(
+        "False", "false"
+    )  # for piecewise functions, since ccode(True) = True not true
     return code
 
 

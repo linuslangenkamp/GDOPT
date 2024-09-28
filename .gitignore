@@ -2,11 +2,15 @@ cmake-build-*/
 *.o
 *.ninja
 Makefile
-/examples/.generated/
+.generated/
 .cache/
 .env
 .fleet
 __pycache__/
+dist/
+.py-build-cmake_cache/
+.venv/
+*.egg-info/
 
 # all the latex stuff
 *.aux

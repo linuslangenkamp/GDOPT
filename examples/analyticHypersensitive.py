@@ -1,4 +1,4 @@
-from optimization import *
+from gdopt import *
 
 """
 * Hypersensitive OCP with an analytic solution from

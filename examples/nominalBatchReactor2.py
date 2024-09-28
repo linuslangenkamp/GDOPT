@@ -1,4 +1,4 @@
-from optimization import *
+from gdopt import *
 
 model = Model("nominalBatchReactor2")
 
@@ -25,12 +25,9 @@ model.optimize(
         "linearSolver": LinearSolver.MA57,
         "initVars": InitVars.SOLVE,
         "tolerance": 1e-12,
-        "exportJacobianPath": "/tmp"
+        "exportJacobianPath": "/tmp",
     },
-    meshFlags={
-        "meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-        "meshIterations": 0
-    },
+    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 0},
 )
 
 model.plotInputs(dots=Dots.BASE)

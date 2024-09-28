@@ -1,4 +1,4 @@
-from optimization import *
+from gdopt import *
 import random
 
 # this model, although it contains not that many non-zeros, will become dense because of fill-in effects
@@ -58,15 +58,11 @@ model.optimize(
     tf=1,
     steps=25,
     rksteps=3,
-    flags={
-        "outputPath": "/tmp",
-        "linearSolver": LinearSolver.MA57,
-        "exportJacobianPath": "/tmp"
-    },
+    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "exportJacobianPath": "/tmp"},
     meshFlags={
         "meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
         "meshIterations": 5,
-        "refinementMethod": RefinementMethod.LINEAR_SPLINE
+        "refinementMethod": RefinementMethod.LINEAR_SPLINE,
     },
 )
 

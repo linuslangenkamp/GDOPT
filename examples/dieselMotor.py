@@ -1,4 +1,4 @@
-from optimization import *
+from gdopt import *
 
 model = Model("dieselMotor")
 
@@ -161,7 +161,7 @@ model.optimize(
     meshFlags={
         "meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
         "meshIterations": 5,
-        "refinementMethod": RefinementMethod.LINEAR_SPLINE
+        "refinementMethod": RefinementMethod.LINEAR_SPLINE,
     },
 )
 

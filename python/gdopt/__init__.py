@@ -1,14 +1,34 @@
+###############################################################################
+#  GDOPT - General Dynamic Optimization Problem Optimizer
+# Copyright (C) 2024  Linus Langenkamp
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+###############################################################################
+
 import os
-from optimization.variables import *
-from optimization.expressions import *
-from optimization.functions import *
-from optimization.structures import *
-from optimization.radauHandling import *
+import subprocess
+from .variables import *
+from .expressions import *
+from .functions import *
+from .structures import *
+from .radauHandling import *
 from scipy.integrate import solve_ivp
 import time as timer
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import importlib.resources as resources
 
 # set global pd settings
 pd.set_option("display.precision", 8)
@@ -566,12 +586,12 @@ class Model:
 #include "{filename}Params.h"
 #include <cmath>
 #include <string>
-#include "constants.h"
-#include "problem.h"
-#include "integrator.h"
-#include "mesh.h"
-#include "gdop.h"
-#include "solver.h"
+#include <libgdopt/constants.h>
+#include <libgdopt/problem.h>
+#include <libgdopt/integrator.h>
+#include <libgdopt/mesh.h>
+#include <libgdopt/gdop.h>
+#include <libgdopt/solver.h>
 \n\n"""
 
         OUTPUT += "// runtime parameters and global constants\n"
@@ -835,19 +855,45 @@ int main() {{
 
         print("Compiling generated code...\n")
         compileStart = timer.time()
-        # TODO: investigate if -ffast-math is save here
-        os.system(
-            f"g++ .generated/{self.name}/{filename}.cpp -O3 -ffast-math -I../src/ -L../cmake-build-release/src -lipopt_do -o.generated/{self.name}/{self.name}"
+
+        with resources.as_file(resources.files(__package__)) as package_path:
+            # TODO: investigate if -ffast-math is save here
+            compileFlags = [
+                "-O3",
+                "-ffast-math",
+                f"-L{package_path / 'lib'}",
+                f"-I{package_path / 'include'}",
+                f"-Wl,-rpath={package_path / 'lib'}",
+            ]
+
+        compileResult = subprocess.run(
+            [
+                "g++",
+                f".generated/{self.name}/{filename}.cpp",
+                "-lgdopt",
+                f"-o.generated/{self.name}/{self.name}",
+            ]
+            + compileFlags,
+            capture_output=True,
         )
+        if compileResult.returncode != 0:
+            print("Compilation failed!")
+            with open(f"compile_{self.name}_err.log", "w+") as errorFile:
+                errorFile.write(compileResult.stderr.decode())
+            exit()
         print(f"Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.\n")
 
         print(f"Executing...\n")
-        os.system(f"LD_LIBRARY_PATH=../cmake-build-release/src/ ./.generated/{self.name}/{self.name}")
+        runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"])
+        if runResult.returncode != 0:
+            exit()
         print("")
 
         self.initAnalysis()
 
         return 0
+
+    # TODO: print model methods
 
     def initVarNames(self):
         self.xVarNames = [info.symbol for info in varInfo.values() if isinstance(info, StateStruct)]

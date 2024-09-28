@@ -1,4 +1,4 @@
-from optimization import *
+from gdopt import *
 
 """
 * Batch Reactor from Parallel Multiple-Shooting and Collocation Optimization with OpenModelica,
@@ -43,11 +43,11 @@ model.generate()
 
 model.optimize(
     tf=1,
-    steps=25,
+    steps=250,
     rksteps=3,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE},
     meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 6},
 )
 
-model.printResults()
+# model.printResults()
 model.plotInputsAndRefinement()
