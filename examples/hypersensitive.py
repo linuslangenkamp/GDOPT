@@ -12,6 +12,8 @@ model.addFinal(1.5 - x, eq=0)
 
 model.addLagrange(0.5 * (x**2 + u**2))
 
+print(model)
+
 model.generate()
 
 model.optimize(

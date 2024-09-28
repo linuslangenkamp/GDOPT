@@ -337,6 +337,43 @@ class Model:
         self.addDynamic(x, 0)
         self.addedDummy = True
 
+    def __str__(self):
+        M = str(self.M) if self.M != None else ""
+        L = str(self.L) if self.L != None else ""
+        if self.M and self.L:
+            out = f"min {M}(tf) + ∫ {L} dt\n"
+        elif self.M:
+            out = f"min {M}(tf)\n"
+        elif self.L:
+            out = f"min ∫ {L} dt\n"
+        else:
+            out = f"min 0\n"
+
+        out += "s.t.\n"
+
+        for f in self.F:
+            out += str(f) + f", {f.diffVar}(0) = {varInfo[f.diffVar].start}\n"
+        if len(self.F) > 0:
+            out += "\n"
+
+        for g in self.G:
+            out += str(g) + "\n"
+        if len(self.G) > 0:
+            out += "\n"
+
+        for r in self.R:
+            out += f"{r.lb} <= {str(r.expr)}(tf) <= {r.ub}\n"
+        if len(self.R) > 0:
+            out += "\n"
+
+        for a in self.A:
+            out += str(a) + "\n"
+
+        return out
+
+    def __repr__(self):
+        return str(self)
+
     def solveDynamic(self):
 
         # solves the dynamic system with the given initial u(t), p, x0
