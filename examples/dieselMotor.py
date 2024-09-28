@@ -148,7 +148,7 @@ model.addLagrange(dot_m_f)
 model.generate()
 
 model.optimize(
-    steps=100,
+    steps=250,
     rksteps=3,
     tf=0.5,
     flags={
