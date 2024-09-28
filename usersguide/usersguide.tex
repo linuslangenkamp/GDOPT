@@ -95,9 +95,9 @@
 
 	\vspace*{2.5cm}
 
-	{\Huge\bfseries User's Guide:}\\[1em]
+	{\LARGE\bfseries User's Guide:}\\[1em]
 
-	{\Huge\bfseries GDOPT - General Dynamic Optimizer}\\[0.5em]
+	{\LARGE\bfseries GDOPT - General Dynamic Optimizer}\\[0.5em]
 	\textcolor{gray}{\large A Python Environment for Optimizing
 		Dynamic Models}\\[1em]
 
@@ -303,10 +303,11 @@ subject to the following constraints:
 \noindent
 \textbf{Variables and Functions:}
 \begin{itemize}
+	\item $t$: Time in the model.
+	\item $t_f$: Final time of the time horizon.
 	\item $\v{x}(t)$: States, which evolve according to the dynamics $\dot{\v{x}}(t) = \v{f}(\cdot)$.
 	\item $\v{u}(t)$: Time-dependent control, also referred to as inputs.
 	\item $\v{p}$: Static parameters.
-	\item $t_f$: The final time of the time horizon.
 	\item $M(\cdot)$: Mayer term, a function that evaluates the cost at the final time.
 	\item $L(\cdot)$: Lagrange term, an integral representing the accumulated cost over time.
 	\item $\v{f}(\cdot)$: Function defining the system dynamics.
