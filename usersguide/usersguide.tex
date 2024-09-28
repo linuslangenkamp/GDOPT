@@ -48,7 +48,7 @@
 % Header and Footer
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{{User's Guide: Dynamic Optimization}}
+\fancyhead[L]{{User's Guide: GDOPT}}
 \fancyfoot[C]{\thepage}
 \fancyhead[R]{{\leftmark}}
 
@@ -97,8 +97,8 @@
 
 	{\Huge\bfseries User's Guide:}\\[1em]
 
-	{\Huge\bfseries Dynamic Optimization Framework}\\[0.5em]
-	\textcolor{gray}{\large A Python-based Environment for Solving
+	{\Huge\bfseries GDOPT - General Dynamic Optimizer}\\[0.5em]
+	\textcolor{gray}{\large A Python Environment for Optimizing
 		Dynamic Models}\\[1em]
 
 	\vspace{2cm}
@@ -141,7 +141,7 @@ along with analyzing the optimal solution.
 
 \subsection{Overview of the Framework} \label{c:overview}
 
-This dynamic optimization framework was developed to enable easy modeling and optimization of dynamic systems. It consists of two main components:
+The dynamic optimization framework, GDOPT, was developed to enable easy modeling and optimization of dynamic systems. It consists of two main components:
 
 A Python front-end that provides the user with a high-level interface to model the continuous problem and set flags, such as enabling mesh refinements or setting tolerances.
 A C++ back-end that performs the computationally intensive task of solving the resulting large-scale nonlinear problem (NLP) with IPOPT (Interior Point OPTimizer). In addition, a novel mesh refinement algorithm (L2-Boundary-Norm) is implemented that performs an h-method. This leads to high-resolution solutions at discontinuities, steep sections or corners of control variables.
@@ -178,55 +178,40 @@ The framework solves continuous dynamic optimization problems by discretizing th
 \end{itemize}
 This overall approach combines the flexibility of Python with the computational efficiency of C++, ensuring that dynamic optimization problems can be solved efficiently.
 
+
 \section{Installation}
-Clone the repository from GitHub:
+
+First, clone the GDOPT repository from GitHub:
 
 \begin{lstlisting}[language=bash]
-git clone https://github.com/linuslangenkamp/DynamicOptimization.git
+git clone https://github.com/linuslangenkamp/GDOPT.git
 \end{lstlisting}
 
-This repository contains the entire framework, i.e. the front-end (Python modeling environment) and the back-end (C++ implementation of local collocation dynamic optimization with mesh refinements).
+Make sure that the following dependencies (LAPACK, CMake, g++, Python3, Python3-Venv, Python3-Build) are installed on your system. Under Ubuntu this command can be used:
 
-\subsection{Requirements}
-Ensure that the following dependencies are installed:
+\begin{lstlisting}[language=bash]
+sudo apt-get install liblapack-dev cmake g++ python3 python3-venv python3-build
+\end{lstlisting}
 
-	
-TODO: make this better -> what is built automatically?! what is needed ...? 
-install python package
-HSL LIB\_HSL path ... env |grep LIB\_HSL
-make the path of running models generic in cmake!
-install:
-sudo cp libgdopt.so /usr/local/lib/ 
-sudo ldconfig
-set GDOPT\_SOURCES
+To keep the environment isolated, it is advisable to create and activate a virtual environment:
 
+\begin{lstlisting}[language=bash]
+python3 -m venv .venv
+source .venv/bin/activate
+\end{lstlisting}
 
-\begin{itemize}
+With the virtual environment activated, install the package. This will automatically install
+IPOPT\cite{wachter2006implementation}, the linear solver MUMPS\cite{amestoy2001fully}, and the Python packages used in the front-end, i.e. SymEngine\cite{symengine}, NumPy\cite{harris2020array}, SciPy\cite{virtanen2020scipy}, pandas\cite{mckinney2010data}, and Matplotlib\cite{hunter2007matplotlib}:
 
-	
-	\item[$\bullet$] Optimizer
-	\begin{itemize}
-		\item[$\bullet$] IPOPT\cite{wachter2006implementation}
-	\end{itemize}
-	
-	\item[$\bullet$] Linear Solver (one of the below)
-	\begin{itemize}
-		\item[$\bullet$] MUMPS\cite{amestoy2001fully}
-		\item[$\bullet$] HSL solvers, such as MA27, MA57, MA86,\ldots\cite{hsl2013collection}
-		\item[$\rightarrow$] set the environment variable "LIB\_HSL"
-	\end{itemize}
-	
-	\item[$\bullet$] Front-end Python Packages
-	\begin{itemize}
-		\item[$\bullet$] SymEngine\cite{symengine}
-		\item[$\bullet$] NumPy\cite{harris2020array}
-		\item[$\bullet$] SciPy\cite{virtanen2020scipy}
-		\item[$\bullet$] pandas\cite{mckinney2010data} (\emph{optional}: only used for importing solutions)
-		\item[$\bullet$] Matplotlib\cite{hunter2007matplotlib} (\emph{optional}: only used for plotting solutions)
-	\end{itemize}
-	
-\end{itemize}
+\begin{lstlisting}[language=bash]
+pip install .
+\end{lstlisting}
 
+Now it is possible to use GDOPT in your Python scripts:
+\begin{lstlisting}[language=python]
+import gdopt
+\end{lstlisting}
+In addition to MUMPS, linear solvers from the HSL suite such as MA27, MA57, MA77, MA86, MA97\cite{hsl2013collection} may also be used if a license is present. To do this, the environment variable “LIB\_HSL” must be set to the corresponding path. The framework can then load the solvers at runtime.
 
 \section{Getting Started}
 This section shows how to set up and solve a simple dynamic
@@ -360,7 +345,7 @@ where $L, M, \v{f}, \v{g}, \v{r}, \v{a} \in C^2$, i.e. are continuously differen
 \section{Modeling}
 
 The first step is to create a new Python file and to import the
-\texttt{optimization} package.
+\texttt{gdopt} package.
 \begin{lstlisting}
 from gdopt import *
 	\end{lstlisting}
@@ -1209,7 +1194,7 @@ are presented below.
 
 \section{Analysis}
 \label{c:Analysis}
-The \texttt{optimization} package offers the possibility to directly analyze the optimal solution with  \texttt{pandas} and \texttt{Matplotlib} functions. To access the features described in this section, it is mandatory to set the \texttt{"outputPath"} flag \eqref{flag:outputPath} in \texttt{model.optimize} \eqref{optimize}. Otherwise, the solution will not be written to a file.
+The \texttt{gdopt} package offers the possibility to directly analyze the optimal solution with  \texttt{pandas} and \texttt{Matplotlib} functions. To access the features described in this section, it is mandatory to set the \texttt{"outputPath"} flag \eqref{flag:outputPath} in \texttt{model.optimize} \eqref{optimize}. Otherwise, the solution will not be written to a file.
 
 \subsection{Results}
 \label{c:Results}
@@ -1500,7 +1485,7 @@ obtain more streamlined flags and arguments.
 
 \subsection{Special Functions}
 \label{c:specialFunction}
-By importing \texttt{optimization}, some special functions and symbols
+By importing \texttt{gdopt}, some special functions and symbols
 get automatically imported from SymEngine. These can be used freely in the
 modeling process, although the user has to be careful with non differentiable
 and discontinuous functions.

@@ -9,7 +9,7 @@ dependencies = [
     "pandas",
     "importlib_resources"
 ]
-description = "General Dynamic Optimization Problem - Optimizer"
+description = "General Dynamic Optimizer"
 
 [tool.setuptools.packages.find]
 # All the following settings are optional:
