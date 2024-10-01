@@ -1,13 +1,12 @@
 [project]
 name = "gdopt"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
     "symengine",
     "matplotlib",
     "numpy",
     "scipy",
     "pandas",
-    "PyQt5",
     "importlib_resources"
 ]
 description = "General Dynamic Optimizer"

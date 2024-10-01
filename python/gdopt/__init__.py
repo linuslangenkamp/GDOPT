@@ -76,6 +76,7 @@ class Model:
             False  # TODO: not in use: automatically scale variables and equations that dont have a nominal value
         )
         self.userScaling = False
+        self.alreadyCompiled = False
 
         # stuff for analyzing the results
         self.resultHistory = {}
@@ -620,7 +621,6 @@ class Model:
         OUTPUT = f"""// CODEGEN FOR MODEL "{self.name}"\n
 // includes
 #define _USE_MATH_DEFINES
-#include "{filename}Params.h"
 #include <cmath>
 #include <string>
 #include <libgdopt/constants.h>
@@ -629,14 +629,19 @@ class Model:
 #include <libgdopt/mesh.h>
 #include <libgdopt/gdop.h>
 #include <libgdopt/solver.h>
+#include <libgdopt/config.h>
 \n\n"""
 
-        OUTPUT += "// runtime parameters and global constants\n"
-        for rp in self.rpVars:
-            info = varInfo[rp]
-            OUTPUT += f"const double {info.symbol} = {str(info.symbol).upper().strip(' ')}_VALUE;\n"
-        else:
-            OUTPUT += "\n\n"
+        rpStrings = [f"{str(varInfo[rp].symbol).upper().strip(' ')}_VALUE" for rp in self.rpVars]
+        if len(self.rpVars) != 0:
+            OUTPUT += "// declaration of global runtime parameters (read from .config)\n"
+        for rpString in rpStrings:
+            OUTPUT += f"double {rpString};\n"
+
+        OUTPUT += "void setGlobalRuntimeParameters(const std::unordered_map<std::string, std::string>& configMap) {\n"
+        for rpString in rpStrings:
+            OUTPUT += f'\t{rpString} = std::stod(configMap.at("{rpString}"));\n'
+        OUTPUT += "}\n\n"
 
         if self.M:
             OUTPUT += "// mayer term\n"
@@ -716,27 +721,33 @@ class Model:
             std::move(A),
             "{self.name}");
     
-    #ifdef USER_SCALING
-    problem.nominalsX = {{{', '.join(str(toCode("1" if varInfo[x].nominal is None else varInfo[x].nominal)) for x in self.xVars)}}};  // nominal states
-    problem.nominalsU = {{{', '.join(str(toCode("1" if varInfo[u].nominal is None else varInfo[u].nominal)) for u in self.uVars)}}};  // nominal inputs
-    problem.nominalsP = {{{', '.join(str(toCode("1" if varInfo[p].nominal is None else varInfo[p].nominal)) for p in self.pVars)}}};  // nominal inputs
+    if (USER_SCALING) {{
+        problem.nominalsX = {{{', '.join(str(toCode("1" if varInfo[x].nominal is None else varInfo[x].nominal)) for x in self.xVars)}}};  // nominal states
+        problem.nominalsU = {{{', '.join(str(toCode("1" if varInfo[u].nominal is None else varInfo[u].nominal)) for u in self.uVars)}}};  // nominal inputs
+        problem.nominalsP = {{{', '.join(str(toCode("1" if varInfo[p].nominal is None else varInfo[p].nominal)) for p in self.pVars)}}};  // nominal inputs
+        
+        problem.nominalObjective = {self.objectiveNominal()};  // nominal objective
+        problem.nominalsF = {{{', '.join(str(toCode("1" if f.nominal is None else f.nominal)) for f in self.F)}}};  // nominal dynamic
+        problem.nominalsG = {{{', '.join(str(toCode("1" if g.nominal is None else g.nominal)) for g in self.G)}}};  // nominal path
+        problem.nominalsR = {{{', '.join(str(toCode("1" if r.nominal is None else r.nominal)) for r in self.R)}}};  // nominal final
+        problem.nominalsA = {{{', '.join(str(toCode("1" if a.nominal is None else a.nominal)) for a in self.A)}}};  // nominal parametric
+    }}
     
-    problem.nominalObjective = {self.objectiveNominal()};  // nominal objective
-    problem.nominalsF = {{{', '.join(str(toCode("1" if f.nominal is None else f.nominal)) for f in self.F)}}};  // nominal dynamic
-    problem.nominalsG = {{{', '.join(str(toCode("1" if g.nominal is None else g.nominal)) for g in self.G)}}};  // nominal path
-    problem.nominalsR = {{{', '.join(str(toCode("1" if r.nominal is None else r.nominal)) for r in self.R)}}};  // nominal final
-    problem.nominalsA = {{{', '.join(str(toCode("1" if a.nominal is None else a.nominal)) for a in self.A)}}};  // nominal parametric
-    #endif
-    
-    #ifdef INITIAL_STATES_PATH
-    problem.initialStatesPath = INITIAL_STATES_PATH "/initialValues.csv";
-    #endif
+    if (INITIAL_STATES_PATH != "") {{
+        problem.initialStatesPath = INITIAL_STATES_PATH + "/initialValues.csv";
+    }}
     {self.generateProblemCondition()}
     return problem;
 }};\n"""
 
         OUTPUT += f"""
 int main() {{
+    // setting the global configuration variables from file
+    auto config = readConfig(".generated/{self.name}/{self.name}.config");
+    setGlobalStdConfiguration(config);
+    setGlobalRuntimeParameters(config);
+
+    // problem and solver creation
     auto problem = std::make_shared<const Problem>(createProblem_{self.name}());
     InitVars initVars = INIT_VARS;
     Integrator rk = Integrator::radauIIA(RADAU_INTEGRATOR);
@@ -748,43 +759,36 @@ int main() {{
     Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 
     // set solver flags
-    #ifdef REFINEMENT_METHOD
     solver.setRefinementMethod(REFINEMENT_METHOD);
-    #endif
     
-    #ifdef EXPORT_OPTIMUM_PATH
-    solver.setExportOptimumPath(EXPORT_OPTIMUM_PATH);
-    #endif
-    
-    #ifdef EXPORT_HESSIAN_PATH
-    solver.setExportHessianPath(EXPORT_HESSIAN_PATH);
-    #endif
-    
-    #ifdef EXPORT_JACOBIAN_PATH
-    solver.setExportJacobianPath(EXPORT_JACOBIAN_PATH);
-    #endif
-    
-    #ifdef TOLERANCE
+    if (EXPORT_OPTIMUM_PATH != "") {{
+        solver.setExportOptimumPath(EXPORT_OPTIMUM_PATH);
+    }}
+
+    if (EXPORT_HESSIAN_PATH != "") {{
+        solver.setExportHessianPath(EXPORT_HESSIAN_PATH);
+    }}
+
+    if (EXPORT_JACOBIAN_PATH != "") {{
+        solver.setExportJacobianPath(EXPORT_JACOBIAN_PATH);
+    }}
+
     solver.setTolerance(TOLERANCE);
-    #endif
+    solver.userScaling = USER_SCALING;
     
     // set solver mesh parameters
-    #ifdef LEVEL
-    solver.setMeshParameter("level", LEVEL);
-    #endif
-    
-    #ifdef C_TOL
-    solver.setMeshParameter("ctol", C_TOL);
-    #endif
-    
-    #ifdef SIGMA
-    solver.setMeshParameter("sigma", SIGMA);
-    #endif
-    
-    #ifdef USER_SCALING
-    solver.userScaling = USER_SCALING;
-    #endif
-    
+    if (LEVEL.has_value()) {{
+        solver.setMeshParameter("level", LEVEL.value());
+    }}
+
+    if (C_TOL.has_value()) {{
+        solver.setMeshParameter("ctol", C_TOL.value());
+    }}
+
+    if (SIGMA.has_value()) {{
+        solver.setMeshParameter("sigma", SIGMA.value());
+    }}
+
     // optimize
     int status = solver.solve();
     return status;
@@ -796,19 +800,31 @@ int main() {{
 
         with open(f".generated/{self.name}/{filename}.cpp", "w") as file:
             file.write(OUTPUT)
+            self.alreadyCompiled = False
 
         print(f"Generated model to .generated/{self.name}/{filename}.cpp.\n")
         print(
             f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.\n"
         )
+
+        self.compile()
+
         return 0
+        
 
     def solve(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
 
         # generate and optimize pipelines sequentially
 
         self.generate()
-        self.optimize(tf=tf, steps=steps, rksteps=rksteps, flags=flags, meshFlags=meshFlags, resimulate=resimulate)
+        self.optimize(
+            tf=tf,
+            steps=steps,
+            rksteps=rksteps,
+            flags=flags,
+            meshFlags=meshFlags,
+            resimulate=resimulate
+        )
 
     def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
 
@@ -852,43 +868,56 @@ int main() {{
                     file.write(",".join(row) + "\n")
             print("Initial guesses done.\n")
 
-        ### main codegen
-        filename = self.name + "Generated"
-        OUTPUT = "//defines\n\n"
-        OUTPUT += f"#define INIT_VARS InitVars::{self.initVars.name}\n"
-        OUTPUT += f"#define RADAU_INTEGRATOR IntegratorSteps::Steps{self.rksteps}\n"
-        OUTPUT += f"#define INTERVALS {self.steps}\n"
-        OUTPUT += f"#define FINAL_TIME {self.tf}\n"
-        OUTPUT += f"#define REFINEMENT_METHOD RefinementMethod::{self.refinementMethod.name}\n"
-        OUTPUT += f"#define LINEAR_SOLVER LinearSolver::{self.linearSolver.name}\n"
-        OUTPUT += f"#define MESH_ALGORITHM MeshAlgorithm::{self.meshAlgorithm.name}\n"
-        OUTPUT += f"#define MESH_ITERATIONS {self.meshIterations}\n"
-        OUTPUT += f"#define TOLERANCE {self.tolerance}\n"
-        OUTPUT += f"#define USER_SCALING {'true' if self.userScaling else 'false'}\n"
+        ### configuration codegen
+        OUTPUT = "[standard model parameters]\n"
+        OUTPUT += f"INIT_VARS {self.initVars.name}\n"
+        OUTPUT += f"RADAU_INTEGRATOR {self.rksteps}\n"
+        OUTPUT += f"INTERVALS {self.steps}\n"
+        OUTPUT += f"FINAL_TIME {self.tf}\n"
+        OUTPUT += f"REFINEMENT_METHOD {self.refinementMethod.name}\n"
+        OUTPUT += f"LINEAR_SOLVER {self.linearSolver.name}\n"
+        OUTPUT += f"MESH_ALGORITHM {self.meshAlgorithm.name}\n"
+        OUTPUT += f"MESH_ITERATIONS {self.meshIterations}\n"
+        OUTPUT += f"TOLERANCE {self.tolerance}\n"
+        OUTPUT += f"USER_SCALING {'true' if self.userScaling else 'false'}\n"
 
+        OUTPUT += "\n[optionals and paths]\n"
         if self.outputFilePath:
-            OUTPUT += f'#define EXPORT_OPTIMUM_PATH "{self.outputFilePath}"\n'
+            OUTPUT += f'EXPORT_OPTIMUM_PATH "{self.outputFilePath}"\n'
         if self.exportHessianPath:
-            OUTPUT += f'#define EXPORT_HESSIAN_PATH "{self.exportHessianPath}"\n'
+            OUTPUT += f'EXPORT_HESSIAN_PATH "{self.exportHessianPath}"\n'
         if self.exportJacobianPath:
-            OUTPUT += f'#define EXPORT_JACOBIAN_PATH "{self.exportJacobianPath}"\n'
+            OUTPUT += f'EXPORT_JACOBIAN_PATH "{self.exportJacobianPath}"\n'
         if self.initVars == InitVars.SOLVE and self.initialStatesPath:
-            OUTPUT += f'#define INITIAL_STATES_PATH "{self.initialStatesPath}"\n'
+            OUTPUT += f'INITIAL_STATES_PATH "{self.initialStatesPath}"\n'
         if self.meshSigma:
-            OUTPUT += f"#define SIGMA {self.meshSigma}\n"
+            OUTPUT += f"SIGMA {self.meshSigma}\n"
         if self.meshLevel:
-            OUTPUT += f"#define LEVEL {self.meshLevel}\n"
+            OUTPUT += f"LEVEL {self.meshLevel}\n"
         if self.meshCTol:
-            OUTPUT += f"#define C_TOL {self.meshCTol}\n"
-        if self.rpVars:
-            OUTPUT += "\n// values for runtime parameters\n"
+            OUTPUT += f"C_TOL {self.meshCTol}\n"
 
+        OUTPUT += "\n[runtime parameters]\n"
         for rp in self.rpVars:
             info = varInfo[rp]
-            OUTPUT += f'#define {str(info.symbol).upper().strip(" ")}_VALUE {info.value}\n'
+            OUTPUT += f'{str(info.symbol).upper().strip(" ")}_VALUE {info.value}\n'
 
-        with open(f".generated/{self.name}/{filename}Params.h", "w") as file:
+        print(f"Creation of configuration .generated/{self.name}/{self.name}.config...\n")
+        with open(f".generated/{self.name}/{self.name}.config", "w") as file:
             file.write(OUTPUT)
+        print("Configuration done.\n")
+
+        print(f"Executing...\n")
+        runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"])
+        if runResult.returncode != 0:
+            exit()
+        print("")
+
+        self.initAnalysis()
+
+        return 0
+
+    def compile(self):
 
         print("Compiling generated code...\n")
         compileStart = timer.time()
@@ -898,15 +927,17 @@ int main() {{
             compileFlags = [
                 "-O3",
                 "-ffast-math",
-                f"-L{package_path / 'lib'}",
-                f"-I{package_path / 'include'}",
-                f"-Wl,-rpath={package_path / 'lib'}",
+            f"-L{package_path / 'lib'}",
+            f"-I{package_path / 'include'}",
+            f"-Wl,-rpath",
+            f"-Wl,{package_path / 'lib'}",
             ]
-
+        
         compileResult = subprocess.run(
             [
                 "g++",
-                f".generated/{self.name}/{filename}.cpp",
+                "-std=c++17",
+                f".generated/{self.name}/{self.name}Generated.cpp",
                 "-lgdopt",
                 f"-o.generated/{self.name}/{self.name}",
             ]
@@ -920,17 +951,7 @@ int main() {{
             exit()
         print(f"Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.\n")
 
-        print(f"Executing...\n")
-        runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"])
-        if runResult.returncode != 0:
-            exit()
-        print("")
-
-        self.initAnalysis()
-
-        return 0
-
-    # TODO: print model methods
+    # TODO: Generate -> Compile -> Optimize
 
     def initVarNames(self):
         self.xVarNames = [info.symbol for info in varInfo.values() if isinstance(info, StateStruct)]

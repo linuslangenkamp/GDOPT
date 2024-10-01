@@ -187,10 +187,10 @@ First, clone the GDOPT repository from GitHub:
 git clone https://github.com/linuslangenkamp/GDOPT.git
 \end{lstlisting}
 
-Make sure that the following dependencies (LAPACK, CMake, g++, Python3, Python3-Venv, Python3-Build) are installed on the system. Under Ubuntu these commands can be used:
+Make sure that the following dependencies (git, curl, gfortran, LAPACK, CMake, g++, Python3, Python3-Venv, Python3-Build) are installed on the system. Under Ubuntu these commands can be used:
 
 \begin{lstlisting}[language=bash]
-sudo apt-get install liblapack-dev cmake g++ python3 python3-venv
+sudo apt-get install git curl gfortran liblapack-dev cmake g++ python3 python3-venv
 pip install build
 \end{lstlisting}
 
@@ -202,7 +202,7 @@ source .venv/bin/activate
 \end{lstlisting}
 
 With the virtual environment activated, install the package. This will automatically install
-IPOPT\cite{wachter2006implementation}, the linear solver MUMPS\cite{amestoy2001fully}, and the Python packages used in the front-end, i.e. SymEngine\cite{symengine}, NumPy\cite{harris2020array}, SciPy\cite{virtanen2020scipy}, pandas\cite{mckinney2010data}, PyQt5, and Matplotlib\cite{hunter2007matplotlib}:
+IPOPT\cite{wachter2006implementation}, the linear solver MUMPS\cite{amestoy2001fully}, and the Python packages used in the front-end, i.e. SymEngine\cite{symengine}, NumPy\cite{harris2020array}, SciPy\cite{virtanen2020scipy}, pandas\cite{mckinney2010data}, and Matplotlib\cite{hunter2007matplotlib}:
 
 \begin{lstlisting}[language=bash]
 pip install .
@@ -597,8 +597,8 @@ p = model.addParameter(symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, 
 \subsubsection{Runtime Parameters}
 \label{c:runtimeParameters}
 Runtime parameter are time-invariant global constants, that can be
-changed after code generation via \texttt{model.setValue}. The value of the
-runtime parameter will be resolved at compile time. These represent usual
+changed after code generation and compilation via \texttt{model.setValue}. The value of the
+runtime parameter will be resolved at runtime. These represent usual
 parameters of standard modeling environments. A runtime parameter can be used
 literally anywhere in the \texttt{Model} object, e.g. in objectives or
 constraints, as a starting value, a lower or upper bound and even as a nominal
@@ -608,7 +608,7 @@ value.
 		linewidth=1pt]
 
 	Adding a runtime parameter to the model. This is a constant in
-	the model, that will be substituted by its associated value at compile
+	the model, that will be substituted by its associated value at runtime
 	time.
 
 	\begin{lstlisting}
@@ -650,7 +650,7 @@ model.setValue(runtimeParameter, value)
 
 \subsection{Constraints}
 
-Any constraint can contain compile time constants such as the global
+Any constraint can contain runtime constants such as the global
 final time \eqref{finalTimeSymbol} or runtime parameters
 \eqref{c:runtimeParameters}.
 
@@ -808,7 +808,7 @@ model.addParametric(expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=No
 
 \subsection{Objective}
 
-Any objective can contain compile time constants such as the global
+Any objective can contain runtime constants such as the global
 final time \eqref{finalTimeSymbol} or runtime parameters
 \eqref{c:runtimeParameters}.
 
@@ -976,7 +976,7 @@ analyzed with the presented framework \eqref{c:Analysis}.
 	paths, \ldots), compiles and runs the optimization.
 
 	\begin{lstlisting}
-model.optimize(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False)
+model.optimize(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False, recompile=False)
 	\end{lstlisting}
 	\label{optimize}
 	\textbf{Parameters:}
@@ -996,6 +996,8 @@ model.optimize(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=Fals
 		\item \texttt{bool resimulate} \emph{(optional)}: If set to
 		      \texttt{true}, all arguments and flags of this method will be taken from the
 		      previous optimization.
+		\item \texttt{bool recompile} \emph{(optional)}: If set to
+		\texttt{true}, the framework will always recompile the model, even if a compilation has been performed already.
 	\end{itemize}
 
 	\textbf{Example}:
@@ -1555,7 +1557,7 @@ t = Symbol("t")
 	constraints, starting values, nominal values, lower and upper bounds,
 	etc.
 	This represents the final time $t_f$ of the model. The
-	associated value will be substituted at compile time.
+	associated value will be substituted at runtime.
 
 	\begin{lstlisting}
 tf = Symbol("FINAL_TIME")

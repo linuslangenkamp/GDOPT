@@ -76,7 +76,7 @@ public:
     // additional / optional flags, printouts, ...
     std::vector<double> objectiveHistory;
     int initialIntervals;
-    std::chrono::_V2::system_clock::time_point solveStartTime;
+    std::chrono::high_resolution_clock::time_point solveStartTime;
     std::chrono::duration<double> solveTotalTimeTaken{};   // total time in solver
     std::chrono::duration<double> solveActualTimeTaken{};  // total time in solver - IO
     std::chrono::duration<double> timedeltaIO{0};          // time in IO operations

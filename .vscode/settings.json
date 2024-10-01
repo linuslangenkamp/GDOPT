@@ -61,7 +61,10 @@
     "stop_token": "cpp",
     "streambuf": "cpp",
     "thread": "cpp",
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "complex": "cpp",
+    "unordered_set": "cpp",
+    "optional": "cpp"
   },
   "editor.tabSize": 4,
   "editor.formatOnSave": true,
