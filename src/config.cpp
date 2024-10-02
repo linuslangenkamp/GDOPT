@@ -119,12 +119,6 @@ std::unordered_map<std::string, std::string> readConfig(const std::string &filen
         }
     }
 
-    // printout model parameters to stdout
-    std::cout << "Model parameters:\n";
-    for (auto [arg, val] : configMap) {
-        std::cout << arg << " -> " << val << "\n";
-    }
-
     return configMap;
 }
 

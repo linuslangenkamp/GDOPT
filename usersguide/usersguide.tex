@@ -931,16 +931,17 @@ model.addObjective(mayer, lagrange, obj=Objective.MINIMIZE, nominal=None)
 
 \subsection{Code Generation}
 
-If the modeling process is done, it is possible to generate the C++ code of the
+If the modeling process is done, it is possible to generate and compile the C++ code of the
 model.
 Therefore, the 1st and 2nd derivatives of the objectives and all constraints
 are calculated symbolically with SymEngine. After that, the framework will
 search for common subexpressions (CSE) in each derivative, using the symbolic
 capabilities of SymEngine. The resulting expressions as well as all other
-problem defining structures are generated to a C++ file. This file makes heavy
-use of preprocessing macros (e.g. final time, runtime parameters, flags, paths,
+problem defining structures are generated to a C++ file. This file makes
+use of runtime constants / model parameters (e.g. final time, runtime parameters, flags, paths,
 \ldots), that will be set later in the \texttt{model.optimize} pipeline
-\eqref{optimize}.
+\eqref{optimize}. The resulting C++ file is
+compiled, while linking against the dynamic optimization back-end. 
 
 If several optimizations have to be executed, where only flags and runtime
 parameters are changed, it is advised to call \texttt{model.generate} only
@@ -950,8 +951,8 @@ recalculations can be avoided.
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
 
-	Calculates the 1st and 2nd derivatives. Generates all the problem
-	defining structures to a .cpp file, which includes preprocessing macros.
+	Calculates the 1st and 2nd derivatives, generates all the problem
+	defining structures to a .cpp file, and compiles the code.
 
 	\begin{lstlisting}
 model.generate()
@@ -960,12 +961,9 @@ model.generate()
 \end{mdframed}
 
 \subsection{Optimization}
-
-After code generation, all model parameters (e.g. final time, runtime
-parameters, flags, paths, \ldots) are written as preprocessing macros to a
-header file. The resulting code consisting of the .cpp and .h files is
-compiled, while linking against the dynamic optimization back-end. The resulting
-executable will be run, which solves the NLP. Additionally the optimal solution
+After code generation and compilation, all model parameters (e.g. final time, runtime
+parameters, flags, paths, \ldots) have to be written to a configuration file. 
+The already existing executable will read in this configuration and then solve the NLP. Additionally the optimal solution
 as well as some metadata can be written to text files. These files can be
 analyzed with the presented framework \eqref{c:Analysis}.
 
@@ -973,7 +971,7 @@ analyzed with the presented framework \eqref{c:Analysis}.
 		linewidth=1pt]
 
 	Sets all model parameters (e.g. final time, runtime parameters, flags,
-	paths, \ldots), compiles and runs the optimization.
+	paths, \ldots) in the configuration file and runs the optimization.
 
 	\begin{lstlisting}
 model.optimize(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False, recompile=False)
@@ -996,8 +994,6 @@ model.optimize(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=Fals
 		\item \texttt{bool resimulate} \emph{(optional)}: If set to
 		      \texttt{true}, all arguments and flags of this method will be taken from the
 		      previous optimization.
-		\item \texttt{bool recompile} \emph{(optional)}: If set to
-		\texttt{true}, the framework will always recompile the model, even if a compilation has been performed already.
 	\end{itemize}
 
 	\textbf{Example}:
@@ -1029,9 +1025,9 @@ If \texttt{optimize} has to be called only once, it is also possible to use
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
 
-	Generates all problem defining structures to a .cpp file,
+	Generates all problem defining structures to a .cpp file, compiles,
 	sets all model parameters (e.g. final time, runtime parameters, flags,
-	paths, \ldots), compiles and runs the optimization.
+	paths, \ldots), and runs the optimization.
 
 	\begin{lstlisting}
 model.solve(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False)

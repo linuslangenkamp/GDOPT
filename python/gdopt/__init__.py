@@ -76,7 +76,6 @@ class Model:
             False  # TODO: not in use: automatically scale variables and equations that dont have a nominal value
         )
         self.userScaling = False
-        self.alreadyCompiled = False
 
         # stuff for analyzing the results
         self.resultHistory = {}
@@ -85,6 +84,8 @@ class Model:
         self.uVarNames = []
         self.pVarNames = []
         self.rpVarNames = []
+
+        print(GDOPT_ASCII_ART)
 
     def addState(self, start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None):
 
@@ -601,7 +602,7 @@ class Model:
 
     def generate(self):
 
-        # does the entire code generation of the model
+        # does the entire code generation and compilation of the model
 
         if len(self.F) != len(self.xVars):
             raise InvalidModel("#states != #differential equations")
@@ -800,7 +801,6 @@ int main() {{
 
         with open(f".generated/{self.name}/{filename}.cpp", "w") as file:
             file.write(OUTPUT)
-            self.alreadyCompiled = False
 
         print(f"Generated model to .generated/{self.name}/{filename}.cpp.\n")
         print(
@@ -810,26 +810,52 @@ int main() {{
         self.compile()
 
         return 0
-        
+
+    def compile(self):
+
+        print("Compiling generated code...\n")
+        compileStart = timer.time()
+
+        with resources.as_file(resources.files(__package__)) as package_path:
+            # TODO: investigate if -ffast-math is save here
+            compileFlags = [
+                "-O3",
+                "-ffast-math",
+                f"-L{package_path / 'lib'}",
+                f"-I{package_path / 'include'}",
+                f"-Wl,-rpath",
+                f"-Wl,{package_path / 'lib'}",
+            ]
+
+        compileResult = subprocess.run(
+            [
+                "g++",
+                "-std=c++17",
+                f".generated/{self.name}/{self.name}Generated.cpp",
+                "-lgdopt",
+                f"-o.generated/{self.name}/{self.name}",
+            ]
+            + compileFlags,
+            capture_output=True,
+        )
+        if compileResult.returncode != 0:
+            print("Compilation failed!")
+            with open(f"compile_{self.name}_err.log", "w+") as errorFile:
+                errorFile.write(compileResult.stderr.decode())
+            exit()
+        print(f"Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.\n")
 
     def solve(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
 
         # generate and optimize pipelines sequentially
 
         self.generate()
-        self.optimize(
-            tf=tf,
-            steps=steps,
-            rksteps=rksteps,
-            flags=flags,
-            meshFlags=meshFlags,
-            resimulate=resimulate
-        )
+        self.optimize(tf=tf, steps=steps, rksteps=rksteps, flags=flags, meshFlags=meshFlags, resimulate=resimulate)
 
     def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
 
-        # generate corresponding main function with flags, mesh, refinement
-        # set runtime parameter file from map
+        # sets the runtime configuration with flags, mesh, refinement, runtime parameters
+        # get and write initial states, if set InitVars.SOLVE
         # run the code
 
         if not resimulate:  # use everything from the previous optimization
@@ -844,31 +870,52 @@ int main() {{
                 self.setRkSteps(1)
 
             self.setFlags(flags)
-
             self.setMeshFlags(meshFlags)
         else:
             self.resultHistory = {}  # clear result history for new optimization
 
+        # solve the IVP with scipy if set
         if self.initVars == InitVars.SOLVE:
             print("Solving IVP for initial state guesses...\n")
-
-            solveStart = timer.time()
-            timeVals, stateVals = self.solveDynamic()
-            print(f"Solving the IVP took {round(timer.time() - solveStart, 4)} seconds.\n")
-
-            print(f"Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...\n")
-            with open(self.initialStatesPath + "/initialValues.csv", "w") as file:
-                for i in range(len(timeVals)):
-                    row = (
-                        []
-                    )  # could add timeColumn for debugging by adding: row = [str(timeVals[i])] -> change JUMP1 as well
-                    for dim in range(len(self.xVars)):
-                        row.append(str(stateVals[dim][i]))
-
-                    file.write(",".join(row) + "\n")
+            self.initialStatesCode()
             print("Initial guesses done.\n")
 
-        ### configuration codegen
+        # configuration codegen
+        print(f"Creation of configuration .generated/{self.name}/{self.name}.config...\n")
+        with open(f".generated/{self.name}/{self.name}.config", "w") as file:
+            file.write(self.createConfigurationCode())
+        print("Configuration done.\n")
+
+        print(f"Executing...\n")
+        runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"])
+        if runResult.returncode != 0:
+            exit()
+        print("")
+
+        self.initAnalysis()
+
+        return 0
+
+    def initialStatesCode(self):
+        solveStart = timer.time()
+        timeVals, stateVals = self.solveDynamic()
+        print(f"Solving the IVP took {round(timer.time() - solveStart, 4)} seconds.\n")
+
+        print(f"Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...\n")
+        with open(self.initialStatesPath + "/initialValues.csv", "w") as file:
+            for i in range(len(timeVals)):
+                row = (
+                    []
+                )  # could add timeColumn for debugging by adding: row = [str(timeVals[i])] -> change JUMP1 as well
+                for dim in range(len(self.xVars)):
+                    row.append(str(stateVals[dim][i]))
+
+                file.write(",".join(row) + "\n")
+
+    def createConfigurationCode(self):
+
+        # generates the code for the .config file
+
         OUTPUT = "[standard model parameters]\n"
         OUTPUT += f"INIT_VARS {self.initVars.name}\n"
         OUTPUT += f"RADAU_INTEGRATOR {self.rksteps}\n"
@@ -902,56 +949,7 @@ int main() {{
             info = varInfo[rp]
             OUTPUT += f'{str(info.symbol).upper().strip(" ")}_VALUE {info.value}\n'
 
-        print(f"Creation of configuration .generated/{self.name}/{self.name}.config...\n")
-        with open(f".generated/{self.name}/{self.name}.config", "w") as file:
-            file.write(OUTPUT)
-        print("Configuration done.\n")
-
-        print(f"Executing...\n")
-        runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"])
-        if runResult.returncode != 0:
-            exit()
-        print("")
-
-        self.initAnalysis()
-
-        return 0
-
-    def compile(self):
-
-        print("Compiling generated code...\n")
-        compileStart = timer.time()
-
-        with resources.as_file(resources.files(__package__)) as package_path:
-            # TODO: investigate if -ffast-math is save here
-            compileFlags = [
-                "-O3",
-                "-ffast-math",
-            f"-L{package_path / 'lib'}",
-            f"-I{package_path / 'include'}",
-            f"-Wl,-rpath",
-            f"-Wl,{package_path / 'lib'}",
-            ]
-        
-        compileResult = subprocess.run(
-            [
-                "g++",
-                "-std=c++17",
-                f".generated/{self.name}/{self.name}Generated.cpp",
-                "-lgdopt",
-                f"-o.generated/{self.name}/{self.name}",
-            ]
-            + compileFlags,
-            capture_output=True,
-        )
-        if compileResult.returncode != 0:
-            print("Compilation failed!")
-            with open(f"compile_{self.name}_err.log", "w+") as errorFile:
-                errorFile.write(compileResult.stderr.decode())
-            exit()
-        print(f"Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.\n")
-
-    # TODO: Generate -> Compile -> Optimize
+        return OUTPUT
 
     def initVarNames(self):
         self.xVarNames = [info.symbol for info in varInfo.values() if isinstance(info, StateStruct)]
