@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef IPOPT_DO_CONSTRAINT_H
-#define IPOPT_DO_CONSTRAINT_H
+#ifndef GDOPT_CONSTRAINT_H
+#define GDOPT_CONSTRAINT_H
 
 #include "expression.h"
 
@@ -45,4 +45,4 @@ public:
     const double ub;
 };
 
-#endif  // IPOPT_DO_CONSTRAINT_H
+#endif  // GDOPT_CONSTRAINT_H

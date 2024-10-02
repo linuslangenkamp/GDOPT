@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef IPOPT_DO_SOLVER_H
-#define IPOPT_DO_SOLVER_H
+#ifndef GDOPT_SOLVER_H
+#define GDOPT_SOLVER_H
 
 #include <chrono>
 #include <set>
@@ -88,6 +88,7 @@ public:
     bool exportJacobian = false;
     bool userScaling = true;  // use nlp scaling provided by the user, otherwise use gradient-based
 
+    void printASCIIArt() const;
     void printObjectiveHistory();
     void printMeshStats() const;
     void createModelInfo() const;
@@ -115,4 +116,4 @@ private:
     std::unique_ptr<SolverPrivate> _priv;
 };
 
-#endif  // IPOPT_DO_SOLVER_H
+#endif  // GDOPT_SOLVER_H

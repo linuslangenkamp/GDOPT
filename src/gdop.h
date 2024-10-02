@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef GDOP_H
-#define GDOP_H
+#ifndef GDOPT_GDOP_H
+#define GDOPT_GDOP_H
 
 #include <memory>
 
@@ -37,4 +37,4 @@ class GDOP;
 
 GDOP* create_gdop(const std::shared_ptr<const Problem>& problem, Mesh& mesh, Integrator& rk, InitVars initVars);
 
-#endif  // GDOP_H
+#endif  // GDOPT_GDOP_H

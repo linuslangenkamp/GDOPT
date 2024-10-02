@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef IPOPT_DO_UTIL_H
-#define IPOPT_DO_UTIL_H
+#ifndef GDOPT_UTIL_H
+#define GDOPT_UTIL_H
 
 #include <cmath>
 #include <cstdlib>
@@ -142,4 +142,4 @@ inline double checkNominalValue(const double value) {
     }
 }
 
-#endif  // IPOPT_DO_UTIL_H
+#endif  // GDOPT_UTIL_H

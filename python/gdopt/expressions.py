@@ -1,5 +1,5 @@
 ###############################################################################
-#  GDOPT - General Dynamic Optimizer
+# GDOPT - General Dynamic Optimizer
 # Copyright (C) 2024  Linus Langenkamp
 #
 # This program is free software: you can redistribute it and/or modify

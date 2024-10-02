@@ -1,5 +1,5 @@
 ###############################################################################
-#  GDOPT - General Dynamic Optimizer
+# GDOPT - General Dynamic Optimizer
 # Copyright (C) 2024  Linus Langenkamp
 #
 # This program is free software: you can redistribute it and/or modify
@@ -36,7 +36,7 @@ pd.set_option("display.precision", 8)
 
 class Model:
 
-    def __init__(self, name):
+    def __init__(self, name="DummyName"):
         self.creationTime = timer.process_time()
         self.xVars = []
         self.uVars = []
@@ -48,7 +48,7 @@ class Model:
         self.G = []
         self.R = []
         self.A = []
-        self.name = name
+        self.name = name.replace(" ", "")
         self.addedDummy = False
 
         # additional stuff for running the model
@@ -84,8 +84,6 @@ class Model:
         self.uVarNames = []
         self.pVarNames = []
         self.rpVarNames = []
-
-        print(GDOPT_ASCII_ART)
 
     def addState(self, start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None):
 
@@ -136,23 +134,6 @@ class Model:
 
         return self.addInput(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
 
-    def addBinaryInput(self, lb=0, ub=1, symbol=None, guess=None, nominal=None):
-
-        # dangerous, might break the code
-        # adds an input / control u for optimization
-        # specify lb or ub, start/initialGuess if needed
-        # to ensure the binary type, adds a parametric equation (u - lb) * (u - ub) == 0 to the model
-
-        if guess is None:
-            guess = (lb + ub) / 2
-        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
-        variable = Symbol(f"u[{info.id}]")
-        varInfo[variable] = info
-        self.uVars.append(variable)
-        self.addPath(variable**2 - variable * (lb + ub) + lb * ub, eq=0)  # forces binary type
-        self.checkNominalNone(nominal)
-        return variable
-
     def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
 
         # adds a parameter p for optimization
@@ -169,7 +150,7 @@ class Model:
 
         # alias for addParameter()
 
-        return self.addParameter(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
+        return self.addParameter(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
 
     def addBinaryParameter(self, lb=0, ub=1, symbol=None, guess=None, nominal=None):
 
@@ -188,7 +169,7 @@ class Model:
         self.checkNominalNone(nominal)
         return variable
 
-    def addRuntimeParameter(self, default, symbol):
+    def addRuntimeParameter(self, default, symbol=None):
 
         # adds a runtime parameter: can be changed for optimization
         # will be handled symbolically -> thus quite slow
@@ -200,11 +181,11 @@ class Model:
         self.rpVars.append(variable)
         return variable
 
-    def addRP(self, default, symbol):
+    def addRP(self, default, symbol=None):
 
         # alias for addRuntimeParameter()
 
-        return self.addRuntimeParameter(default, symbol)
+        return self.addRuntimeParameter(default, symbol=symbol)
 
     def setValue(self, runtimeParameter, value):
 
@@ -230,7 +211,7 @@ class Model:
         else:
             if obj == Objective.MAXIMIZE:
                 self.M = Expression(-1 * expr, nominal=nominal)
-                print("Setting Mayer term as -1 * mayer, since maximization is chosen.\n")
+                print("[GDOPT] Setting Mayer term as -1 * mayer, since maximization is chosen.\n")
             else:
                 self.M = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
@@ -251,7 +232,7 @@ class Model:
         else:
             if obj == Objective.MAXIMIZE:
                 self.L = Expression(-1 * expr, nominal=nominal)
-                print("Setting Lagrange term as -1 * lagrange, since maximization is chosen.\n")
+                print("[GDOPT] Setting Lagrange term as -1 * lagrange, since maximization is chosen.\n")
             else:
                 self.L = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
@@ -388,9 +369,9 @@ class Model:
                 + [u for u in self.uVars]
                 + [p for p in self.pVars]
                 + [rp for rp in self.rpVars],
-                self.F[eq].expr,
+                dynEq.expr.subs(FINAL_TIME_SYMBOL, self.tf) if hasattr(dynEq.expr, "subs") else dynEq.expr,
             )
-            for eq in range(len(self.F))
+            for dynEq in self.F
         ]
 
         # dirty uFuncs hack, if standard functions for the guess are provided
@@ -419,8 +400,13 @@ class Model:
             )
             for r in rhs
         ]
-
-        x0 = [varInfo[x].start for x in self.xVars]
+        
+        runtimeConstantsDict = {rpVar: varInfo[rpVar].value for rpVar in self.rpVars}
+        runtimeConstantsDict[FINAL_TIME_SYMBOL] = self.tf
+        x0 = [
+            varInfo[x].start.subs(runtimeConstantsDict) if hasattr(varInfo[x].start, "subs") else varInfo[x].start
+            for x in self.xVars
+        ]
         timeHorizon = [0, self.tf]
 
         # scipy.solve_ivp
@@ -567,21 +553,19 @@ class Model:
         return out
 
     def objectiveNominal(self):
+        nom = 1
         if self.M and self.L:
             if self.M.nominal is not None and self.L.nominal is not None:
-                return self.M.nominal + self.L.nominal
+                nom = self.M.nominal + self.L.nominal
             elif self.M.nominal is not None:
-                return self.M.nominal
+                nom = self.M.nominal
             elif self.L.nominal is not None:
-                return self.L.nominal
-            else:
-                return 1
+                nom = self.L.nominal
         elif self.M:
-            return self.M.nominal if self.M.nominal is not None else 1
+            nom = self.M.nominal if self.M.nominal is not None else 1
         elif self.L:
-            return self.L.nominal if self.L.nominal is not None else 1
-        else:
-            return 1
+            nom = self.L.nominal if self.L.nominal is not None else 1
+        return nom
 
     def checkNominalNone(self, nominal):
         # forces userScaling to True, if a single nominal is provided in the model -> else its False
@@ -617,7 +601,7 @@ class Model:
         # codegen
         filename = self.name + "Generated"
 
-        print("Starting .cpp codegen...\n")
+        print("[GDOPT] Starting .cpp codegen...\n")
 
         OUTPUT = f"""// CODEGEN FOR MODEL "{self.name}"\n
 // includes
@@ -647,40 +631,40 @@ class Model:
         if self.M:
             OUTPUT += "// mayer term\n"
             OUTPUT += self.M.codegen("Mayer" + self.name)
-            print("Mayer: codegen done.\n")
+            print("[GDOPT] Mayer: codegen done.\n")
 
         if self.L:
             OUTPUT += "// lagrange term\n"
             OUTPUT += self.L.codegen("Lagrange" + self.name)
-            print("Lagrange: codegen done.\n")
+            print("[GDOPT] Lagrange: codegen done.\n")
 
         if self.F:
             OUTPUT += "// dynamic constraints\n"
 
         for n, f in enumerate(self.F):
             OUTPUT += f.codegen("F" + str(n) + self.name)
-            print(f"Dynamic constraint {n}: codegen done.\n")
+            print(f"[GDOPT] Dynamic constraint {n}: codegen done.\n")
 
         if self.G:
             OUTPUT += "// path constraints\n"
 
         for n, g in enumerate(self.G):
             OUTPUT += g.codegen("G" + str(n) + self.name)
-            print(f"Path constraint {n}: codegen done.\n")
+            print(f"[GDOPT] Path constraint {n}: codegen done.\n")
 
         if self.R:
             OUTPUT += "// final constraints\n"
 
         for n, r in enumerate(self.R):
             OUTPUT += r.codegen("R" + str(n) + self.name)
-            print(f"Final constraint {n}: codegen done.\n")
+            print(f"[GDOPT] Final constraint {n}: codegen done.\n")
 
         if self.A:
             OUTPUT += "// parametric constraints\n"
 
         for n, a in enumerate(self.A):
             OUTPUT += a.codegen("A" + str(n) + self.name)
-            print(f"Parametric constraints {n}: codegen done.\n")
+            print(f"[GDOPT] Parametric constraints {n}: codegen done.\n")
 
         OUTPUT += self.uInitialGuessCodegen()
 
@@ -727,7 +711,7 @@ class Model:
         problem.nominalsU = {{{', '.join(str(toCode("1" if varInfo[u].nominal is None else varInfo[u].nominal)) for u in self.uVars)}}};  // nominal inputs
         problem.nominalsP = {{{', '.join(str(toCode("1" if varInfo[p].nominal is None else varInfo[p].nominal)) for p in self.pVars)}}};  // nominal inputs
         
-        problem.nominalObjective = {self.objectiveNominal()};  // nominal objective
+        problem.nominalObjective = {toCode(self.objectiveNominal())};  // nominal objective
         problem.nominalsF = {{{', '.join(str(toCode("1" if f.nominal is None else f.nominal)) for f in self.F)}}};  // nominal dynamic
         problem.nominalsG = {{{', '.join(str(toCode("1" if g.nominal is None else g.nominal)) for g in self.G)}}};  // nominal path
         problem.nominalsR = {{{', '.join(str(toCode("1" if r.nominal is None else r.nominal)) for r in self.R)}}};  // nominal final
@@ -795,16 +779,16 @@ int main() {{
     return status;
 }}        
         """
-        print(".cpp: codegen done.\n")
+        print("[GDOPT] .cpp codegen done.\n")
 
         os.makedirs(f".generated/{self.name}", exist_ok=True)
 
         with open(f".generated/{self.name}/{filename}.cpp", "w") as file:
             file.write(OUTPUT)
 
-        print(f"Generated model to .generated/{self.name}/{filename}.cpp.\n")
+        print(f"[GDOPT] Generated model to .generated/{self.name}/{filename}.cpp.\n")
         print(
-            f"Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.\n"
+            f"[GDOPT] Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.\n"
         )
 
         self.compile()
@@ -813,7 +797,7 @@ int main() {{
 
     def compile(self):
 
-        print("Compiling generated code...\n")
+        print("[GDOPT] Compiling generated code...\n")
         compileStart = timer.time()
 
         with resources.as_file(resources.files(__package__)) as package_path:
@@ -839,11 +823,11 @@ int main() {{
             capture_output=True,
         )
         if compileResult.returncode != 0:
-            print("Compilation failed!")
+            print("[GDOPT] Compilation failed!")
             with open(f"compile_{self.name}_err.log", "w+") as errorFile:
                 errorFile.write(compileResult.stderr.decode())
             exit()
-        print(f"Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.\n")
+        print(f"[GDOPT] Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.\n")
 
     def solve(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
 
@@ -864,7 +848,7 @@ int main() {{
                 self.setSteps(steps)
                 self.setRkSteps(rksteps)
             else:  # purely parametric
-                print("Setting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.\n")
+                print("[GDOPT] Setting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.\n")
                 self.setFinalTime(0)
                 self.setSteps(1)
                 self.setRkSteps(1)
@@ -876,32 +860,31 @@ int main() {{
 
         # solve the IVP with scipy if set
         if self.initVars == InitVars.SOLVE:
-            print("Solving IVP for initial state guesses...\n")
+            print("[GDOPT] Solving IVP for initial state guesses...\n")
             self.initialStatesCode()
-            print("Initial guesses done.\n")
+            print("[GDOPT] Initial guesses done.\n")
 
         # configuration codegen
-        print(f"Creation of configuration .generated/{self.name}/{self.name}.config...\n")
+        print(f"[GDOPT] Creation of configuration .generated/{self.name}/{self.name}.config...\n")
         with open(f".generated/{self.name}/{self.name}.config", "w") as file:
             file.write(self.createConfigurationCode())
-        print("Configuration done.\n")
+        print("[GDOPT] Configuration done.\n")
 
-        print(f"Executing...\n")
+        print(f"[GDOPT] Executing...\n")
         runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"])
-        if runResult.returncode != 0:
-            exit()
-        print("")
+        returnString = backendReturnCode(runResult.returncode).replace("_", " ")
+        print(f"\n[GDOPT] Exit: {returnString}.\n")
 
         self.initAnalysis()
 
-        return 0
+        return runResult.returncode
 
     def initialStatesCode(self):
         solveStart = timer.time()
         timeVals, stateVals = self.solveDynamic()
-        print(f"Solving the IVP took {round(timer.time() - solveStart, 4)} seconds.\n")
+        print(f"[GDOPT] Solving the IVP took {round(timer.time() - solveStart, 4)} seconds.\n")
 
-        print(f"Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...\n")
+        print(f"[GDOPT] Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...\n")
         with open(self.initialStatesPath + "/initialValues.csv", "w") as file:
             for i in range(len(timeVals)):
                 row = (
@@ -1000,7 +983,7 @@ int main() {{
     def printResultParameters(self, meshIteration=None):
         meshIteration = self.checkMeshIteration(meshIteration)
         self.getResults(meshIteration)
-        print("Optimal parameters:")
+        print("[GDOPT] Optimal parameters:")
         for p, pValue in self.resultHistory[meshIteration][self.pVarNames].iloc[0].items():
             print(f"{p} = {pValue}")
         print("")
@@ -1017,7 +1000,7 @@ int main() {{
             return maxMeshIteration
         if type(meshIteration) == int:
             if meshIteration > maxMeshIteration:
-                print(f"meshIteration too large. Setting meshIteration to maximum value of {maxMeshIteration}.")
+                print(f"[GDOPT] meshIteration too large. Setting meshIteration to maximum value of {maxMeshIteration}.")
                 meshIteration = maxMeshIteration
         return meshIteration
 

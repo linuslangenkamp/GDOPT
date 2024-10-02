@@ -1,5 +1,5 @@
 ###############################################################################
-#  GDOPT - General Dynamic Optimizer
+# GDOPT - General Dynamic Optimizer
 # Copyright (C) 2024  Linus Langenkamp
 #
 # This program is free software: you can redistribute it and/or modify
@@ -65,3 +65,29 @@ def guessPiecewise(*args):
     # *args = (val1, condition1), (val2, condition2), ...
 
     return Piecewise(*args, (0, True))
+
+
+def backendReturnCode(code):
+    code = int(code)
+    IPOPT_RETURN_CODES = {
+        0: "Optimal_Solution_Found",
+        1: "Solved_To_Acceptable_Level",
+        2: "Infeasible_Problem_Detected",
+        3: "Search_Direction_Becomes_Too_Small",
+        4: "Diverging_Iterates",
+        5: "User_Requested_Stop",
+        6: "Feasible_Point_Found",
+        7: "Maximum_Iterations_Exceeded",
+        8: "Restoration_Failed",
+        9: "Error_In_Step_Computation",
+        10: "Maximum_CpuTime_Exceeded",
+        11: "Not_Enough_Degrees_Of_Freedom",
+        12: "Invalid_Problem_Definition",
+        13: "Invalid_Option",
+        14: "Invalid_Number_Detected",
+        -1: "Internal_Error",
+    }
+    if code in IPOPT_RETURN_CODES:
+        return IPOPT_RETURN_CODES[code]
+    else:
+        return "Unknown return code"

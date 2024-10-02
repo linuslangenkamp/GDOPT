@@ -16,12 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef IPOPT_DO_CONSTANTS_H
-#define IPOPT_DO_CONSTANTS_H
+#ifndef GDOPT_CONSTANTS_H
+#define GDOPT_CONSTANTS_H
 
 #include <limits>
 
 const double PLUS_INFINITY = std::numeric_limits<double>::infinity();
 const double MINUS_INFINITY = -std::numeric_limits<double>::infinity();
 
-#endif  // IPOPT_DO_CONSTANTS_H
+#endif  // GDOPT_CONSTANTS_H

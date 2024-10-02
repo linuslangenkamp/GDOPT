@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef IPOPT_DO_PROBLEM_H
-#define IPOPT_DO_PROBLEM_H
+#ifndef GDOPT_PROBLEM_H
+#define GDOPT_PROBLEM_H
 
 #include <functional>
 #include <memory>
@@ -74,4 +74,4 @@ public:
     bool quadraticObjLinearConstraints = false;  // true if f, g, r and a are all linear and M and L are at most quadratic
 };
 
-#endif  // IPOPT_DO_PROBLEM_H
+#endif  // GDOPT_PROBLEM_H

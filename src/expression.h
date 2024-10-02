@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef IPOPT_DO_EXPRESSION_H
-#define IPOPT_DO_EXPRESSION_H
+#ifndef GDOPT_EXPRESSION_H
+#define GDOPT_EXPRESSION_H
 
 #include <array>
 #include <utility>
@@ -84,4 +84,4 @@ public:
     const ParamAdjacencyDiff adjDiff;
 };
 
-#endif  // IPOPT_DO_EXPRESSION_H
+#endif  // GDOPT_EXPRESSION_H

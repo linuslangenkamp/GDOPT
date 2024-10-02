@@ -2,7 +2,7 @@ from gdopt import *
 
 model = Model("nominalBatchReactor")
 
-NOM_SCALED = 1e10
+NOM_SCALED = model.addRuntimeParameter(default=1e-10, symbol="NOM_SCALED")
 
 y1 = model.addState(symbol="Reactant", start=NOM_SCALED, nominal=NOM_SCALED)
 y2 = model.addState(symbol="Product", start=0, nominal=1 / NOM_SCALED)
@@ -27,5 +27,8 @@ model.optimize(
     rksteps=3,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE, "tolerance": 1e-14},
 )
+
+model.setValue(NOM_SCALED, 1e10)
+model.optimize(resimulate=True)
 
 model.plot(dots=Dots.BASE)

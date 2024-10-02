@@ -490,6 +490,7 @@ void Solver::setRefinementMethod(RefinementMethod method) {
 }
 
 void Solver::initSolvingProcess() {
+    printASCIIArt();
     setRefinementParameters();
     solveStartTime = std::chrono::high_resolution_clock::now();
     initialIntervals = _priv->gdop->mesh.intervals;
@@ -566,6 +567,24 @@ void Solver::printMeshStats() const {
     std::cout << "Initial:" << std::setw(7) << initialIntervals << std::endl;
     std::cout << "Inserted:  " << std::setw(4) << _priv->gdop->mesh.intervals - initialIntervals << std::endl;
     std::cout << "Final:" << std::setw(9) << _priv->gdop->mesh.intervals << std::endl;
+}
+
+void Solver::printASCIIArt() const {
+    const std::string art = R"(
+.----------------------------------------------------------------------------------------------------------------------------------------------.
+|     ______ ____   ____   ____  ______            ______                                 __   ____                                   _        |
+|    / ____// __ \ / __ \ / __ \/_  __/           / ____/___   ____   ___   _____ ____ _ / /  / __ \ __  __ ____   ____ _ ____ ___   (_)_____  |
+|   / / __ / / / // / / // /_/ / / /   ______    / / __ / _ \ / __ \ / _ \ / ___// __ `// /  / / / // / / // __ \ / __ `// __ `__ \ / // ___/  |
+|  / /_/ // /_/ // /_/ // ____/ / /   /_____/   / /_/ //  __// / / //  __// /   / /_/ // /  / /_/ // /_/ // / / // /_/ // / / / / // // /__    |
+|  \____//_____/ \____//_/     /_/     _        \____/ \___//_/ /_/ \___//_/   _\__,_//_/  /_____/ \__, //_/ /_/ \__,_//_/ /_/ /_//_/ \___/    |
+|    / __ \ ____   / /_ (_)____ ___   (_)____  ___   _____  _   __   / __ \   <  /  <  /          /____/                                       |
+|   / / / // __ \ / __// // __ `__ \ / //_  / / _ \ / ___/ | | / /  / / / /   / /   / /                                                        |
+|  / /_/ // /_/ // /_ / // / / / / // /  / /_/  __// /     | |/ /_ / /_/ /_  / /_  / /                                                         |
+|  \____// .___/ \__//_//_/ /_/ /_//_/  /___/\___//_/      |___/(_)\____/(_)/_/(_)/_/                                                          |
+|       /_/                                                                                                                                    |
+'----------------------------------------------------------------------------------------------------------------------------------------------'
+)";
+    std::cout << art << "\n";
 }
 
 void Solver::setSolverFlags(IpoptApplication& app) {

@@ -187,14 +187,19 @@ First, clone the GDOPT repository from GitHub:
 git clone https://github.com/linuslangenkamp/GDOPT.git
 \end{lstlisting}
 
-Make sure that the following dependencies (git, curl, gfortran, LAPACK, CMake, g++, Python3, Python3-Venv, Python3-Build) are installed on the system. Under Ubuntu these commands can be used:
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+	linewidth=1pt]
+
+\textbf{Ubuntu:}
+
+Make sure that the dependencies (git, curl, gfortran, LAPACK, CMake, g++, Python3, Python3-Venv, Python3-Build) are installed on the system.
 
 \begin{lstlisting}[language=bash]
 sudo apt-get install git curl gfortran liblapack-dev cmake g++ python3 python3-venv
 pip install build
 \end{lstlisting}
 
-To keep the environment isolated, it is advisable to create and activate a virtual environment:
+To keep the environment isolated, it is advised to create and activate a virtual environment:
 
 \begin{lstlisting}[language=bash]
 python3 -m venv .venv
@@ -207,6 +212,7 @@ IPOPT\cite{wachter2006implementation}, the linear solver MUMPS\cite{amestoy2001f
 \begin{lstlisting}[language=bash]
 pip install .
 \end{lstlisting}
+\end{mdframed}
 
 Now it is possible to use GDOPT in your Python scripts:
 \begin{lstlisting}[language=python]
@@ -278,10 +284,10 @@ Example procedure:
 \section{Mathematical Problem Formulation}
 \label{c:GDOP}
 
-In a \textbf{General Dynamic Optimization Problem} (GDOP) the goal is the minimization of a \textit{Mayer term} $M(\cdot)$, which defines the cost at the final time $t_f$, and a \textit{Lagrange term} $L(\cdot)$, which represents the cumulative cost over the time horizon $[t_0, t_f]$. The problem can be written as follows:
+In a \textbf{General Dynamic Optimization Problem} (GDOP) the goal is the minimization of a \textit{Mayer term}, which defines the cost at the final time $t_f$ (terminal cost), and a \textit{Lagrange term}, which represents the running cost over the time horizon $[t_0, t_f]$. The problem can be written as follows:
 
 \begin{equation*}
-\min_{\v{u}(t), \v{p}} \quad M(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f) + \int_{t_0}^{t_f} L(\v{x}(t), \v{u}(t), \v{p}, t)\, \dd t
+	\min_{\v{u}(t), \v{p}} \quad \underbrace{M(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f)}_{\text{Mayer term}} + \underbrace{\int_{t_0}^{t_f} L(\v{x}(t), \v{u}(t), \v{p}, t)\, \dd t}_{\text{Lagrange term}}
 \end{equation*}
 
 subject to the following constraints:
@@ -306,10 +312,10 @@ subject to the following constraints:
 	\item $t$: Time in the model.
 	\item $t_f$: Final time of the time horizon.
 	\item $\v{x}(t)$: States, which evolve according to the dynamics $\dot{\v{x}}(t) = \v{f}(\cdot)$.
-	\item $\v{u}(t)$: Time-dependent control, also referred to as inputs.
+	\item $\v{u}(t)$: Time-dependent control variables, also referred to as inputs.
 	\item $\v{p}$: Static parameters.
-	\item $M(\cdot)$: Mayer term, a function that evaluates the cost at the final time.
-	\item $L(\cdot)$: Lagrange term, an integral representing the accumulated cost over time.
+	\item $M(\cdot)$: Mayer term, a function that evaluates a cost at the final time.
+	\item $L(\cdot)$: Lagrange integrand, a function defining a cost at a specific time $t$. $\int_{t_0}^{t_f} L(\cdot) \, \dd t$ is then referred to as the Lagrange term.
 	\item $\v{f}(\cdot)$: Function defining the system dynamics.
 	\item $\v{g}(\cdot)$: Path constraint function, which forces restrictions on variables at all times.
 	\item $\v{r}(\cdot)$: Final constraint function, which forces restrictions on variables at the final time.
@@ -352,9 +358,8 @@ The first step is to create a new Python file and to import the
 from gdopt import *
 	\end{lstlisting}
 
-Additionally a \texttt{Model} object has to be created. This
-\texttt{Model} is the basis for any modeling and has to have an associated
-model name.
+Additionally a \texttt{Model} object has to be created, which may have an associated model name. This
+\texttt{Model} is the basis for all modeling.
 \begin{lstlisting}
 model = Model("Model Name")
 	\end{lstlisting}
@@ -445,11 +450,10 @@ u = model.addInput(symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nomi
 The guess parameter in \texttt{model.addInput} \eqref{addInput} can be
 any \texttt{Expression} that contains the global time or final time symbols
 \eqref{c:globaltime}, but can also be a regular constant \texttt{float} or
-\texttt{int}. This guess trajectory is only used if the
-\texttt{"initVars"} flag \eqref{flag:initVars} is chosen to be
-\texttt{InitVars.SOLVE} \eqref{enum:initVars}. This trajectory is used to
+\texttt{int}. If the \texttt{"initVars"} flag \eqref{flag:initVars} is chosen to be a  
+\texttt{SOLVE} option \eqref{enum:initVars}, this trajectory is used to
 solve the dynamic and provide an initial, feasible guess for the state
-variables. Note that any valid SymEngine \texttt{Expression} can be provided as
+variables. If the option \texttt{InitVars.CONST} is set, the guess is used nevertheless, although the states are initialized constant. Note that any valid SymEngine \texttt{Expression} can be provided as
 a guess, although there are several standard functions to provide better
 initial guesses for the control.
 
@@ -596,9 +600,9 @@ p = model.addParameter(symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, 
 
 \subsubsection{Runtime Parameters}
 \label{c:runtimeParameters}
-Runtime parameter are time-invariant global constants, that can be
+Runtime parameters are time-invariant global constants, that can be
 changed after code generation and compilation via \texttt{model.setValue}. The value of the
-runtime parameter will be resolved at runtime. These represent usual
+runtime parameter will be set at runtime. These represent usual
 parameters of standard modeling environments. A runtime parameter can be used
 literally anywhere in the \texttt{Model} object, e.g. in objectives or
 constraints, as a starting value, a lower or upper bound and even as a nominal
@@ -612,14 +616,14 @@ value.
 	time.
 
 	\begin{lstlisting}
-rp = model.addRuntimeParameter(default, symbol)
+rp = model.addRuntimeParameter(default, symbol=None)
 		\end{lstlisting}
 	\label{addRuntimeParameter}
 	\textbf{Parameters:}
 	\begin{itemize}
 		\item \texttt{float default}: A default value for the
 		      runtime parameter.
-		\item \texttt{str symbol}: A symbolic representation of
+		\item \texttt{str symbol} \emph{(optional)}: A symbolic representation of
 		      the runtime parameter.
 	\end{itemize}
 

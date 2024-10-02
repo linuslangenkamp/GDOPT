@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GDOPT_CONFIG_H
+#define GDOPT_CONFIG_H
 
 #include <optional>
 
@@ -27,3 +28,5 @@ extern std::optional<double> C_TOL;
 
 std::unordered_map<std::string, std::string> readConfig(const std::string& filename);
 void setGlobalStdConfiguration(const std::unordered_map<std::string, std::string>& configMap);
+
+#endif  // GDOPT_CONFIG_H

@@ -1,5 +1,5 @@
 ###############################################################################
-#  GDOPT - General Dynamic Optimizer
+# GDOPT - General Dynamic Optimizer
 # Copyright (C) 2024  Linus Langenkamp
 #
 # This program is free software: you can redistribute it and/or modify
@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
+
 
 class VariableStruct:
     id_counter = 0
@@ -66,7 +67,7 @@ class RuntimeParameterStruct(VariableStruct):
 
     def __init__(self, default, symbol=None, lb=-float("inf"), ub=float("inf")):
         super().__init__(symbol, lb, ub)
-        self.symbol = symbol if symbol is not None else f"rp[{ParameterStruct.id_counter}]"
+        self.symbol = symbol if symbol is not None else f"rp_{ParameterStruct.id_counter}"
         self.id = ParameterStruct.id_counter
         self.value = default
         ParameterStruct.id_counter += 1

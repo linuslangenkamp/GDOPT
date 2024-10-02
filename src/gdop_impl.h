@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef IPOPT_DO_GDOP_IMPL_H
-#define IPOPT_DO_GDOP_IMPL_H
+#ifndef GDOPT_GDOP_IMPL_H
+#define GDOPT_GDOP_IMPL_H
 
 #include <IpTNLP.hpp>
 
@@ -141,4 +141,4 @@ public:
     void exportOptimum(const std::string&) const;
 };
 
-#endif  // IPOPT_DO_GDOP_IMPL_H
+#endif  // GDOPT_GDOP_IMPL_H

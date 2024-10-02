@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef IPOPT_DO_MESH_H
-#define IPOPT_DO_MESH_H
+#ifndef GDOPT_MESH_H
+#define GDOPT_MESH_H
 
 #include <utility>
 #include <vector>
@@ -37,4 +37,4 @@ public:
     void update(std::vector<int>& markedIntervals);
 };
 
-#endif  // IPOPT_DO_MESH_H
+#endif  // GDOPT_MESH_H

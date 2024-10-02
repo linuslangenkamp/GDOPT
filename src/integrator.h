@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef IPOPT_DO_INTEGRATOR_H
-#define IPOPT_DO_INTEGRATOR_H
+#ifndef GDOPT_INTEGRATOR_H
+#define GDOPT_INTEGRATOR_H
 
 #include <vector>
 
@@ -101,4 +101,4 @@ private:
                const std::vector<double>& invRowSum, int steps);
 };
 
-#endif  // IPOPT_DO_INTEGRATOR_H
+#endif  // GDOPT_INTEGRATOR_H
