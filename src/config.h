@@ -22,6 +22,8 @@ extern std::string EXPORT_HESSIAN_PATH;
 extern std::string EXPORT_JACOBIAN_PATH;
 extern std::string INITIAL_STATES_PATH;
 
+extern std::optional<int> IPOPT_PRINT_LEVEL;
+extern std::optional<double> MAX_ITERATIONS;
 extern std::optional<double> SIGMA;
 extern std::optional<double> LEVEL;
 extern std::optional<double> C_TOL;

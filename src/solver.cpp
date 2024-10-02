@@ -17,6 +17,7 @@
  **/
 
 #include "solver.h"
+#include "config.h"
 
 #include <chrono>
 
@@ -466,8 +467,49 @@ void Solver::refinePolynomial(std::vector<int>& markedIntervals) {
     }
 }
 
+void Solver::setGlobalFlags() {
+    // set solver flags
+    
+    setTolerance(TOLERANCE);
+    userScaling = USER_SCALING;
+    setRefinementMethod(REFINEMENT_METHOD);
+    
+    if (EXPORT_OPTIMUM_PATH != "") {{
+        setExportOptimumPath(EXPORT_OPTIMUM_PATH);
+    }}
+
+    if (EXPORT_HESSIAN_PATH != "") {{
+        setExportHessianPath(EXPORT_HESSIAN_PATH);
+    }}
+
+    if (EXPORT_JACOBIAN_PATH != "") {{
+        setExportJacobianPath(EXPORT_JACOBIAN_PATH);
+    }}
+
+    if (MAX_ITERATIONS.has_value()) {{
+        setMaxIterations(MAX_ITERATIONS.value());
+    }}
+
+    // set solver mesh parameters
+    if (LEVEL.has_value()) {{
+        setMeshParameter("level", LEVEL.value());
+    }}
+
+    if (C_TOL.has_value()) {{
+        setMeshParameter("ctol", C_TOL.value());
+    }}
+
+    if (SIGMA.has_value()) {{
+        setMeshParameter("sigma", SIGMA.value());
+    }}
+}
+
 void Solver::setTolerance(double tol) {
     tolerance = tol;
+}
+
+void Solver::setMaxIterations(int iterations) {
+    maxIterations = iterations;
 }
 
 void Solver::setExportOptimumPath(const std::string& exportPath) {
@@ -570,19 +612,25 @@ void Solver::printMeshStats() const {
 }
 
 void Solver::printASCIIArt() const {
+    // slant simple border width 90
     const std::string art = R"(
-.----------------------------------------------------------------------------------------------------------------------------------------------.
-|     ______ ____   ____   ____  ______            ______                                 __   ____                                   _        |
-|    / ____// __ \ / __ \ / __ \/_  __/           / ____/___   ____   ___   _____ ____ _ / /  / __ \ __  __ ____   ____ _ ____ ___   (_)_____  |
-|   / / __ / / / // / / // /_/ / / /   ______    / / __ / _ \ / __ \ / _ \ / ___// __ `// /  / / / // / / // __ \ / __ `// __ `__ \ / // ___/  |
-|  / /_/ // /_/ // /_/ // ____/ / /   /_____/   / /_/ //  __// / / //  __// /   / /_/ // /  / /_/ // /_/ // / / // /_/ // / / / / // // /__    |
-|  \____//_____/ \____//_/     /_/     _        \____/ \___//_/ /_/ \___//_/   _\__,_//_/  /_____/ \__, //_/ /_/ \__,_//_/ /_/ /_//_/ \___/    |
-|    / __ \ ____   / /_ (_)____ ___   (_)____  ___   _____  _   __   / __ \   <  /  <  /          /____/                                       |
-|   / / / // __ \ / __// // __ `__ \ / //_  / / _ \ / ___/ | | / /  / / / /   / /   / /                                                        |
-|  / /_/ // /_/ // /_ / // / / / / // /  / /_/  __// /     | |/ /_ / /_/ /_  / /_  / /                                                         |
-|  \____// .___/ \__//_//_/ /_/ /_//_/  /___/\___//_/      |___/(_)\____/(_)/_/(_)/_/                                                          |
-|       /_/                                                                                                                                    |
-'----------------------------------------------------------------------------------------------------------------------------------------------'
+************************************************************************************
+*    __________  ____  ____  ______            ______                           __ *
+*   / ____/ __ \/ __ \/ __ \/_  __/           / ____/__  ____  ___  _________ _/ / *
+*  / / __/ / / / / / / /_/ / / /   ______    / / __/ _ \/ __ \/ _ \/ ___/ __ `/ /  *
+* / /_/ / /_/ / /_/ / ____/ / /   /_____/   / /_/ /  __/ / / /  __/ /  / /_/ / /   *
+* \____/_____/\____/_/     /_/          _   \____/\___/_/ /_/\___/_/   \__,_/_/    *
+*    / __ \__  ______  ____ _____ ___  (_)____                                     *
+*   / / / / / / / __ \/ __ `/ __ `__ \/ / ___/                                     *
+*  / /_/ / /_/ / / / / /_/ / / / / / / / /__                                       *
+* /_____/\__, /_/ /_/\__,_/_/ /_/ /_/_/\___/                                       *
+*    ___/____/   __  _           _                          ____   ___ ___         *
+*   / __ \____  / /_(_)___ ___  (_)___  ___  _____  _   __ / __ \ <  /|__ \        *
+*  / / / / __ \/ __/ / __ `__ \/ /_  / / _ \/ ___/ | | / // / / / / / __/ /        *
+* / /_/ / /_/ / /_/ / / / / / / / / /_/  __/ /     | |/ // /_/ / / / / __/         *
+* \____/ .___/\__/_/_/ /_/ /_/_/ /___/\___/_/      |___(_)____(_)_(_)____/         *
+*     /_/                                                                          *
+************************************************************************************
 )";
     std::cout << art << "\n";
 }
@@ -621,12 +669,12 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
     // iterations and tolereances
     app.Options()->SetNumericValue("tol", tolerance);
     app.Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
-    app.Options()->SetIntegerValue("max_iter", 15000);
+    app.Options()->SetIntegerValue("max_iter", maxIterations);
 
     // ipopt dump
-    app.Options()->SetIntegerValue("print_level", 5);
     app.Options()->SetStringValue("timing_statistics", "yes");
-
+    app.Options()->SetIntegerValue("print_level", IPOPT_PRINT_LEVEL.has_value() ? IPOPT_PRINT_LEVEL.value() : 5);
+    
     // linear solver
     auto const libHSLPath = getenv("LIB_HSL");
     auto const linSolver = getLinearSolverName(linearSolver);

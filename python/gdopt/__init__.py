@@ -56,6 +56,8 @@ class Model:
         self.steps = None
         self.rksteps = None
         self.outputFilePath = None
+        self.maxIterations = None
+        self.ipoptPrintLevel = None
         self.ivpSolver = IVPSolver.RADAU
         self.initVars = InitVars.SOLVE
         self.refinementMethod = RefinementMethod.LINEAR_SPLINE
@@ -426,6 +428,12 @@ class Model:
     def setRkSteps(self, rksteps: int):
         self.rksteps = rksteps
 
+    def setMaxIterations(self, iterations: int):
+        self.maxIterations = iterations
+
+    def setIpoptPrintLevel(self, printLevel: int):
+        self.ipoptPrintLevel = printLevel
+
     def setOutputPath(self, path: str):
         self.outputFilePath = path
 
@@ -516,6 +524,10 @@ class Model:
             self.setIVPSolver(flags["ivpSolver"])
         if "initVars" in flags:
             self.setInitVars(flags["initVars"])
+        if "maxIterations" in flags:
+            self.setMaxIterations(flags["maxIterations"])
+        if "ipoptPrintLevel" in flags:
+            self.setIpoptPrintLevel(flags["ipoptPrintLevel"])
 
     def setMeshFlags(self, meshFlags):
         if "meshAlgorithm" in meshFlags:
@@ -743,36 +755,8 @@ int main() {{
 
     Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
 
-    // set solver flags
-    solver.setRefinementMethod(REFINEMENT_METHOD);
-    
-    if (EXPORT_OPTIMUM_PATH != "") {{
-        solver.setExportOptimumPath(EXPORT_OPTIMUM_PATH);
-    }}
-
-    if (EXPORT_HESSIAN_PATH != "") {{
-        solver.setExportHessianPath(EXPORT_HESSIAN_PATH);
-    }}
-
-    if (EXPORT_JACOBIAN_PATH != "") {{
-        solver.setExportJacobianPath(EXPORT_JACOBIAN_PATH);
-    }}
-
-    solver.setTolerance(TOLERANCE);
-    solver.userScaling = USER_SCALING;
-    
-    // set solver mesh parameters
-    if (LEVEL.has_value()) {{
-        solver.setMeshParameter("level", LEVEL.value());
-    }}
-
-    if (C_TOL.has_value()) {{
-        solver.setMeshParameter("ctol", C_TOL.value());
-    }}
-
-    if (SIGMA.has_value()) {{
-        solver.setMeshParameter("sigma", SIGMA.value());
-    }}
+    // set all flags based on the global configuration
+    solver.setGlobalFlags();
 
     // optimize
     int status = solver.solve();
@@ -792,8 +776,6 @@ int main() {{
         )
 
         self.compile()
-
-        return 0
 
     def compile(self):
 
@@ -877,8 +859,6 @@ int main() {{
 
         self.initAnalysis()
 
-        return runResult.returncode
-
     def initialStatesCode(self):
         solveStart = timer.time()
         timeVals, stateVals = self.solveDynamic()
@@ -912,6 +892,10 @@ int main() {{
         OUTPUT += f"USER_SCALING {'true' if self.userScaling else 'false'}\n"
 
         OUTPUT += "\n[optionals and paths]\n"
+        if self.maxIterations != None:
+            OUTPUT += f'MAX_ITERATIONS {self.maxIterations}\n'
+        if self.ipoptPrintLevel != None:
+            OUTPUT += f'IPOPT_PRINT_LEVEL {self.ipoptPrintLevel}\n'
         if self.outputFilePath:
             OUTPUT += f'EXPORT_OPTIMUM_PATH "{self.outputFilePath}"\n'
         if self.exportHessianPath:

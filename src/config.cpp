@@ -29,6 +29,8 @@ std::string EXPORT_JACOBIAN_PATH;
 std::string INITIAL_STATES_PATH;
 
 // actual optionals
+std::optional<int> IPOPT_PRINT_LEVEL;
+std::optional<double> MAX_ITERATIONS;
 std::optional<double> SIGMA;
 std::optional<double> LEVEL;
 std::optional<double> C_TOL;
@@ -138,6 +140,14 @@ void setGlobalStdConfiguration(const std::unordered_map<std::string, std::string
     REFINEMENT_METHOD = stringToRefinementMethod(configMap.at("REFINEMENT_METHOD"));
     MESH_ALGORITHM = stringToMeshAlgorithm(configMap.at("MESH_ALGORITHM"));
     RADAU_INTEGRATOR = (IntegratorSteps)std::stoi(configMap.at("RADAU_INTEGRATOR"));
+
+    // optional flags
+    if ((configMap.find("MAX_ITERATIONS") != configMap.end())) {
+        MAX_ITERATIONS = std::stoi(configMap.at("MAX_ITERATIONS"));
+    }
+    if ((configMap.find("IPOPT_PRINT_LEVEL") != configMap.end())) {
+        IPOPT_PRINT_LEVEL = std::stoi(configMap.at("IPOPT_PRINT_LEVEL"));
+    }
 
     // optional string arguments
     if ((configMap.find("EXPORT_OPTIMUM_PATH") != configMap.end())) {

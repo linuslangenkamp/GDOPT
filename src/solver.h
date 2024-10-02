@@ -54,7 +54,8 @@ public:
     RefinementMethod refinementMethod = RefinementMethod::LINEAR_SPLINE;
     int meshIteration = 0;
     const int maxMeshIterations;
-    double tolerance = 1e-12;
+    double tolerance = 1e-14;
+    int maxIterations = 5000;
     std::vector<double> cbValues;  // starting values after refinement
     std::unordered_map<std::string, double> meshParameters;
 
@@ -88,6 +89,7 @@ public:
     bool exportJacobian = false;
     bool userScaling = true;  // use nlp scaling provided by the user, otherwise use gradient-based
 
+    void setGlobalFlags();
     void printASCIIArt() const;
     void printObjectiveHistory();
     void printMeshStats() const;
@@ -98,6 +100,7 @@ public:
     void setExportHessianPath(const std::string& exportPath);
     void initSolvingProcess();
     void setTolerance(double tol);
+    void setMaxIterations(int iterations);
     void setRefinementParameters();
     void setL2BoundaryNorm();
     void setBasicStrategy();

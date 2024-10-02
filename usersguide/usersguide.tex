@@ -1098,7 +1098,17 @@ are presented below.
 		      that solves the arising initial value problem, if \texttt{"initVars"} is set to
 		      \texttt{InitVars.SOLVE}. The value has to be an element of the
 		      \texttt{IVPSolver} enumeration \eqref{enum:IVPSolver}.
-
+			
+			  \phantomsection
+			  \label{flag:maxIterations}
+		\item \texttt{"maxIterations" $\rightarrow$ int}
+			  (\emph{default}=\texttt{5000}): Sets the maximum number of iterations in IPOPT.
+			  
+			  \phantomsection
+		\label{flag:ipoptPrintLevel}
+		\item \texttt{"ipoptPrintLevel" $\rightarrow$ int}
+		(\emph{default}=\texttt{5}): Sets the verbosity level for console outputs of IPOPT. The default value of $5$ provides pretty detailed information about the solving process. The valid range is $0 \leq \texttt{"ipoptPrintLevel"} \leq 12$, while a value of $0$ corresponds to no output at all.
+		
 		      \phantomsection
 		      \label{flag:outputPath}
 		\item \texttt{"outputPath" $\rightarrow$ str}: Sets the path to which
