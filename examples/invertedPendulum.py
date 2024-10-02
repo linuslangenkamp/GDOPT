@@ -1,6 +1,7 @@
 from gdopt import *
 
 # choose implicit Euler, since it's the most stable
+# maybe the mu globalization needs to be disabled here
 
 model = Model("invertedPendulum")
 
@@ -30,7 +31,7 @@ model.generate()
 model.setValue(Ms, 1.5)
 
 model.optimize(
-    steps=5000,
+    steps=500,
     rksteps=1,
     tf=8,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57},

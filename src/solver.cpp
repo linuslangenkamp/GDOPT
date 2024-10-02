@@ -49,6 +49,7 @@
     others:
     12 plotting features for path constraints, lagrange terms            1, 1
     13 splitting const jacobian equality / inequality                    1, 1
+    14 argc, argv                                                        1, 1
 */
 
 struct SolverPrivate {
@@ -588,16 +589,18 @@ void Solver::finalizeOptimization() {
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << "\nOutput for optimization of model: " << _priv->gdop->problem->name << std::endl;
 
-    printMeshStats();
+    if (meshIteration > 0) {
+        printMeshStats();
+    }
     printObjectiveHistory();
 
     solveTotalTimeTaken = (std::chrono::high_resolution_clock::now() - solveStartTime);
     solveActualTimeTaken = solveTotalTimeTaken - timedeltaIO;
     std::cout << std::fixed << std::setprecision(5);
     std::cout << "\n----------------------------------------------------------------" << std::endl;
-    std::cout << "\nTotal time in Solver (w/o I/O): " << std::setw(8) << solveTotalTimeTaken.count() << " seconds" << std::endl;
+    std::cout << "\nTotal time in Solver (w/o I/O): " << std::setw(8) << solveActualTimeTaken.count() << " seconds" << std::endl;
     std::cout << "Total time in I/O: " << std::setw(21) << timedeltaIO.count() << " seconds" << std::endl;
-    std::cout << "Total time in Solver: " << std::setw(18) << solveActualTimeTaken.count() << " seconds" << std::endl;
+    std::cout << "Total time in Solver: " << std::setw(18) << solveTotalTimeTaken.count() << " seconds" << std::endl;
     std::cout << std::defaultfloat;
 
     createModelInfo();
@@ -630,6 +633,14 @@ void Solver::printASCIIArt() const {
 * / /_/ / /_/ / /_/ / / / / / / / / /_/  __/ /     | |/ // /_/ / / / / __/         *
 * \____/ .___/\__/_/_/ /_/ /_/_/ /___/\___/_/      |___(_)____(_)_(_)____/         *
 *     /_/                                                                          *
+*                                                                                  *
+* This is GDOPT - General Dynamic Optimizer v.0.1.2, a framework for solving       *
+* "General Dynamic Optimization Problems" using local collocation methods, based   *
+* on RadauIIA formulas, and adaptive mesh refinement techniques. GDOPT utilizes    *
+* the capabilities of the nonlinear optimizer IPOPT for solving the resulting      *
+* large-scale NLPs. For help, visit https://github.com/linuslangenkamp/GDOPT and   *
+* have a look at the provided User's Guide.                                        *
+*                                                                                  *
 ************************************************************************************
 )";
     std::cout << art << "\n";

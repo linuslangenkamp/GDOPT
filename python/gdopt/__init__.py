@@ -213,7 +213,7 @@ class Model:
         else:
             if obj == Objective.MAXIMIZE:
                 self.M = Expression(-1 * expr, nominal=nominal)
-                print("[GDOPT] Setting Mayer term as -1 * mayer, since maximization is chosen.\n")
+                print("[GDOPT] Setting Mayer term as -1 * mayer, since maximization is chosen.")
             else:
                 self.M = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
@@ -234,7 +234,7 @@ class Model:
         else:
             if obj == Objective.MAXIMIZE:
                 self.L = Expression(-1 * expr, nominal=nominal)
-                print("[GDOPT] Setting Lagrange term as -1 * lagrange, since maximization is chosen.\n")
+                print("[GDOPT] Setting Lagrange term as -1 * lagrange, since maximization is chosen.")
             else:
                 self.L = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
@@ -613,7 +613,7 @@ class Model:
         # codegen
         filename = self.name + "Generated"
 
-        print("[GDOPT] Starting .cpp codegen...\n")
+        print("[GDOPT] Starting .cpp codegen...")
 
         OUTPUT = f"""// CODEGEN FOR MODEL "{self.name}"\n
 // includes
@@ -643,40 +643,40 @@ class Model:
         if self.M:
             OUTPUT += "// mayer term\n"
             OUTPUT += self.M.codegen("Mayer" + self.name)
-            print("[GDOPT] Mayer: codegen done.\n")
+            print("[GDOPT] Mayer: codegen done.")
 
         if self.L:
             OUTPUT += "// lagrange term\n"
             OUTPUT += self.L.codegen("Lagrange" + self.name)
-            print("[GDOPT] Lagrange: codegen done.\n")
+            print("[GDOPT] Lagrange: codegen done.")
 
         if self.F:
             OUTPUT += "// dynamic constraints\n"
 
         for n, f in enumerate(self.F):
             OUTPUT += f.codegen("F" + str(n) + self.name)
-            print(f"[GDOPT] Dynamic constraint {n}: codegen done.\n")
+            print(f"[GDOPT] Dynamic constraint {n}: codegen done.")
 
         if self.G:
             OUTPUT += "// path constraints\n"
 
         for n, g in enumerate(self.G):
             OUTPUT += g.codegen("G" + str(n) + self.name)
-            print(f"[GDOPT] Path constraint {n}: codegen done.\n")
+            print(f"[GDOPT] Path constraint {n}: codegen done.")
 
         if self.R:
             OUTPUT += "// final constraints\n"
 
         for n, r in enumerate(self.R):
             OUTPUT += r.codegen("R" + str(n) + self.name)
-            print(f"[GDOPT] Final constraint {n}: codegen done.\n")
+            print(f"[GDOPT] Final constraint {n}: codegen done.")
 
         if self.A:
             OUTPUT += "// parametric constraints\n"
 
         for n, a in enumerate(self.A):
             OUTPUT += a.codegen("A" + str(n) + self.name)
-            print(f"[GDOPT] Parametric constraints {n}: codegen done.\n")
+            print(f"[GDOPT] Parametric constraints {n}: codegen done.")
 
         OUTPUT += self.uInitialGuessCodegen()
 
@@ -763,23 +763,22 @@ int main() {{
     return status;
 }}        
         """
-        print("[GDOPT] .cpp codegen done.\n")
 
         os.makedirs(f".generated/{self.name}", exist_ok=True)
 
         with open(f".generated/{self.name}/{filename}.cpp", "w") as file:
             file.write(OUTPUT)
 
-        print(f"[GDOPT] Generated model to .generated/{self.name}/{filename}.cpp.\n")
+        print(f"[GDOPT] Generated model to .generated/{self.name}/{filename}.cpp.")
         print(
-            f"[GDOPT] Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds.\n"
+            f"[GDOPT] Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds."
         )
 
         self.compile()
 
     def compile(self):
 
-        print("[GDOPT] Compiling generated code...\n")
+        print("[GDOPT] Compiling generated code...")
         compileStart = timer.time()
 
         with resources.as_file(resources.files(__package__)) as package_path:
@@ -809,7 +808,7 @@ int main() {{
             with open(f"compile_{self.name}_err.log", "w+") as errorFile:
                 errorFile.write(compileResult.stderr.decode())
             exit()
-        print(f"[GDOPT] Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.\n")
+        print(f"[GDOPT] Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.")
 
     def solve(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
 
@@ -830,7 +829,7 @@ int main() {{
                 self.setSteps(steps)
                 self.setRkSteps(rksteps)
             else:  # purely parametric
-                print("[GDOPT] Setting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.\n")
+                print("[GDOPT] Setting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.")
                 self.setFinalTime(0)
                 self.setSteps(1)
                 self.setRkSteps(1)
@@ -842,17 +841,17 @@ int main() {{
 
         # solve the IVP with scipy if set
         if self.initVars == InitVars.SOLVE:
-            print("[GDOPT] Solving IVP for initial state guesses...\n")
+            print("[GDOPT] Solving IVP for initial state guesses...")
             self.initialStatesCode()
-            print("[GDOPT] Initial guesses done.\n")
+            print("[GDOPT] Initial guesses done.")
 
         # configuration codegen
-        print(f"[GDOPT] Creation of configuration .generated/{self.name}/{self.name}.config...\n")
+        print(f"[GDOPT] Creation of configuration .generated/{self.name}/{self.name}.config...")
         with open(f".generated/{self.name}/{self.name}.config", "w") as file:
             file.write(self.createConfigurationCode())
-        print("[GDOPT] Configuration done.\n")
+        print("[GDOPT] Configuration done.")
 
-        print(f"[GDOPT] Executing...\n")
+        print(f"[GDOPT] Executing...")
         runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"])
         returnString = backendReturnCode(runResult.returncode).replace("_", " ")
         print(f"\n[GDOPT] Exit: {returnString}.\n")
@@ -862,9 +861,9 @@ int main() {{
     def initialStatesCode(self):
         solveStart = timer.time()
         timeVals, stateVals = self.solveDynamic()
-        print(f"[GDOPT] Solving the IVP took {round(timer.time() - solveStart, 4)} seconds.\n")
+        print(f"[GDOPT] Solving the IVP took {round(timer.time() - solveStart, 4)} seconds.")
 
-        print(f"[GDOPT] Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...\n")
+        print(f"[GDOPT] Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...")
         with open(self.initialStatesPath + "/initialValues.csv", "w") as file:
             for i in range(len(timeVals)):
                 row = (
