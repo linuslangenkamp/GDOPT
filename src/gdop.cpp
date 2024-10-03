@@ -501,7 +501,7 @@ bool GDOP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Numb
             case InitVars::CALLBACK:
                 // strict callback case, optimizer will set initVars to Callback, if a mesh refinement is executed
                 for (int i = 0; i < n; i++) {
-                    x[i] = x_cb[i];
+                    x[i] = xInitCallback[i];
                 }
 
                 break;

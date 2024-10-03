@@ -159,8 +159,8 @@ model.optimize(
         "tolerance": 1e-14,
     },
     meshFlags={
-        "meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-        "meshIterations": 5,
+        "algorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+        "iterations": 5,
         "refinementMethod": RefinementMethod.LINEAR_SPLINE,
     },
 )

@@ -46,7 +46,7 @@ model.optimize(
     steps=250,
     rksteps=3,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE},
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 6},
+    meshFlags={"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "iterations": 6},
 )
 
 # model.printResults()

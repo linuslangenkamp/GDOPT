@@ -22,10 +22,9 @@ model.optimize(
     rksteps=9,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57},
     meshFlags={
-        "meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+        "algorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
         "refinementMethod": RefinementMethod.LINEAR_SPLINE,
-        "meshIterations": 20,
-        "meshLevel": 0,
+        "iterations": 20,
     },
 )
 

@@ -60,8 +60,8 @@ model.optimize(
     rksteps=3,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "exportJacobianPath": "/tmp"},
     meshFlags={
-        "meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-        "meshIterations": 5,
+        "algorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+        "iterations": 5,
         "refinementMethod": RefinementMethod.LINEAR_SPLINE,
     },
 )

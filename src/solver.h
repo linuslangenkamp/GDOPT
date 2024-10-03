@@ -113,7 +113,7 @@ public:
 
     // L2 norm / boundary parameters
     double L2Level = 0;
-    double L2CornerTol = 0.2;
+    double L2CornerTol = 0.1;
 
 private:
     std::unique_ptr<SolverPrivate> _priv;

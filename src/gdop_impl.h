@@ -33,28 +33,28 @@ class GDOP : public TNLP {
 public:
     GDOP(const std::shared_ptr<const Problem>& problem, Mesh& mesh, Integrator& rk, InitVars initVars);
 
-    std::shared_ptr<const Problem> problem;
-    Mesh mesh;
-    Integrator rk;
-    InitVars initVars;
+    std::shared_ptr<const Problem> problem;  // problem that has to be solved
+    InitVars initVars;                       // the way variables are initialized
+    Integrator rk;                           // RadauIIA scheme
+    Mesh mesh;                               // mesh for discretization
 
-    std::vector<double> optimum;  // optimal solution - variables
-    double objective{};           // optimal solution - objective
-    std::vector<double> x_cb;     // optimal solution (interpolated after refinement)
+    double objective{};                 // optimal solution - objective
+    std::vector<double> optimum;        // optimal solution - variables
+    std::vector<double> xInitCallback;  // optimal solution (interpolated after refinement)
 
-    std::string exportPath;
-    std::string exportHessianPath;
-    bool exportHessian = false;
-    std::string exportJacobianPath;
-    bool exportJacobian = false;
+    std::string exportPath;          // export path for the optimal solution
+    std::string exportHessianPath;   // export path for the hessian
+    std::string exportJacobianPath;  // export path for the jacobian
+    bool exportHessian = false;      // flag if hessian is exported
+    bool exportJacobian = false;     // flag if jacobian is exported
 
-    const int offX = problem->sizeX;
-    const int offU = problem->sizeU;
-    const int offP = problem->sizeP;
-    const int offXU = problem->sizeX + problem->sizeU;                                     // number of vars for one collocation grid point
-    const int offXUBlock = (problem->sizeX + problem->sizeU) * rk.steps;                   // number of vars in one interval
-    const int offXUTotal = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals;  // first parameter variable
-    const int numberVars = (problem->sizeX + problem->sizeU) * rk.steps * mesh.intervals + problem->sizeP;
+    const int offX = problem->sizeX;                     // offset #xVars
+    const int offU = problem->sizeU;                     // offset #uVars
+    const int offP = problem->sizeP;                     // offset #pVars
+    const int offXU = problem->sizeX + problem->sizeU;   // number of vars for one collocation grid point
+    const int offXUBlock = offXU * rk.steps;             // number of vars in one interval
+    const int offXUTotal = offXUBlock * mesh.intervals;  // first parameter variable
+    const int numberVars = offXUTotal + problem->sizeP;  // total number of variables in the NLP
 
     // block hessians as sparse map: (i,j) -> idxCOO - index in COO format with the var indices (i,j)
     // note that A, At, C only contain the lower triangle

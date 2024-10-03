@@ -16,11 +16,20 @@ RefinementMethod REFINEMENT_METHOD;
 LinearSolver LINEAR_SOLVER;
 MeshAlgorithm MESH_ALGORITHM;
 
-int INTERVALS;
+double TOLERANCE = 1e-12;
 double FINAL_TIME;
+int INTERVALS;
+int MAX_ITERATIONS;
 int MESH_ITERATIONS;
-double TOLERANCE;
-bool USER_SCALING;
+bool USER_SCALING = false;
+
+// flags for constant derivatives
+bool LINEAR_OBJECTIVE = false;                        // true if M and L are linear
+bool LINEAR_CONSTRAINTS = false;                      // true if f, g, r and a are all linear
+bool QUADRATIC_OBJECTIVE_LINEAR_CONSTRAINTS = false;  // true if f, g, r and a are all linear and M and L are at most quadratic
+
+// an important ipopt flag
+bool KKT_ERROR_MU_GLOBALIZATION = true;
 
 // pseudo optional, if null -> empty string ""
 std::string EXPORT_OPTIMUM_PATH;
@@ -30,7 +39,6 @@ std::string INITIAL_STATES_PATH;
 
 // actual optionals
 std::optional<int> IPOPT_PRINT_LEVEL;
-std::optional<double> MAX_ITERATIONS;
 std::optional<double> SIGMA;
 std::optional<double> LEVEL;
 std::optional<double> C_TOL;
@@ -92,10 +100,10 @@ MeshAlgorithm stringToMeshAlgorithm(const std::string &str) {
 }
 
 std::string trim(const std::string &str) {
-    size_t first = str.find_first_not_of(" \t\"");
+    size_t first = str.find_first_not_of(" \t\";");
     if (first == std::string::npos)
         return "";
-    size_t last = str.find_last_not_of(" \t\"");
+    size_t last = str.find_last_not_of(" \t\";");
     return str.substr(first, last - first + 1);
 }
 
@@ -124,12 +132,13 @@ std::unordered_map<std::string, std::string> readConfig(const std::string &filen
     return configMap;
 }
 
-void setGlobalStdConfiguration(const std::unordered_map<std::string, std::string> &configMap) {
+void setGlobalStandardConfiguration(const std::unordered_map<std::string, std::string> &configMap) {
     // sets the global variables from the given configuration (excluding runtime parameters)
 
     // basic types
     INTERVALS = std::stoi(configMap.at("INTERVALS"));
     MESH_ITERATIONS = std::stoi(configMap.at("MESH_ITERATIONS"));
+    MAX_ITERATIONS = std::stoi(configMap.at("MAX_ITERATIONS"));
     FINAL_TIME = std::stod(configMap.at("FINAL_TIME"));
     TOLERANCE = std::stod(configMap.at("TOLERANCE"));
     USER_SCALING = configMap.at("USER_SCALING") == "true";
@@ -141,15 +150,20 @@ void setGlobalStdConfiguration(const std::unordered_map<std::string, std::string
     MESH_ALGORITHM = stringToMeshAlgorithm(configMap.at("MESH_ALGORITHM"));
     RADAU_INTEGRATOR = (IntegratorSteps)std::stoi(configMap.at("RADAU_INTEGRATOR"));
 
-    // optional flags
-    if ((configMap.find("MAX_ITERATIONS") != configMap.end())) {
-        MAX_ITERATIONS = std::stoi(configMap.at("MAX_ITERATIONS"));
+    // oconstant derivatives
+    LINEAR_OBJECTIVE = configMap.at("LINEAR_OBJECTIVE") == "true";
+    LINEAR_CONSTRAINTS = configMap.at("LINEAR_CONSTRAINTS") == "true";
+    QUADRATIC_OBJECTIVE_LINEAR_CONSTRAINTS = configMap.at("QUADRATIC_OBJECTIVE_LINEAR_CONSTRAINTS") == "true";
+
+    // important ipopt flag, which is often benefitial, but terrible for poorly conditioned problems
+    if ((configMap.find("KKT_ERROR_MU_GLOBALIZATION") != configMap.end())) {
+        KKT_ERROR_MU_GLOBALIZATION = configMap.at("KKT_ERROR_MU_GLOBALIZATION") == "true";
     }
+
+    // optional output and dump flags
     if ((configMap.find("IPOPT_PRINT_LEVEL") != configMap.end())) {
         IPOPT_PRINT_LEVEL = std::stoi(configMap.at("IPOPT_PRINT_LEVEL"));
     }
-
-    // optional string arguments
     if ((configMap.find("EXPORT_OPTIMUM_PATH") != configMap.end())) {
         EXPORT_OPTIMUM_PATH = configMap.at("EXPORT_OPTIMUM_PATH");
     }

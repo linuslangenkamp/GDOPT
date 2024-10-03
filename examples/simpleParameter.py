@@ -31,7 +31,6 @@ model.optimize(
     rksteps=3,
     tf=1,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MUMPS, "tolerance": 1e-14},
-    meshFlags={},
 )
 
 model.printResultParameters()

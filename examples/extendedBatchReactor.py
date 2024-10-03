@@ -34,7 +34,7 @@ model.optimize(
         "initVars": InitVars.SOLVE,
         "exportJacobianPath": "/tmp",
     },
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 6},
+    meshFlags={"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "iterations": 6},
 )
 
 model.plotInputs(dots=Dots.ALL)

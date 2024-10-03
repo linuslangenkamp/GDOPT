@@ -27,7 +27,6 @@ model.optimize(
         "tolerance": 1e-12,
         "exportJacobianPath": "/tmp",
     },
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 0},
 )
 
 model.plotInputs(dots=Dots.BASE)

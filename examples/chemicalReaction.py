@@ -30,7 +30,7 @@ model.optimize(
     steps=10,
     rksteps=3,
     flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MUMPS, "initVars": InitVars.SOLVE, "ipoptPrintLevel": 0},
-    meshFlags={"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "meshIterations": 6},
+    meshFlags={"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "iterations": 6},
 )
 
 model.plot(dots=Dots.BASE)

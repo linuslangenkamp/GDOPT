@@ -56,8 +56,9 @@ class Model:
         self.steps = None
         self.rksteps = None
         self.outputFilePath = None
-        self.maxIterations = None
+        self.maxIterations = 5000
         self.ipoptPrintLevel = None
+        self.kktMuGlobalization = None
         self.ivpSolver = IVPSolver.RADAU
         self.initVars = InitVars.SOLVE
         self.refinementMethod = RefinementMethod.LINEAR_SPLINE
@@ -402,7 +403,7 @@ class Model:
             )
             for r in rhs
         ]
-        
+
         runtimeConstantsDict = {rpVar: varInfo[rpVar].value for rpVar in self.rpVars}
         runtimeConstantsDict[FINAL_TIME_SYMBOL] = self.tf
         x0 = [
@@ -446,6 +447,9 @@ class Model:
     def setTolerance(self, tolerance: float):
         self.tolerance = tolerance
 
+    def setKKTMuGlobalization(self, kktMuGlobalization: bool):
+        self.kktMuGlobalization = kktMuGlobalization
+
     def setExportHessianPath(self, path: str):
         self.exportHessianPath = path
 
@@ -483,23 +487,23 @@ class Model:
     def setUserScaling(self, userScaling: bool):
         self.userScaling = userScaling
 
-    def hasLinearObjective(self):
+    def hasLinearObjective(self, linearObjective=True):
 
         # set this if both Mayer and Lagrange are linear
 
-        self.linearObjective = True
+        self.linearObjective = linearObjective
 
-    def hasQuadraticObjective(self):
+    def hasQuadraticObjective(self, quadraticObjective=True):
 
         # set this if both Mayer and Lagrange are quadratic
 
-        self.quadraticObjective = True
+        self.quadraticObjective = quadraticObjective
 
-    def hasLinearConstraints(self):
+    def hasLinearConstraints(self, linearConstraints=True):
 
         # set this if all constraints, i.e. f, g, r and a are linear
 
-        self.linearConstraints = True
+        self.linearConstraints = linearConstraints
 
     def setExpressionSimplification(self, simp):
 
@@ -528,40 +532,33 @@ class Model:
             self.setMaxIterations(flags["maxIterations"])
         if "ipoptPrintLevel" in flags:
             self.setIpoptPrintLevel(flags["ipoptPrintLevel"])
+        if "linearObjective" in flags:
+            self.hasLinearObjective(flags["linearObjective"])
+        if "quadraticObjective" in flags:
+            self.hasQuadraticObjective(flags["quadraticObjective"])
+        if "linearConstraints" in flags:
+            self.hasLinearConstraints(flags["linearConstraints"])
+        if "kktMuGlobalization" in flags:
+            self.setKKTMuGlobalization(flags["kktMuGlobalization"])
 
     def setMeshFlags(self, meshFlags):
-        if "meshAlgorithm" in meshFlags:
-            self.setMeshAlgorithm(meshFlags["meshAlgorithm"])
-        if "meshIterations" in meshFlags:
-            self.setMeshIterations(meshFlags["meshIterations"])
+        if "algorithm" in meshFlags:
+            self.setMeshAlgorithm(meshFlags["algorithm"])
+        if "iterations" in meshFlags:
+            self.setMeshIterations(meshFlags["iterations"])
         if "refinementMethod" in meshFlags:
             self.setRefinementMethod(meshFlags["refinementMethod"])
-        if "meshLevel" in meshFlags:
-            self.setMeshLevel(meshFlags["meshLevel"])
-        if "meshCTol" in meshFlags:
-            self.setMeshCTol(meshFlags["meshCTol"])
-        if "meshSigma" in meshFlags:
-            self.setMeshSigma(meshFlags["meshSigma"])
+        if "level" in meshFlags:
+            self.setMeshLevel(meshFlags["level"])
+        if "cTol" in meshFlags:
+            self.setMeshCTol(meshFlags["cTol"])
+        if "sigma" in meshFlags:
+            self.setMeshSigma(meshFlags["sigma"])
 
     def uInitialGuessCodegen(self):
         out = "std::vector<double> initialGuessU(double t) {\n"
         out += f"\t return {{{', '.join(str(toCode(varInfo[u].initialGuess)) for u in self.uVars)}}};"
         out += "\n};\n\n"
-        return out
-
-    def generateProblemCondition(self):
-        lines = [
-            "\tproblem.linearObjective = true;" if self.linearObjective else "",
-            "\tproblem.linearConstraints = true;" if self.linearConstraints else "",
-            (
-                "\tproblem.quadraticObjLinearConstraints = true;"
-                if (self.linearObjective or self.quadraticObjective) and self.linearConstraints
-                else ""
-            ),
-        ]
-        out = "\n".join(line for line in lines if line)
-        if out != "":
-            out = "\n" + out + "\n"
         return out
 
     def objectiveNominal(self):
@@ -733,15 +730,15 @@ class Model:
     if (INITIAL_STATES_PATH != "") {{
         problem.initialStatesPath = INITIAL_STATES_PATH + "/initialValues.csv";
     }}
-    {self.generateProblemCondition()}
+
     return problem;
 }};\n"""
 
         OUTPUT += f"""
-int main() {{
+int main(int argc, char** argv) {{
     // setting the global configuration variables from file
     auto config = readConfig(".generated/{self.name}/{self.name}.config");
-    setGlobalStdConfiguration(config);
+    setGlobalStandardConfiguration(config);
     setGlobalRuntimeParameters(config);
 
     // problem and solver creation
@@ -851,10 +848,13 @@ int main() {{
             file.write(self.createConfigurationCode())
         print("[GDOPT] Configuration done.")
 
+        self.execute()
+
+    def execute(self, args=""):
+        argList = args.split() if args else []
         print(f"[GDOPT] Executing...")
-        runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"])
-        returnString = backendReturnCode(runResult.returncode).replace("_", " ")
-        print(f"\n[GDOPT] Exit: {returnString}.\n")
+        runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"] + argList)
+        print(f"\n[GDOPT] Exit: {backendReturnCode(runResult.returncode).replace('_', ' ')}.\n")
 
         self.initAnalysis()
 
@@ -879,22 +879,30 @@ int main() {{
         # generates the code for the .config file
 
         OUTPUT = "[standard model parameters]\n"
-        OUTPUT += f"INIT_VARS {self.initVars.name}\n"
-        OUTPUT += f"RADAU_INTEGRATOR {self.rksteps}\n"
-        OUTPUT += f"INTERVALS {self.steps}\n"
         OUTPUT += f"FINAL_TIME {self.tf}\n"
-        OUTPUT += f"REFINEMENT_METHOD {self.refinementMethod.name}\n"
+        OUTPUT += f"INTERVALS {self.steps}\n"
+        OUTPUT += f"RADAU_INTEGRATOR {self.rksteps}\n"
         OUTPUT += f"LINEAR_SOLVER {self.linearSolver.name}\n"
+        OUTPUT += f"INIT_VARS {self.initVars.name}\n"
+        OUTPUT += f"TOLERANCE {self.tolerance}\n"
+        OUTPUT += f"MAX_ITERATIONS {self.maxIterations}\n"
         OUTPUT += f"MESH_ALGORITHM {self.meshAlgorithm.name}\n"
         OUTPUT += f"MESH_ITERATIONS {self.meshIterations}\n"
-        OUTPUT += f"TOLERANCE {self.tolerance}\n"
+        OUTPUT += f"REFINEMENT_METHOD {self.refinementMethod.name}\n"
         OUTPUT += f"USER_SCALING {'true' if self.userScaling else 'false'}\n"
 
-        OUTPUT += "\n[optionals and paths]\n"
-        if self.maxIterations != None:
-            OUTPUT += f'MAX_ITERATIONS {self.maxIterations}\n'
-        if self.ipoptPrintLevel != None:
-            OUTPUT += f'IPOPT_PRINT_LEVEL {self.ipoptPrintLevel}\n'
+        OUTPUT += "\n[constant derivatives]\n"
+        OUTPUT += f"LINEAR_OBJECTIVE {'true' if self.linearObjective else 'false'}\n"
+        OUTPUT += f"QUADRATIC_OBJECTIVE_LINEAR_CONSTRAINTS {'true' if ((self.quadraticObjective or self.linearObjective) and self.linearConstraints) else 'false'}\n"
+        OUTPUT += f"LINEAR_CONSTRAINTS {'true' if self.linearConstraints else 'false'}\n"
+
+        OUTPUT += "\n[optionals: ipopt flags]\n"
+        if self.kktMuGlobalization is not None:
+            OUTPUT += f"KKT_ERROR_MU_GLOBALIZATION {'true' if self.kktMuGlobalization else 'false'}\n"
+        if self.ipoptPrintLevel is not None:
+            OUTPUT += f"IPOPT_PRINT_LEVEL {self.ipoptPrintLevel}\n"
+
+        OUTPUT += "\n[optionals: output]\n"
         if self.outputFilePath:
             OUTPUT += f'EXPORT_OPTIMUM_PATH "{self.outputFilePath}"\n'
         if self.exportHessianPath:
@@ -903,6 +911,8 @@ int main() {{
             OUTPUT += f'EXPORT_JACOBIAN_PATH "{self.exportJacobianPath}"\n'
         if self.initVars == InitVars.SOLVE and self.initialStatesPath:
             OUTPUT += f'INITIAL_STATES_PATH "{self.initialStatesPath}"\n'
+
+        OUTPUT += "\n[optionals: mesh refinement]\n"
         if self.meshSigma:
             OUTPUT += f"SIGMA {self.meshSigma}\n"
         if self.meshLevel:

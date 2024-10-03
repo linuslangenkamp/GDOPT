@@ -68,10 +68,6 @@ public:
 
     std::string name;
     std::string initialStatesPath;
-
-    bool linearObjective = false;                // true if M and L are linear
-    bool linearConstraints = false;              // true if f, g, r and a are all linear
-    bool quadraticObjLinearConstraints = false;  // true if f, g, r and a are all linear and M and L are at most quadratic
 };
 
 #endif  // GDOPT_PROBLEM_H

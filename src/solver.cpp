@@ -17,11 +17,11 @@
  **/
 
 #include "solver.h"
-#include "config.h"
 
 #include <chrono>
 
 #include "IpIpoptApplication.hpp"
+#include "config.h"
 #include "gdop_impl.h"
 
 /* BIG TODOS: TYPE | IMPORTANCE | EFFORT from 1 to 5
@@ -49,7 +49,9 @@
     others:
     12 plotting features for path constraints, lagrange terms            1, 1
     13 splitting const jacobian equality / inequality                    1, 1
-    14 argc, argv                                                        1, 1
+    14 use argc, argv                                                    1, 1
+    15 clean up all the flags no optionals in config.h, set everything,  3, 1
+       every default in config.cpp
 */
 
 struct SolverPrivate {
@@ -116,7 +118,7 @@ int Solver::solve() {
         _priv->gdop = new GDOP(_priv->gdop->problem, _priv->gdop->mesh, _priv->gdop->rk, InitVars::CALLBACK);
 
         // set new starting values
-        _priv->gdop->x_cb = cbValues;
+        _priv->gdop->xInitCallback = cbValues;
 
         // update solver flags
         setSolverFlags(*app);
@@ -239,8 +241,8 @@ std::vector<int> Solver::L2BoundaryNorm() const {
                 // difference in derivatives from polynomial of adjacent intervals
                 // must not exceed some eps using p1 (+1) error; basically
                 // isclose(.) in numpy bib
-                double p1ErrorDiff = std::abs(p_uDiff[0] - lastDiffs[u][0]) / (1 + std::max({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])}));
-                double p1ErrorDiff2 = std::abs(p_uDiff2[0] - lastDiffs[u][1]) / (1 + std::max({std::abs(p_uDiff2[0]), std::abs(lastDiffs[u][1])}));
+                double p1ErrorDiff = std::abs(p_uDiff[0] - lastDiffs[u][0]) / (1 + std::min({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])}));
+                double p1ErrorDiff2 = std::abs(p_uDiff2[0] - lastDiffs[u][1]) / (1 + std::min({std::abs(p_uDiff2[0]), std::abs(lastDiffs[u][1])}));
 
                 if (p1ErrorDiff > L2CornerTol || p1ErrorDiff2 > L2CornerTol) {
                     cornerTrigger = true;
@@ -253,8 +255,7 @@ std::vector<int> Solver::L2BoundaryNorm() const {
                 // splitting the interval itself
                 markerSet.insert(i);
 
-                // on interval / L2 criterion -> forces adjacent intervals to be split
-                // as well
+                // on interval / L2 criterion -> forces adjacent intervals to be split as well
                 if (L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u]) {
                     if (i >= 1) {
                         markerSet.insert(i - 1);
@@ -470,39 +471,36 @@ void Solver::refinePolynomial(std::vector<int>& markedIntervals) {
 
 void Solver::setGlobalFlags() {
     // set solver flags
-    
-    setTolerance(TOLERANCE);
+
     userScaling = USER_SCALING;
+    setTolerance(TOLERANCE);
     setRefinementMethod(REFINEMENT_METHOD);
-    
-    if (EXPORT_OPTIMUM_PATH != "") {{
+    setMaxIterations(MAX_ITERATIONS);
+
+    if (EXPORT_OPTIMUM_PATH != "") {
         setExportOptimumPath(EXPORT_OPTIMUM_PATH);
-    }}
+    }
 
-    if (EXPORT_HESSIAN_PATH != "") {{
+    if (EXPORT_HESSIAN_PATH != "") {
         setExportHessianPath(EXPORT_HESSIAN_PATH);
-    }}
+    }
 
-    if (EXPORT_JACOBIAN_PATH != "") {{
+    if (EXPORT_JACOBIAN_PATH != "") {
         setExportJacobianPath(EXPORT_JACOBIAN_PATH);
-    }}
-
-    if (MAX_ITERATIONS.has_value()) {{
-        setMaxIterations(MAX_ITERATIONS.value());
-    }}
+    }
 
     // set solver mesh parameters
-    if (LEVEL.has_value()) {{
+    if (LEVEL.has_value()) {
         setMeshParameter("level", LEVEL.value());
-    }}
+    }
 
-    if (C_TOL.has_value()) {{
+    if (C_TOL.has_value()) {
         setMeshParameter("ctol", C_TOL.value());
-    }}
+    }
 
-    if (SIGMA.has_value()) {{
+    if (SIGMA.has_value()) {
         setMeshParameter("sigma", SIGMA.value());
-    }}
+    }
 }
 
 void Solver::setTolerance(double tol) {
@@ -627,14 +625,14 @@ void Solver::printASCIIArt() const {
 *   / / / / / / / __ \/ __ `/ __ `__ \/ / ___/                                     *
 *  / /_/ / /_/ / / / / /_/ / / / / / / / /__                                       *
 * /_____/\__, /_/ /_/\__,_/_/ /_/ /_/_/\___/                                       *
-*    ___/____/   __  _           _                          ____   ___ ___         *
-*   / __ \____  / /_(_)___ ___  (_)___  ___  _____  _   __ / __ \ <  /|__ \        *
-*  / / / / __ \/ __/ / __ `__ \/ /_  / / _ \/ ___/ | | / // / / / / / __/ /        *
-* / /_/ / /_/ / /_/ / / / / / / / / /_/  __/ /     | |/ // /_/ / / / / __/         *
+*    ___/____/   __  _           _                          ____   ___ _____       *
+*   / __ \____  / /_(_)___ ___  (_)___  ___  _____  _   __ / __ \ <  /|__  /       *
+*  / / / / __ \/ __/ / __ `__ \/ /_  / / _ \/ ___/ | | / // / / / / /  /_ <        *
+* / /_/ / /_/ / /_/ / / / / / / / / /_/  __/ /     | |/ // /_/ / / / ___/ /        *
 * \____/ .___/\__/_/_/ /_/ /_/_/ /___/\___/_/      |___(_)____(_)_(_)____/         *
 *     /_/                                                                          *
 *                                                                                  *
-* This is GDOPT - General Dynamic Optimizer v.0.1.2, a framework for solving       *
+* This is GDOPT - General Dynamic Optimizer v.0.1.3, a framework for solving       *
 * "General Dynamic Optimization Problems" using local collocation methods, based   *
 * on RadauIIA formulas, and adaptive mesh refinement techniques. GDOPT utilizes    *
 * the capabilities of the nonlinear optimizer IPOPT for solving the resulting      *
@@ -673,9 +671,12 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
     // these are flags are always set, no matter if a mesh refinement is currently executed
 
     // mu-update strategy
-    // turns out kkt-error adaptive_mu works really well for the provided examples
+    // turns out kkt-error adaptive_mu works really well for the provided examples (excluding poorly conditioned)
+    // can be turned of with a flag
     app.Options()->SetStringValue("mu_strategy", "adaptive");
-    app.Options()->SetStringValue("adaptive_mu_globalization", "kkt-error");
+    if (KKT_ERROR_MU_GLOBALIZATION) {
+        app.Options()->SetStringValue("adaptive_mu_globalization", "kkt-error");
+    }
 
     // iterations and tolereances
     app.Options()->SetNumericValue("tol", tolerance);
@@ -685,7 +686,7 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
     // ipopt dump
     app.Options()->SetStringValue("timing_statistics", "yes");
     app.Options()->SetIntegerValue("print_level", IPOPT_PRINT_LEVEL.has_value() ? IPOPT_PRINT_LEVEL.value() : 5);
-    
+
     // linear solver
     auto const libHSLPath = getenv("LIB_HSL");
     auto const linSolver = getLinearSolverName(linearSolver);
@@ -713,13 +714,13 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
     }
 
     // constant derivatives reduce the number of function evals
-    if (_priv->gdop->problem->quadraticObjLinearConstraints) {
+    if (QUADRATIC_OBJECTIVE_LINEAR_CONSTRAINTS) {
         app.Options()->SetStringValue("hessian_constant", "yes");
     }
-    if (_priv->gdop->problem->linearObjective) {
+    if (LINEAR_OBJECTIVE) {
         app.Options()->SetStringValue("grad_f_constant", "yes");
     }
-    if (_priv->gdop->problem->linearConstraints) {
+    if (LINEAR_CONSTRAINTS) {
         app.Options()->SetStringValue("jac_c_constant", "yes");
         app.Options()->SetStringValue("jac_d_constant", "yes");
     }

@@ -9,14 +9,14 @@
 *   / / / / / / / __ \/ __ `/ __ `__ \/ / ___/                                     *
 *  / /_/ / /_/ / / / / /_/ / / / / / / / /__                                       *
 * /_____/\__, /_/ /_/\__,_/_/ /_/ /_/_/\___/                                       *
-*    ___/____/   __  _           _                          ____   ___ ___         *
-*   / __ \____  / /_(_)___ ___  (_)___  ___  _____  _   __ / __ \ <  /|__ \        *
-*  / / / / __ \/ __/ / __ `__ \/ /_  / / _ \/ ___/ | | / // / / / / / __/ /        *
-* / /_/ / /_/ / /_/ / / / / / / / / /_/  __/ /     | |/ // /_/ / / / / __/         *
+*    ___/____/   __  _           _                          ____   ___ _____       *
+*   / __ \____  / /_(_)___ ___  (_)___  ___  _____  _   __ / __ \ <  /|__  /       *
+*  / / / / __ \/ __/ / __ `__ \/ /_  / / _ \/ ___/ | | / // / / / / /  /_ <        *
+* / /_/ / /_/ / /_/ / / / / / / / / /_/  __/ /     | |/ // /_/ / / / ___/ /        *
 * \____/ .___/\__/_/_/ /_/ /_/_/ /___/\___/_/      |___(_)____(_)_(_)____/         *
 *     /_/                                                                          *
 *                                                                                  *
-* This is GDOPT - General Dynamic Optimizer v.0.1.2, a framework for solving       *
+* This is GDOPT - General Dynamic Optimizer v.0.1.3, a framework for solving       *
 * "General Dynamic Optimization Problems" using local collocation methods, based   *
 * on RadauIIA formulas, and adaptive mesh refinement techniques. GDOPT utilizes    *
 * the capabilities of the nonlinear optimizer IPOPT for solving the resulting      *

@@ -54,7 +54,6 @@
 
 \renewcommand{\sectionmark}[1]{\markboth{#1}{}}
 
-
 % Colors for code
 \definecolor{commentgreen}{rgb}{0,0.6,0}
 \definecolor{keywordblue}{rgb}{0,0,0.9}
@@ -86,7 +85,6 @@
 % maybe use in the future or different: good, neutral, evil :)
 \renewcommand{\v}{\bm}
 \date{\today}
-
 
 \begin{document}
 
@@ -126,11 +124,16 @@
 
 \clearpage
 \pagestyle{fancy}
-\setcounter{page}{1}  
+\setcounter{page}{1}
 
 \section{Introduction}
 
-Dynamic optimization is a branch of mathematical optimization that deals with systems that evolve over time. The goal is to find optimal state trajectories satisfying given differential equations by adjusting the controls over a certain time horizon. These so-called optimal control problems are of great importance in industrial applications and occur in various areas such as industrial biochemistry, economics and aerospace engineering.
+Dynamic optimization is a branch of mathematical optimization that deals with
+systems that evolve over time. The goal is to find optimal state trajectories
+satisfying given differential equations by adjusting the controls over a
+certain time horizon. These so-called optimal control problems are of great
+importance in industrial applications and occur in various areas such as
+industrial biochemistry, economics and aerospace engineering.
 
 This guide presents a high level Python modeling environment for
 solving dynamic optimization problems using local collocation methods and
@@ -141,43 +144,74 @@ along with analyzing the optimal solution.
 
 \subsection{Overview of the Framework} \label{c:overview}
 
-The dynamic optimization framework, GDOPT, was developed to enable easy modeling and optimization of dynamic systems. It consists of two main components:
+The dynamic optimization framework, GDOPT, was developed to enable easy
+modeling and optimization of dynamic systems. It consists of two main
+components:
 
-A Python front-end that provides the user with a high-level interface to model the continuous problem and set flags, such as enabling mesh refinements or setting tolerances.
-A C++ back-end that performs the computationally intensive task of solving the resulting large-scale nonlinear problem (NLP) with IPOPT (Interior Point OPTimizer). In addition, a novel mesh refinement algorithm (L2-Boundary-Norm) is implemented that performs an h-method. This leads to high-resolution solutions at discontinuities, steep sections or corners of control variables.
+A Python front-end that provides the user with a high-level interface to model
+the continuous problem and set flags, such as enabling mesh refinements or
+setting tolerances.
+A C++ back-end that performs the computationally intensive task of solving the
+resulting large-scale nonlinear problem (NLP) with IPOPT (Interior Point
+OPTimizer). In addition, a novel mesh refinement algorithm (L2-Boundary-Norm)
+is implemented that performs an h-method. This leads to high-resolution
+solutions at discontinuities, steep sections or corners of control variables.
 
-The framework is very flexible and expressive, but retains a simple and accessible syntax. The front-end has many special features that are presented in this guide.
+The framework is very flexible and expressive, but retains a simple and
+accessible syntax. The front-end has many special features that are presented
+in this guide.
 
-Once a dynamic optimization problem is defined, the framework discretizes it and applies numerical techniques to transform it into a sparse NLP that can be efficiently solved. In the following section, this process is described in principal.
+Once a dynamic optimization problem is defined, the framework discretizes it
+and applies numerical techniques to transform it into a sparse NLP that can be
+efficiently solved. In the following section, this process is described in
+principal.
 
 \subsection{How the Framework Solves Dynamic Models} \label{c:collocation}
 
-The framework solves continuous dynamic optimization problems by discretizing them over the specified time horizon. This is achieved by the following steps:
+The framework solves continuous dynamic optimization problems by discretizing
+them over the specified time horizon. This is achieved by the following steps:
 
 \begin{itemize}
-	
-	\item Time discretization:
-	The continuous time horizon is discretized into $N$ equidistant grid points.
-	
-	\item {Dynamic constraints}:
-	Within each of the resulting intervals, a RadauIIA collocation scheme is constructed, inserting $M = 1, \ldots, 36$ nodes on each interval. Consequently, the states of the model are represented by a polynomial of degree $M$ on each interval, discretizing the dynamics.
-	
-	\item {Non-dynamic constraints}:
-	Non-dynamic constraints are discretized at all nodes according to their time frame. For example, path constraints must apply at every node and final constraints at the very last node.
-	
-	\item {Objective function}:
-	The Lagrange term, which is an integral over the entire time horizon, is approximated using the quadrature rule, which corresponds to the RadauIIA collocation scheme.
-	The Mayer term, which represents a cost function evaluated at the last time point, is replaced by an evaluation at the last node.
-	
-	\item {Transformation to a nonlinear problem}:
-	The local collocation-based discretization leads to a large-scale nonlinear problem. This NLP has very sparse Jacobians and Hessians, which makes it well suited for modern optimization algorithms.
-	
-	\item {Back-end solution}:
-	The C++ back-end of the framework solves this NLP with IPOPT. The Python front-end allows access to this back-end so that the user can interact with the solver via a series of flags. For example, if the number of mesh refinement iterations is set greater than 0, the optimization and refinement are looped, refining and optimizing the mesh sequentially. This provides a very precise solution to the optimization problem.
-	
-\end{itemize}
-This overall approach combines the flexibility of Python with the computational efficiency of C++, ensuring that dynamic optimization problems can be solved efficiently.
 
+	\item Time discretization:
+	      The continuous time horizon is discretized into $N$ equidistant grid
+	      points.
+
+	\item {Dynamic constraints}:
+	      Within each of the resulting intervals, a RadauIIA collocation scheme
+	      is constructed, inserting $M = 1, \ldots, 36$ nodes on each interval.
+	      Consequently, the states of the model are represented by a polynomial of degree
+	      $M$ on each interval, discretizing the dynamics.
+
+	\item {Non-dynamic constraints}:
+	      Non-dynamic constraints are discretized at all nodes according to their
+	      time frame. For example, path constraints must apply at every node and final
+	      constraints at the very last node.
+
+	\item {Objective function}:
+	      The Lagrange term, which is an integral over the entire time horizon,
+	      is approximated using the quadrature rule, which corresponds to the RadauIIA
+	      collocation scheme.
+	      The Mayer term, which represents a cost function evaluated at the last
+	      time point, is replaced by an evaluation at the last node.
+
+	\item {Transformation to a nonlinear problem}:
+	      The local collocation-based discretization leads to a large-scale
+	      nonlinear problem. This NLP has very sparse Jacobians and Hessians, which makes
+	      it well suited for modern optimization algorithms.
+
+	\item {Back-end solution}:
+	      The C++ back-end of the framework solves this NLP with IPOPT. The
+	      Python front-end allows access to this back-end so that the user can interact
+	      with the solver via a series of flags. For example, if the number of mesh
+	      refinement iterations is set greater than 0, the optimization and refinement
+	      are looped, refining and optimizing the mesh sequentially. This provides a very
+	      precise solution to the optimization problem.
+
+\end{itemize}
+This overall approach combines the flexibility of Python with the computational
+efficiency of C++, ensuring that dynamic optimization problems can be solved
+efficiently.
 
 \section{Installation}
 
@@ -190,28 +224,35 @@ git clone https://github.com/linuslangenkamp/GDOPT.git
 Depending on your operating system, follow the installation instructions.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
-	linewidth=1pt]
+		linewidth=1pt]
 
-\textbf{Ubuntu:}
+	\textbf{Ubuntu:}
 
-Make sure that the dependencies (git, curl, gfortran, LAPACK, CMake, g++, Python3, Python3-Venv, Python3-Build) are installed on the system.
+	Make sure that the dependencies (git, curl, gfortran, LAPACK, CMake, g++,
+	Python3, Python3-Venv, Python3-Build) are installed on the system.
 
-\begin{lstlisting}[language=bash]
+	\begin{lstlisting}[language=bash]
 sudo apt-get install git curl gfortran liblapack-dev cmake g++ python3 python3-venv
 pip install build
 \end{lstlisting}
 
-To keep the environment isolated, it is advised to create and activate a virtual environment:
+	To keep the environment isolated, it is advised to create and activate a
+	virtual environment:
 
-\begin{lstlisting}[language=bash]
+	\begin{lstlisting}[language=bash]
 python3 -m venv .venv
 source .venv/bin/activate
 \end{lstlisting}
 
-With the virtual environment activated, install the package. This will automatically install
-IPOPT\cite{wachter2006implementation}, the linear solver MUMPS\cite{amestoy2001fully}, and the Python packages used in the front-end, i.e. SymEngine\cite{symengine}, NumPy\cite{harris2020array}, SciPy\cite{virtanen2020scipy}, pandas\cite{mckinney2010data}, and Matplotlib\cite{hunter2007matplotlib}:
+	With the virtual environment activated, install the package. This will
+	automatically install
+	IPOPT\cite{wachter2006implementation}, the linear solver
+	MUMPS\cite{amestoy2001fully}, and the Python packages used in the front-end,
+	i.e. SymEngine\cite{symengine}, NumPy\cite{harris2020array},
+	SciPy\cite{virtanen2020scipy}, pandas\cite{mckinney2010data}, and
+	Matplotlib\cite{hunter2007matplotlib}:
 
-\begin{lstlisting}[language=bash]
+	\begin{lstlisting}[language=bash]
 pip install .
 \end{lstlisting}
 \end{mdframed}
@@ -220,14 +261,18 @@ Now it is possible to use GDOPT in your Python scripts:
 \begin{lstlisting}[language=python]
 import gdopt
 \end{lstlisting}
-In addition to MUMPS, linear solvers from the HSL suite such as MA27, MA57, MA77, MA86, MA97\cite{hsl2013collection} may also be used if a license is present. To do this, the environment variable “LIB\_HSL” must be set to the corresponding path. The framework can then load the solvers at runtime.
+In addition to MUMPS, linear solvers from the HSL suite such as MA27, MA57,
+MA77, MA86, MA97\cite{hsl2013collection} may also be used if a license is
+present. To do this, the environment variable “LIB\_HSL” must be set to the
+corresponding path. The framework can then load the solvers at runtime.
 
 \section{Getting Started}
 This section shows how to set up and solve a simple dynamic
 optimization problem with the proposed framework.
 
 \subsection{Basic Example}
-Here is a minimal working example for a bang-bang control problem, adapted from the OpenModelica User's Guide \cite{openmodelica}
+Here is a minimal working example for a bang-bang control problem, adapted from
+the OpenModelica User's Guide \cite{openmodelica}
 \begin{lstlisting}
 from gdopt import *
 
@@ -286,26 +331,40 @@ Example procedure:
 \section{Mathematical Problem Formulation}
 \label{c:GDOP}
 
-In a \textbf{General Dynamic Optimization Problem} (GDOP) the goal is the minimization of a \textit{Mayer term}, which defines the cost at the final time $t_f$ (terminal cost), and a \textit{Lagrange term}, which represents the running cost over the time horizon $[t_0, t_f]$. The problem can be written as follows:
+In a \textbf{General Dynamic Optimization Problem} (GDOP) the goal is the
+minimization of a \textit{Mayer term}, which defines the cost at the final time
+$t_f$ (terminal cost), and a \textit{Lagrange term}, which represents the
+running cost over the time horizon $[t_0, t_f]$. The problem can be written as
+follows:
 
 \begin{equation*}
-	\min_{\v{u}(t), \v{p}} \quad \underbrace{M(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f)}_{\text{Mayer term}} + \underbrace{\int_{t_0}^{t_f} L(\v{x}(t), \v{u}(t), \v{p}, t)\, \dd t}_{\text{Lagrange term}}
+	\min_{\v{u}(t), \v{p}} \quad \underbrace{M(\v{x}(t_f), \v{u}(t_f),
+		\v{p}, t_f)}_{\text{Mayer term}} + \underbrace{\int_{t_0}^{t_f} L(\v{x}(t),
+		\v{u}(t), \v{p}, t)\, \dd t}_{\text{Lagrange term}}
 \end{equation*}
 
 subject to the following constraints:
 
 \begin{itemize}
-	\item \textit{Dynamic constraints}:  
-	The states of the system are evaluated by the differential equation $\dot{\v{x}}(t) = \v{f}(\v{x}(t), \v{u}(t), \v{p}, t)$. The differential equation must apply for all times $t \in [t_0, t_f]$ and has the initial condition $\v{x}(t_0) = \v{x}_0$.
-	
-	\item \textit{Path constraints}:  
-	For all times $t \in [t_0, t_f]$, the variables must satisfy the inequality $\v{g}^L \leq \v{g}(\v{x}(t), \v{u}(t), \v{p}, t) \leq \v{g}^U$. These may represent physical restrictions, for example.
-	
-	\item \textit{Final constraints}:  
-	At the final time $t_f$, $\v{r}^L \leq \v{r}(\v{x}(t_f), \v{u}(t_f), \v{p}, t_f) \leq \v{r}^U$ must be fulfilled. These constraints define the desired final configuration of the system.
-	
-	\item \textit{Parametric constraints:}  
-	The static parameters must satisfy the algebraic inequality constraints $\v{a}^L \leq \v{a}(\v{p}) \leq \v{a}^U$.
+	\item \textit{Dynamic constraints}:
+	      The states of the system are evaluated by the differential equation
+	      $\dot{\v{x}}(t) = \v{f}(\v{x}(t), \v{u}(t), \v{p}, t)$. The differential
+	      equation must apply for all times $t \in [t_0, t_f]$ and has the initial
+	      condition $\v{x}(t_0) = \v{x}_0$.
+
+	\item \textit{Path constraints}:
+	      For all times $t \in [t_0, t_f]$, the variables must satisfy the
+	      inequality $\v{g}^L \leq \v{g}(\v{x}(t), \v{u}(t), \v{p}, t) \leq \v{g}^U$.
+	      These may represent physical restrictions, for example.
+
+	\item \textit{Final constraints}:
+	      At the final time $t_f$, $\v{r}^L \leq \v{r}(\v{x}(t_f), \v{u}(t_f),
+		      \v{p}, t_f) \leq \v{r}^U$ must be fulfilled. These constraints define the
+	      desired final configuration of the system.
+
+	\item \textit{Parametric constraints:}
+	      The static parameters must satisfy the algebraic inequality constraints
+	      $\v{a}^L \leq \v{a}(\v{p}) \leq \v{a}^U$.
 \end{itemize}
 
 \noindent
@@ -313,18 +372,28 @@ subject to the following constraints:
 \begin{itemize}
 	\item $t$: Time in the model.
 	\item $t_f$: Final time of the time horizon.
-	\item $\v{x}(t)$: States, which evolve according to the dynamics $\dot{\v{x}}(t) = \v{f}(\cdot)$.
-	\item $\v{u}(t)$: Time-dependent control variables, also referred to as inputs.
+	\item $\v{x}(t)$: States, which evolve according to the dynamics
+	      $\dot{\v{x}}(t) = \v{f}(\cdot)$.
+	\item $\v{u}(t)$: Time-dependent control variables, also referred to as
+	      inputs.
 	\item $\v{p}$: Static parameters.
-	\item $M(\cdot)$: Mayer term, a function that evaluates a cost at the final time.
-	\item $L(\cdot)$: Lagrange integrand, a function defining a cost at a specific time $t$. $\int_{t_0}^{t_f} L(\cdot) \, \dd t$ is then referred to as the Lagrange term.
+	\item $M(\cdot)$: Mayer term, a function that evaluates a cost at the
+	      final time.
+	\item $L(\cdot)$: Lagrange integrand, a function defining a cost at a
+	      specific time $t$. $\int_{t_0}^{t_f} L(\cdot) \, \dd t$ is then referred to as
+	      the Lagrange term.
 	\item $\v{f}(\cdot)$: Function defining the system dynamics.
-	\item $\v{g}(\cdot)$: Path constraint function, which forces restrictions on variables at all times.
-	\item $\v{r}(\cdot)$: Final constraint function, which forces restrictions on variables at the final time.
-	\item $\v{a}(\cdot)$: Parametric constraint function, which forces restrictions on solely static parameters.
+	\item $\v{g}(\cdot)$: Path constraint function, which forces
+	      restrictions on variables at all times.
+	\item $\v{r}(\cdot)$: Final constraint function, which forces
+	      restrictions on variables at the final time.
+	\item $\v{a}(\cdot)$: Parametric constraint function, which forces
+	      restrictions on solely static parameters.
 \end{itemize}
 
-In this problem formulation, the goal is to minimize the combined objective of the Mayer and Lagrange terms while ensuring that the system dynamics, path constraints, final constraints, and parametric constraints are all satisfied.
+In this problem formulation, the goal is to minimize the combined objective of
+the Mayer and Lagrange terms while ensuring that the system dynamics, path
+constraints, final constraints, and parametric constraints are all satisfied.
 
 The entire problem can be formulated in standard notation as
 \begin{align*}
@@ -350,7 +419,8 @@ The entire problem can be formulated in standard notation as
 	\\
 	\v{a}^{L}                & \leq \v{a}(\v{p}) \leq \v{a}^{U}
 \end{align*}
-where $L, M, \v{f}, \v{g}, \v{r}, \v{a} \in C^2$, i.e. are continuously differentiable twice.
+where $L, M, \v{f}, \v{g}, \v{r}, \v{a} \in C^2$, i.e. are continuously
+differentiable twice.
 
 \section{Modeling}
 
@@ -361,24 +431,26 @@ The first step is to create a new Python file and to import the
 from gdopt import *
 	\end{lstlisting}
 
-Additionally a \texttt{Model} object has to be created, which is the basis for all modeling.
+Additionally a \texttt{Model} object has to be created, which is the basis for
+all modeling.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt, linewidth=1pt]
-	
+
 	Constructs a \texttt{Model} object.
-	
+
 	\begin{lstlisting}
 model = Model(name="DummyName")
 	\end{lstlisting}\label{Model}
-	
+
 	\textbf{Parameters:}
 	\begin{itemize}
-		\item \texttt{str name} \emph{(optional)}: The name of the model.
+		\item \texttt{str name} \emph{(optional)}: The name of the
+		      model.
 	\end{itemize}
-	
+
 	\textbf{Returns:}
 	\texttt{Model model}: The \texttt{Model} object.
-	
+
 	\textbf{Example:}
 	\begin{lstlisting}
 model = Model("Model Name")
@@ -386,7 +458,8 @@ model = Model("Model Name")
 \end{mdframed}
 
 The variables, constraints and objectives are added to this
-\texttt{Model} object. Note that a \texttt{Model} can be printed to the standard output with the native \texttt{print} function.
+\texttt{Model} object. Note that a \texttt{Model} can be printed to the
+standard output with the native \texttt{print} function.
 
 \subsection{Variables}
 
@@ -471,10 +544,13 @@ u = model.addInput(symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nomi
 The guess parameter in \texttt{model.addInput} \eqref{addInput} can be
 any \texttt{Expression} that contains the global time or final time symbols
 \eqref{c:globaltime}, but can also be a regular constant \texttt{float} or
-\texttt{int}. If the \texttt{"initVars"} flag \eqref{flag:initVars} is chosen to be a  
+\texttt{int}. If the \texttt{"initVars"} flag \eqref{flag:initVars} is chosen
+to be a
 \texttt{SOLVE} option \eqref{enum:initVars}, this trajectory is used to
 solve the dynamic and provide an initial, feasible guess for the state
-variables. If the option \texttt{InitVars.CONST} is set, the guess is used nevertheless, although the states are initialized constant. Note that any valid SymEngine \texttt{Expression} can be provided as
+variables. If the option \texttt{InitVars.CONST} is set, the guess is used
+nevertheless, although the states are initialized constant. Note that any valid
+SymEngine \texttt{Expression} can be provided as
 a guess, although there are several standard functions to provide better
 initial guesses for the control.
 
@@ -566,8 +642,10 @@ guessPiecewise(*args)
 	\textbf{Parameters:}
 	\begin{itemize}
 		\item \texttt{*(Expression, Condition) *args}: Arbitrary number
-		      of tuples. The first argument in each tuple has to be an \texttt{Expression} and the second argument is the corresponding interval its defined on.
-		      
+		      of tuples. The first argument in each tuple has to be an
+		      \texttt{Expression} and the second argument is the corresponding interval its
+		      defined on.
+
 	\end{itemize}
 
 	\textbf{Example:} \texttt{guessPiecewise((0.6, t <= 0.5), (2 + t**2,
@@ -622,7 +700,8 @@ p = model.addParameter(symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, 
 \subsubsection{Runtime Parameters}
 \label{c:runtimeParameters}
 Runtime parameters are time-invariant global constants, that can be
-changed after code generation and compilation via \texttt{model.setValue}. The value of the
+changed after code generation and compilation via \texttt{model.setValue}. The
+value of the
 runtime parameter will be set at runtime. These represent usual
 parameters of standard modeling environments. A runtime parameter can be used
 literally anywhere in the \texttt{Model} object, e.g. in objectives or
@@ -644,7 +723,8 @@ rp = model.addRuntimeParameter(default, symbol=None)
 	\begin{itemize}
 		\item \texttt{float default}: A default value for the
 		      runtime parameter.
-		\item \texttt{str symbol} \emph{(optional)}: A symbolic representation of
+		\item \texttt{str symbol} \emph{(optional)}: A symbolic
+		      representation of
 		      the runtime parameter.
 	\end{itemize}
 
@@ -689,7 +769,8 @@ change on the right hand side. This equation must hold at every moment.
 		linewidth=1pt]
 
 	Adding a dynamic constraint $\frac{\dd y(t)}{\dd t} =
-		f(\v{x}(t), \v{u}(t), \v{p}, t) \,\, \forall t \in [t_0, t_f]$ to
+		f(\v{x}(t), \v{u}(t), \v{p}, t) \,\, \forall t \in [t_0, t_f]$
+	to
 	the \texttt{Model}
 	object, where $y(t)$ is a previously added state.
 
@@ -917,7 +998,8 @@ assigned nominals. If only one term has a nominal value, then this value is
 used for the full objective.
 
 Combined objectives can be added individually with \texttt{model.addMayer}
-\eqref{addMayer} and \texttt{model} \, \texttt{.addLagrange} \eqref{addLagrange} or
+\eqref{addMayer} and \texttt{model} \, \texttt{.addLagrange}
+\eqref{addLagrange} or
 with the method
 \texttt{model.addObjective}.
 
@@ -956,17 +1038,19 @@ model.addObjective(mayer, lagrange, obj=Objective.MINIMIZE, nominal=None)
 
 \subsection{Code Generation}
 
-If the modeling process is done, it is possible to generate and compile the C++ code of the
+If the modeling process is done, it is possible to generate and compile the C++
+code of the
 model.
 Therefore, the 1st and 2nd derivatives of the objectives and all constraints
 are calculated symbolically with SymEngine. After that, the framework will
 search for common subexpressions (CSE) in each derivative, using the symbolic
 capabilities of SymEngine. The resulting expressions as well as all other
 problem defining structures are generated to a C++ file. This file makes
-use of runtime constants / model parameters (e.g. final time, runtime parameters, flags, paths,
+use of runtime constants / model parameters (e.g. final time, runtime
+parameters, flags, paths,
 \ldots), that will be set later in the \texttt{model.optimize} pipeline
 \eqref{optimize}. The resulting C++ file is
-compiled, while linking against the dynamic optimization back-end. 
+compiled, while linking against the dynamic optimization back-end.
 
 If several optimizations have to be executed, where only flags and runtime
 parameters are changed, it is advised to call \texttt{model.generate} only
@@ -986,9 +1070,11 @@ model.generate()
 \end{mdframed}
 
 \subsection{Optimization}
-After code generation and compilation, all model parameters (e.g. final time, runtime
-parameters, flags, paths, \ldots) have to be written to a configuration file. 
-The already existing executable will read in this configuration and then solve the NLP. Additionally the optimal solution
+After code generation and compilation, all model parameters (e.g. final time,
+runtime
+parameters, flags, paths, \ldots) have to be written to a configuration file.
+The already existing executable will read in the configuration and then solve
+the NLP. Additionally the optimal solution
 as well as some metadata can be written to text files. These files can be
 analyzed with the presented framework \eqref{c:Analysis}.
 
@@ -1009,15 +1095,19 @@ model.optimize(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=Fals
 		\item \texttt{int steps} \emph{(optional)}: The number of
 		      intervals.
 		\item \texttt{int rksteps} \emph{(optional)}: The number of
-		      collocation nodes of the RadauIIA integrator per interval. Valid range: $1
+		      collocation nodes of the RadauIIA integrator per
+		      interval. Valid range: $1
 			      \leq$ \texttt{rksteps} $\leq 36$.
 		\item \texttt{dict<str, arg> flags} \emph{(optional)}: A
-		      dictionary of flags. All possible flags are presented in \eqref{c:flags}.
+		      dictionary of flags. All possible flags are presented in
+		      \eqref{c:flags}.
 		\item \texttt{dict<str, arg> meshFlags} \emph{(optional)}: A
-		      dictionary of mesh flags. All possible mesh flags are presented in
+		      dictionary of mesh flags. All possible mesh flags are
+		      presented in
 		      \eqref{c:meshflags}.
 		\item \texttt{bool resimulate} \emph{(optional)}: If set to
-		      \texttt{true}, all arguments and flags of this method will be taken from the
+		      \texttt{true}, all arguments and flags of this method
+		      will be taken from the
 		      previous optimization.
 	\end{itemize}
 
@@ -1034,8 +1124,8 @@ model.optimize(
 		"exportJacobianPath": "/tmp",
 	},
 	meshFlags={
-		"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-		"meshIterations": 6
+		"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+		"iterations": 6
 	}
 )
 	\end{lstlisting}
@@ -1065,19 +1155,43 @@ model.solve(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False)
 		\item \texttt{int steps} \emph{(optional)}: The number of
 		      intervals.
 		\item \texttt{int rksteps} \emph{(optional)}: The number of
-		      collocation nodes of the RadauIIA integrator per interval. Valid range: $1
+		      collocation nodes of the RadauIIA integrator per
+		      interval. Valid range: $1
 			      \leq$ \texttt{rksteps} $\leq 36$.
 		\item \texttt{dict<str, arg> flags} \emph{(optional)}: A
-		      dictionary of flags. All possible flags are presented in \eqref{c:flags}.
+		      dictionary of flags. All possible flags are presented in
+		      \eqref{c:flags}.
 		\item \texttt{dict<str, arg> meshFlags} \emph{(optional)}: A
-		      dictionary of mesh flags. All possible mesh flags are presented in
+		      dictionary of mesh flags. All possible mesh flags are
+		      presented in
 		      \eqref{c:meshflags}.
 		\item \texttt{bool resimulate} \emph{(optional)}: If set to
-		      \texttt{true}, all arguments and flags of this method will be taken from the
+		      \texttt{true}, all arguments and flags of this method
+		      will be taken from the
 		      previous optimization.
 	\end{itemize}
 
 \end{mdframed}
+
+If the \texttt{Model} has to be optimized several times, e.g. for benchmarks, one can call \texttt{execute}. This method executes the previously compiled model using the existing initial states and configuration file. Obviously \texttt{solve} or \texttt{optimize} has to be called previously. Additionally command-line arguments can be provided to the back-end.
+
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+	linewidth=1pt]
+	
+	Runs the optimization given a previously compiled model, calculated initial states, if \texttt{"initVars"} is set to \texttt{InitVars.SOLVE} \eqref{flag:initVars}, and an existing configuration.
+	Command-line arguments can be provided to \texttt{execute} via the \texttt{args} argument (currently in development).
+	
+	\begin{lstlisting}
+model.execute(args="")
+	\end{lstlisting}
+	\label{execute}
+	\textbf{Parameters:}
+	\begin{itemize}
+		\item \texttt{string args} \emph{(optional)}: Command line arguments for the back-end.
+	\end{itemize}
+	
+\end{mdframed}
+
 
 \subsubsection{Flags}
 \label{c:flags}
@@ -1093,72 +1207,117 @@ are presented below.
 	\begin{itemize}
 
 		\phantomsection
+		\label{flag:outputPath}
+		\item \texttt{"outputPath" $\rightarrow$ str}: Sets the path to
+		which
+		the optimal solution is output as a text file. If this
+		value is not provided,
+		the optimal solution \textbf{can not be accessed}. This flag does
+		not have a standard
+		path, since I/O operations can slow down the framework
+		and are obsolete in some
+		cases.
+		
+		\phantomsection
 		\label{flag:tolerance}
 		\item \texttt{"tolerance" $\rightarrow$ float}
-		      (\emph{default}=\texttt{1e-14}): Sets the optimization tolerance in IPOPT. The
-		      acceptable tolerance is always defined as \texttt{1e3} $\cdot$ "tolerance".
+		      (\emph{default}=\texttt{1e-14}): Sets the optimization
+		      tolerance in IPOPT. The
+		      acceptable tolerance is always defined as \texttt{1e3}
+		      $\cdot$ "tolerance".
 
 		      \phantomsection
 		      \label{flag:linearSolver}
 		\item \texttt{"linearSolver" $\rightarrow$ LinearSolver}
-		      (\emph{default}=\texttt{LinearSolver.MUMPS}): Sets the linear solver used in
-		      IPOPT. The linear solver has to be an element of the \texttt{LinearSolver}
+		      (\emph{default}=\texttt{LinearSolver.MUMPS}): Sets the
+		      linear solver used in
+		      IPOPT. The linear solver has to be an element of the
+		      \texttt{LinearSolver}
 		      enumeration \eqref{enum:LinearSolver}.
 
 		      \phantomsection
 		      \label{flag:initVars}
 		\item \texttt{"initVars" $\rightarrow$ InitVars}
-		      (\emph{default}=\texttt{InitVars.SOLVE}): Sets the way in which the variables
-		      are initialized. The value has to be an element of the \texttt{InitVars}
+		      (\emph{default}=\texttt{InitVars.SOLVE}): Sets the way in
+		      which the variables
+		      are initialized. The value has to be an element of the
+		      \texttt{InitVars}
 		      enumeration \eqref{enum:initVars}.
 
 		      \phantomsection
 		      \label{flag:ivpSolver}
 		\item \texttt{"ivpSolver" $\rightarrow$ IVPSolver}
-		      (\emph{default}=\texttt{IVPSolver.RADAU}): Sets the \texttt{SciPy} integrator,
-		      that solves the arising initial value problem, if \texttt{"initVars"} is set to
-		      \texttt{InitVars.SOLVE}. The value has to be an element of the
+		      (\emph{default}=\texttt{IVPSolver.RADAU}): Sets the
+		      \texttt{SciPy} integrator,
+		      that solves the arising initial value problem, if
+		      \texttt{"initVars"} is set to
+		      \texttt{InitVars.SOLVE}. The value has to be an element
+		      of the
 		      \texttt{IVPSolver} enumeration \eqref{enum:IVPSolver}.
-			
-			  \phantomsection
-			  \label{flag:maxIterations}
-		\item \texttt{"maxIterations" $\rightarrow$ int}
-			  (\emph{default}=\texttt{5000}): Sets the maximum number of iterations in IPOPT.
-			  
-			  \phantomsection
-		\label{flag:ipoptPrintLevel}
-		\item \texttt{"ipoptPrintLevel" $\rightarrow$ int}
-		(\emph{default}=\texttt{5}): Sets the verbosity level for console outputs of IPOPT. The default value of $5$ provides pretty detailed information about the solving process. The valid range is $0 \leq \texttt{"ipoptPrintLevel"} \leq 12$, while a value of $0$ corresponds to no output at all.
-		
+
 		      \phantomsection
-		      \label{flag:outputPath}
-		\item \texttt{"outputPath" $\rightarrow$ str}: Sets the path to which
-		      the optimal solution is output as a text file. If this value is not provided,
-		      the optimal solution can not be accessed. This flag does not have a standard
-		      path, since I/O operations can slow down the framework and are obsolete in some
-		      cases.
+		      \label{flag:maxIterations}
+		\item \texttt{"maxIterations" $\rightarrow$ int}
+		      (\emph{default}=\texttt{5000}): Sets the maximum
+		      number of iterations in IPOPT.
+
+		      \phantomsection
+			\label{flag:kktmuglobalization}
+			\item \texttt{"kktMuGlobalization" $\rightarrow$ bool}
+			(\emph{default}=\texttt{True}): Turns the IPOPT adaptive mu globalization based on KKT errors on or off. In many cases, it is advantageous to use this, which is why this strategy is set as the default. For poorly conditioned problems, it is advised to disable this.
+
+		      \phantomsection
+		      \label{flag:ipoptPrintLevel}
+		\item \texttt{"ipoptPrintLevel" $\rightarrow$ int}
+		      (\emph{default}=\texttt{5}): Sets the verbosity level for
+		      console outputs of IPOPT. The default value of $5$ provides pretty detailed
+		      information about the solving process. The valid range is $0 \leq
+			      \texttt{"ipoptPrintLevel"} \leq 12$, while a value of $0$ corresponds to no
+		      output at all.
 
 		      \phantomsection
 		      \label{flag:exportHessianPath}
-		\item \texttt{"exportHessianPath" $\rightarrow$ str}: Sets the path to
-		      which the Hessian sparsity pattern is output as a text file. If this value is
+		\item \texttt{"exportHessianPath" $\rightarrow$ str}: Sets the
+		      path to
+		      which the Hessian sparsity pattern is output as a text
+		      file. If this value is
 		      not provided, the sparsity can not be accessed.
 
 		      \phantomsection
 		      \label{flag:exportJacobianPath}
-		\item \texttt{"exportJacobianPath" $\rightarrow$ str}: Sets the path to
-		      which the Jacobian sparsity pattern is output as a text file. If this value is
+		\item \texttt{"exportJacobianPath" $\rightarrow$ str}: Sets the
+		      path to
+		      which the Jacobian sparsity pattern is output as a text
+		      file. If this value is
 		      not provided, the sparsity can not be accessed.
 
 		      \phantomsection
 		      \label{flag:initialStatesPath}
 		\item \texttt{"initialStatesPath" $\rightarrow$ str}
-		      (\emph{default}=\texttt{"/.generated"}): Sets the path to which the solution of
-		      the initial value problem, which arises if \texttt{"initVars"} is set to
+		      (\emph{default}=\texttt{"/.generated"}): Sets the path to
+		      which the solution of
+		      the initial value problem, which arises if
+		      \texttt{"initVars"} is set to
 		      \texttt{InitVars.SOLVE}, is written.
+		      
+		      \phantomsection
+		\label{flag:linearObjective}
+		\item \texttt{"linearObjective" $\rightarrow$ bool}
+		(\emph{default}=\texttt{False}): Tells the solver that the Mayer term and Lagrange integrand are at most linear. This can improve the runtime, but be aware that this flag should only be set, if the criterion is met. 
+		
+		      \phantomsection
+		\label{flag:quadraticObjective}
+		\item \texttt{"quadraticObjective" $\rightarrow$ bool}
+		(\emph{default}=\texttt{False}): Tells the solver that the Mayer term and Lagrange integrand are at most quadratic. This can improve the runtime, but be aware that this flag should only be set, if the criterion is met. 
+		
+		\phantomsection
+		\label{flag:linearConstraints}
+		\item \texttt{"linearConstraints" $\rightarrow$ bool}
+		(\emph{default}=\texttt{False}): Tells the solver that all constraints, i.e. $\v{f}, \v{g}, \v{r}, \v{a}$, are at most linear. This can improve the runtime, but be aware that this flag should only be set, if the criterion is met. 
 
 	\end{itemize}
 \end{mdframed}
+
 
 \subsubsection{Mesh Flags}
 \label{c:meshflags}
@@ -1170,58 +1329,85 @@ are presented below.
 
 		\phantomsection
 		\label{flag:MeshAlgorithm}
-		\item \texttt{"meshAlgorithm" $\rightarrow$ MeshAlgorithm}
-		      (\emph{default}=\texttt{MeshAlgorithm.L2\_BOUNDARY} \texttt{\_NORM}): Sets the
-		      mesh algorithm, which is used to update the mesh and consequently create high
-		      resolution solutions at important sections. The mesh algorithm has to be an
-		      element of the \texttt{MeshAlgorithm} enumeration \eqref{enum:MeshAlgorithm}.
+		\item \texttt{"algorithm" $\rightarrow$ MeshAlgorithm}
+		      (\emph{default}=\texttt{MeshAlgorithm.L2\_BOUNDARY\_NO\\RM}): Sets the
+		      mesh algorithm, which is used to update the mesh and
+		      consequently create high
+		      resolution solutions at important sections. The mesh
+		      algorithm has to be an
+		      element of the \texttt{MeshAlgorithm} enumeration
+		      \eqref{enum:MeshAlgorithm}.
 
 		      \phantomsection
 		      \label{flag:meshIterations}
-		\item \texttt{"meshIterations" $\rightarrow$ int}
-		      (\emph{default}=\texttt{0}): Sets the number of mesh refinement iterations. The
-		      default value is 0, implying that no mesh refinement is executed.
-		      A typical range for \texttt{"meshIterations"} is between 3 and 10.
+		\item \texttt{"iterations" $\rightarrow$ int}
+		      (\emph{default}=\texttt{0}): Sets the number of mesh
+		      refinement iterations. The
+		      default value is 0, implying that no mesh refinement is
+		      executed.
+		      A typical range for \texttt{"iterations"} is between
+		      3 and 10.
 
 		      \phantomsection
 		      \label{flag:RefinementMethod}
-		\item \texttt{"refinementMethod" $\rightarrow$ RefinementMethod}
-		      (\emph{default}=\texttt{RefinementMethod.LI} \texttt{NEAR\_SPLINE}): Sets the
-		      refinement method, which is used to interpolate the optimal solution from the
-		      previous optimization and provide new initial values. The refinement method has
-		      to be an element of the \texttt{RefinementMethod} enumeration
+		\item \texttt{"refinementMethod" $\rightarrow$
+			      RefinementMethod}
+		      (\emph{default}=\texttt{RefinementMethod.LI}
+		      \texttt{NEAR\_SPLINE}): Sets the
+		      refinement method, which is used to interpolate the
+		      optimal solution from the
+		      previous optimization and provide new initial values. The
+		      refinement method has
+		      to be an element of the \texttt{RefinementMethod}
+		      enumeration
 		      \eqref{enum:RefinementMethod}.
 
 		      \phantomsection
 		      \label{flag:meshLevel}
-		\item \texttt{"meshLevel" $\rightarrow$ float} (\emph{default}=0): Sets
-		      the level of \texttt{MeshAlgorithm.L2\_BOUN\\DARY\_NORM}. This is only used, if
-		      \texttt{"meshAlgorithm"} is set accordingly. The \texttt{"meshLevel"} describes
-		      how sensitive the algorithm is to abnormal behavior on an interval. Positive
-		      values make the algorithm more sensitive, and negative values less so. The
-		      \texttt{"meshLevel"} operates on a logarithmic scale with base 10, meaning that
-		      an increase by 1 corresponds to a 10-fold increase in sensitivity. The typical
-		      range for \texttt{"meshLevel"} is between -2.5 and 2.5.
+		\item \texttt{"level" $\rightarrow$ float}
+		      (\emph{default}=0): Sets
+		      the level of \texttt{MeshAlgorithm.L2\_BOUNDARY\\\_NORM}.
+		      This is only used, if
+		      \texttt{"algorithm"} is set accordingly. The
+		      \texttt{"level"} describes
+		      how sensitive the algorithm is to abnormal behavior on an
+		      interval. Positive
+		      values make the algorithm more sensitive, and negative
+		      values less so. The
+		      \texttt{"level"} operates on a logarithmic scale with
+		      base 10, meaning that
+		      an increase by 1 corresponds to a 10-fold increase in
+		      sensitivity. The typical
+		      range for \texttt{"level"} is between -2.5 and 2.5.
 
 		      \phantomsection
 		      \label{flag:meshCTol}
-		\item \texttt{"meshCTol" $\rightarrow$ float $> 0$}
-		      (\emph{default}=0.2): Sets the P1-error threshold / corner tolerance in
-		      \texttt{MeshAlgorithm.L2\_BOUNDARY\_NORM}. This is only used, if
-		      \texttt{"meshAlgo\\rithm"} is set accordingly. This argument specifies a
-		      threshold for the error in derivatives of adjacent intervals at the boundary.
-		      Large values make the algorithm less sensitive and values close to 0 make it
+		\item \texttt{"cTol" $\rightarrow$ float $> 0$}
+		      (\emph{default}=0.1): Sets the P1-error threshold /
+		      corner tolerance in
+		      \texttt{MeshAlgorithm.L2\_BOUNDARY\_NORM}. This is only
+		      used, if
+		      \texttt{"algorithm"} is set accordingly. This
+		      argument specifies a
+		      threshold for the error in derivatives of adjacent
+		      intervals at the boundary.
+		      Large values make the algorithm less sensitive and values
+		      close to 0 make it
 		      more sensitive.
-		      The typical range for \texttt{"meshCTol"} is between 0.1 and 1.
+		      The typical range for \texttt{"cTol"} is between 0.025
+		      and 0.5.
 
 		      \phantomsection
 		      \label{flag:meshSigma}
-		\item \texttt{"meshSigma" $\rightarrow$ float $> 0$}
+		\item \texttt{"sigma" $\rightarrow$ float $> 0$}
 		      (\emph{default}=2.5): Sets the sigma in
-		      \texttt{MeshAlgorithm.\\BASIC\_STRATEGY}. Indicates how many standard
-		      deviations away from the mean value is considered abnormal behavior. This is
-		      only used, if \texttt{"meshSigma"} is set accordingly.
-		      The typical range for \texttt{"meshSigma"} is between 1.5 and 5.
+		      \texttt{MeshAlgorithm.\\BASIC\_STRATEGY}. Indicates how
+		      many standard
+		      deviations away from the mean value is considered
+		      abnormal behavior. This is
+		      only used, if \texttt{"sigma"} is set accordingly.
+		      The typical range for \texttt{"sigma"} is between 1.5
+		      and 5.
 
 	\end{itemize}
 
@@ -1229,57 +1415,85 @@ are presented below.
 
 \section{Analysis}
 \label{c:Analysis}
-The \texttt{gdopt} package offers the possibility to directly analyze the optimal solution with  \texttt{pandas} and \texttt{Matplotlib} functions. To access the features described in this section, it is mandatory to set the \texttt{"outputPath"} flag \eqref{flag:outputPath} in \texttt{model.optimize} \eqref{optimize}. Otherwise, the solution will not be written to a file.
+The \texttt{gdopt} package offers the possibility to directly analyze the
+optimal solution with  \texttt{pandas} and \texttt{Matplotlib} functions. To
+access the features described in this section, it is mandatory to set the
+\texttt{"outputPath"} flag \eqref{flag:outputPath} in \texttt{model.optimize}
+\eqref{optimize}. Otherwise, the solution will not be written to a file.
 
 \subsection{Results}
 \label{c:Results}
-In any case the framework generates a metadata file \texttt{"\textbackslash tmp\textbackslash modelinfo.txt"}, which includes basic information about the solving process. This file is automatically read in as a \texttt{dict} after a successful optimization and includes the time taken by the solver as well as the number of mesh iterations. The modelinfo can be accessed via \texttt{model.modelInfo}, e.g.
+In any case the framework generates a metadata file \texttt{"\textbackslash
+	tmp\textbackslash modelinfo.txt"}, which includes basic information about the
+solving process. This file is automatically read in as a \texttt{dict} after a
+successful optimization and includes the time taken by the solver as well as
+the number of mesh iterations. The modelinfo can be accessed via
+\texttt{model.modelInfo}, e.g.
 \begin{lstlisting}
 print(model.modelInfo)
 out: {"maxMeshIteration": 6, "totalTimeInSolver": 0.6753, "actualTimeInSolver": 0.600671, "totalTimeInIO": 0.0746288}
 \end{lstlisting}
-The file's main purpose is to do benchmarks, although it is used internally as well. The elements of the dictionary are
+The file's main purpose is to do benchmarks, although it is used internally as
+well. The elements of the dictionary are
 \begin{itemize}
-\item "maxMeshIteration": Number of mesh iterations that have been executed
-\item "totalTimeInSolver": Total time taken in the back-end
-\item "totalTimeInIO": Total time to read and write files in the back-end
-\item "actualTimeInSolver": Time taken in back-end excluding read and write operations
+	\item "maxMeshIteration": Number of mesh iterations that have been executed
+	\item "totalTimeInSolver": Total time taken in the back-end
+	\item "totalTimeInIO": Total time to read and write files in the back-end
+	\item "actualTimeInSolver": Time taken in back-end excluding read and write
+	      operations
 \end{itemize}
 
-If the \texttt{"outputPath"} flag \eqref{flag:outputPath} is set, the framework can directly import the optimal solution from the back-end as a \texttt{pandas.DataFrame}. Note that the names of the variables are taken from the \texttt{symbol} argument in \texttt{addState} \eqref{addState}, \texttt{addInput} \eqref{addInput} and  \texttt{addParameter} \eqref{addParameter}. If no \texttt{symbol} is provided, a dummy name will be used.
+If the \texttt{"outputPath"} flag \eqref{flag:outputPath} is set, the framework
+can directly import the optimal solution from the back-end as a
+\texttt{pandas.DataFrame}. Note that the names of the variables are taken from
+the \texttt{symbol} argument in \texttt{addState} \eqref{addState},
+\texttt{addInput} \eqref{addInput} and	\texttt{addParameter}
+\eqref{addParameter}. If no \texttt{symbol} is provided, a dummy name will be
+used.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-	
-	Reads in the result file from a specific mesh iteration and saves it to the dictionary \texttt{model.resultHistory} at the key \texttt{meshIteration}. The value \texttt{model.resultHisto\\ ry[meshIteration]}, that is set in the process, is returned. If no mesh iteration is provided, the last mesh iteration is used automatically.
- 
+
+	Reads in the result file from a specific mesh iteration and saves it to
+	the dictionary \texttt{model.resultHistory} at the key \texttt{meshIteration}.
+	The value \texttt{model.resultHisto\\ ry[meshIteration]}, that is set in the
+	process, is returned. If no mesh iteration is provided, the last mesh iteration
+	is used automatically.
+
 	\begin{lstlisting}
 model.getResults(meshIteration=None)
 		\end{lstlisting}
 	\label{getResults}
 	\textbf{Parameters:}
 	\begin{itemize}
-		\item \texttt{int meshIteration} \emph{(optional)}: The mesh iteration from which the results are to be analyzed. 
+		\item \texttt{int meshIteration} \emph{(optional)}: The mesh
+		      iteration from which the results are to be analyzed.
 	\end{itemize}
-	
-	\textbf{Returns:} \texttt{pandas.DataFrame model.resultHistory[meshIteration]}
+
+	\textbf{Returns:} \texttt{pandas.DataFrame
+		model.resultHistory[meshIteration]}
 
 \end{mdframed}
 
-It is also possible to read in the results from all mesh iterations with \texttt{getAllResults}.
+It is also possible to read in the results from all mesh iterations with
+\texttt{getAllResults}.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-	
-	Reads in the result file from all mesh iterations and saves them to the dictionary \texttt{model.resultHistory} at the keys \texttt{0, \ldots, maxMeshIteration}. The entire dictionary \texttt{model.resultsHistory} is returned in the process.
- 
+
+	Reads in the result file from all mesh iterations and saves them to the
+	dictionary \texttt{model.resultHistory} at the keys \texttt{0, \ldots,
+		maxMeshIteration}. The entire dictionary \texttt{model.resultsHistory} is
+	returned in the process.
+
 	\begin{lstlisting}
 model.getAllResults()
 		\end{lstlisting}
 	\label{getAllResults}
-	
-	\textbf{Returns:} \texttt{dict<int, pandas.DataFrame> model.resultHistory}
-	
+
+	\textbf{Returns:} \texttt{dict<int, pandas.DataFrame>
+		model.resultHistory}
+
 	\textbf{Example:} \begin{lstlisting}
 # read in all result files and set the resultHistory
 model.getAllResults()
@@ -1293,18 +1507,20 @@ The results can be printed with the two following method.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-	
-	Prints the results from a given mesh iteration to the console. If no mesh iteration is provided, the last mesh iteration is used automatically.
- 
+
+	Prints the results from a given mesh iteration to the console. If no
+	mesh iteration is provided, the last mesh iteration is used automatically.
+
 	\begin{lstlisting}
 model.printResults(meshIteration=None)
 		\end{lstlisting}
 	\label{printResults}
 	\textbf{Parameters:}
 	\begin{itemize}
-		\item \texttt{int meshIteration} \emph{(optional)}: The mesh iteration from which the results have to be printed. 
+		\item \texttt{int meshIteration} \emph{(optional)}: The mesh
+		      iteration from which the results have to be printed.
 	\end{itemize}
-\begin{lstlisting}
+	\begin{lstlisting}
 # example soultion from the Batch Reactor
 # printing the last mesh iteration
 model.printResults()
@@ -1319,198 +1535,250 @@ out:
 \end{lstlisting}
 \end{mdframed}
 
-
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-	
-	Prints the optimal parameters from a given mesh iteration to the console. If no mesh iteration is provided, the last mesh iteration is used automatically.
- 
+
+	Prints the optimal parameters from a given mesh iteration to the
+	console. If no mesh iteration is provided, the last mesh iteration is used
+	automatically.
+
 	\begin{lstlisting}
 model.printResultParameters(meshIteration=None)
 		\end{lstlisting}
 	\label{printResultParameters}
 	\textbf{Parameters:}
 	\begin{itemize}
-		\item \texttt{int meshIteration} \emph{(optional)}: The mesh iteration from which the parameters have to be printed. 
+		\item \texttt{int meshIteration} \emph{(optional)}: The mesh
+		      iteration from which the parameters have to be printed.
 	\end{itemize}
 
 \end{mdframed}
- 
+
 \subsection{Plotting}
 \label{c:Plotting}
-The framework includes a lot of functions to draw standard plots of states and inputs, sparsity patterns, parametric plots and of the mesh refinement process as well. 
+The framework includes a lot of functions to draw standard plots of states and
+inputs, sparsity patterns, parametric plots and of the mesh refinement process
+as well.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-	
+
 	Draws a plot of the optimal solution.
- 
+
 	\begin{lstlisting}
 model.plot(specifCols=None, meshIteration=None, interval=None, dots=Dots.OFF) 
 		\end{lstlisting}
 	\label{plot}
 	\textbf{Parameters:}
 	\begin{itemize}
-		\item \texttt{list<str> specifCols} \emph{(optional)}: Sets the list of variables that will be drawn. These strings have to match the columns names in \texttt{model.resultHistory} or equivalently the \texttt{symbol} argument of the variables. If no value is provided, all variables will be drawn in the plot.
-		
-		\item \texttt{int meshIteration} \emph{(optional)}: Sets the mesh iteration of which the optimal values originate. If no value is provided, the last iteration is used.
+		\item \texttt{list<str> specifCols} \emph{(optional)}: Sets the
+		      list of variables that will be drawn. These strings have to match the columns
+		      names in \texttt{model.resultHistory} or equivalently the \texttt{symbol}
+		      argument of the variables. If no value is provided, all variables will be drawn
+		      in the plot.
 
-		\item \texttt{[float, float] interval} \emph{(optional)}: Sets the time range of the plot. Defaults to the interval $[t_0, t_f]$.
+		\item \texttt{int meshIteration} \emph{(optional)}: Sets the
+		      mesh iteration of which the optimal values originate. If no value is provided,
+		      the last iteration is used.
 
-		\item \texttt{Dots dots} \emph{(optional)}: Adds dots of the discrete solution to the plot. This has to be an element of the \texttt{Dots} enumeration \eqref{enum:Dots} and in the default case no dots are added.
+		\item \texttt{[float, float] interval} \emph{(optional)}: Sets
+		      the time range of the plot. Defaults to the interval $[t_0, t_f]$.
+
+		\item \texttt{Dots dots} \emph{(optional)}: Adds dots of the
+		      discrete solution to the plot. This has to be an element of the \texttt{Dots}
+		      enumeration \eqref{enum:Dots} and in the default case no dots are added.
 	\end{itemize}
 
 	\textbf{Special cases:}
-		There are two methods that use \texttt{model.plot} directly. These share all arguments with the standard plot function but only plot the state variables or the input variables respectively.
-		\begin{lstlisting}
+	There are two methods that use \texttt{model.plot} directly.
+	These share all arguments with the standard plot function but only plot the
+	state variables or the input variables respectively.
+	\begin{lstlisting}
 model.plotStates(meshIteration=None, interval=None, dots=Dots.OFF)     
 		\end{lstlisting}
-		
-		\begin{lstlisting}
+
+	\begin{lstlisting}
 model.plotInputs(meshIteration=None, interval=None, dots=Dots.OFF)     
 		\end{lstlisting}
-		
-			\textbf{Example:} 	\begin{lstlisting}
+
+	\textbf{Example:}	\begin{lstlisting}
 model.plot(specifCols=["Product", "u"], interval=[0.5, 1], dots=Dots.ALL)
 					\end{lstlisting}
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=1\textwidth]{images/plotstd.png}
-	\caption{Optimal product and control the "Batch Reactor" example}
-	\label{fig:batch}
-\end{figure}
-	
-\end{mdframed}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\textwidth]{images/plotstd.png}
+		\caption{Optimal product and control the "Batch Reactor" example}
+		\label{fig:batch}
+	\end{figure}
 
+\end{mdframed}
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-	
+
 	Draws a parametric plot of the optimal solution.
- 
+
 	\begin{lstlisting}
 model.parametricPlot(varX, varY, meshIteration=None, interval=None, dots=Dots.OFF)
 		\end{lstlisting}
 	\label{parametricPlot}
 	\textbf{Parameters:}
 	\begin{itemize}
-		\item \texttt{Symbol varX}: Symbol of the variable on the x-axis.
-		
-		\item \texttt{Symbol varY}: Symbol of the variable on the y-axis.
-		
-		\item \texttt{int meshIteration} \emph{(optional)}: Sets the mesh iteration of which the optimal values originate. If no value is provided, the last iteration is used.
+		\item \texttt{Symbol varX}: Symbol of the variable on the
+		      x-axis.
 
-		\item \texttt{[float, float] interval} \emph{(optional)}: Sets the time range of the plot. Defaults to the interval $[t_0, t_f]$.
+		\item \texttt{Symbol varY}: Symbol of the variable on the
+		      y-axis.
 
-		\item \texttt{Dots dots} \emph{(optional)}: Adds dots of the discrete solution to the plot. This has to be an element of the \texttt{Dots} enumeration \eqref{enum:Dots} and in the default case no dots are added.
+		\item \texttt{int meshIteration} \emph{(optional)}: Sets the
+		      mesh iteration of which the optimal values originate. If no value is provided,
+		      the last iteration is used.
+
+		\item \texttt{[float, float] interval} \emph{(optional)}: Sets
+		      the time range of the plot. Defaults to the interval $[t_0, t_f]$.
+
+		\item \texttt{Dots dots} \emph{(optional)}: Adds dots of the
+		      discrete solution to the plot. This has to be an element of the \texttt{Dots}
+		      enumeration \eqref{enum:Dots} and in the default case no dots are added.
 	\end{itemize}
-	
+
 	\textbf{Example:}
-\begin{lstlisting}
+	\begin{lstlisting}
 model.parametricPlot(xpos, ypos)   
 \end{lstlisting}
 \end{mdframed}
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-	
+
 	Draws a plot of the mesh refinement process.
- 
+
 	\begin{lstlisting}
 model.plotMeshRefinement(interval=None, markerSize=30, dots=Dots.BASE)
 		\end{lstlisting}
 	\label{plotMeshRefinement}
 	\textbf{Parameters:}
 	\begin{itemize}
-		\item \texttt{[float, float] interval} \emph{(optional)}: Sets the time range of the plot. Defaults to the interval $[t_0, t_f]$.
-		
-		\item \texttt{float markerSize} \emph{(optional)}: Sets the size of the dots in the plot.
-		
-		\item \texttt{Dots dots} \emph{(optional)}: Sets which points are displayed in the plot. This has to be an element of the \texttt{Dots} enumeration \eqref{enum:Dots} (excluding \texttt{Dots.NONE}) and in the default case base points are added as a dot.
+		\item \texttt{[float, float] interval} \emph{(optional)}: Sets
+		      the time range of the plot. Defaults to the interval $[t_0, t_f]$.
+
+		\item \texttt{float markerSize} \emph{(optional)}: Sets the
+		      size of the dots in the plot.
+
+		\item \texttt{Dots dots} \emph{(optional)}: Sets which points
+		      are displayed in the plot. This has to be an element of the \texttt{Dots}
+		      enumeration \eqref{enum:Dots} (excluding \texttt{Dots.NONE}) and in the default
+		      case base points are added as a dot.
 	\end{itemize}
-	
+
 	\textbf{Example:}
-\begin{lstlisting}
+	\begin{lstlisting}
 model.plotMeshRefinement()
 \end{lstlisting}
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=1\textwidth]{images/refinementVDP.png}
-	\caption{Mesh refinement in the "Van der Pol" example}
-	\label{fig:vdp}
-\end{figure}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\textwidth]{images/refinementVDP.png}
+		\caption{Mesh refinement in the "Van der Pol" example}
+		\label{fig:vdp}
+	\end{figure}
 \end{mdframed}
 
-The plot of the mesh refinement is not very useful on its own. It is therefore possible to combine it with standard plots. In this way, the sections that have been recognized as important or conspicuous by the  algorithm can be investigated further.
+The plot of the mesh refinement is not very useful on its own. It is therefore
+possible to combine it with standard plots. In this way, the sections that have
+been recognized as important or conspicuous by the  algorithm can be
+investigated further.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-	
+
 	Draws a combined plot of the mesh refinement and given standard plots.
- 
+
 	\begin{lstlisting}
 model.plotVarsAndRefinement(meshIteration=None, interval=None, specifCols=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.OFF)
 		\end{lstlisting}
 	\label{plotVarsAndRefinement}
 	\textbf{Parameters:}
 	\begin{itemize}
-		\item \texttt{int meshIteration} \emph{(optional)}: Sets the mesh iteration of which the optimal values for the standard plots originate. If no value is provided, the last iteration is used.
+		\item \texttt{int meshIteration} \emph{(optional)}: Sets the
+		      mesh iteration of which the optimal values for the standard plots originate. If
+		      no value is provided, the last iteration is used.
 
-		\item \texttt{[float, float] interval} \emph{(optional)}: Sets the time range of the plot. Defaults to the interval $[t_0, t_f]$.
-		
-		\item \texttt{list<str> specifCols} \emph{(optional)}: Sets the list of variables that will be drawn. These strings have to match the columns names in \texttt{model.resultHistory} or equivalently the \texttt{symbol} argument of the variables. If no value is provided, all variables will be drawn in the plot.
+		\item \texttt{[float, float] interval} \emph{(optional)}: Sets
+		      the time range of the plot. Defaults to the interval $[t_0, t_f]$.
 
-		\item \texttt{float markerSize} \emph{(optional)}: Sets the size of the dots in the refinement plot.		
+		\item \texttt{list<str> specifCols} \emph{(optional)}: Sets the
+		      list of variables that will be drawn. These strings have to match the columns
+		      names in \texttt{model.resultHistory} or equivalently the \texttt{symbol}
+		      argument of the variables. If no value is provided, all variables will be drawn
+		      in the plot.
 
-		\item \texttt{Dots dotsMesh} \emph{(optional)}: Sets which points are displayed in the refinement plot. This has to be an element of the \texttt{Dots} enumeration \eqref{enum:Dots} (excluding \texttt{Dots.NONE}) and in the default case base points are added as a dot.
-		
-		\item \texttt{Dots dotsGraph} \emph{(optional)}: Adds dots of the discrete solution to the standard plot. This has to be an element of the \texttt{Dots} enumeration \eqref{enum:Dots} and in the default case no dots are added.
+		\item \texttt{float markerSize} \emph{(optional)}: Sets the
+		      size of the dots in the refinement plot.
+
+		\item \texttt{Dots dotsMesh} \emph{(optional)}: Sets which
+		      points are displayed in the refinement plot. This has to be an element of the
+		      \texttt{Dots} enumeration \eqref{enum:Dots} (excluding \texttt{Dots.NONE}) and
+		      in the default case base points are added as a dot.
+
+		\item \texttt{Dots dotsGraph} \emph{(optional)}: Adds dots of
+		      the discrete solution to the standard plot. This has to be an element of the
+		      \texttt{Dots} enumeration \eqref{enum:Dots} and in the default case no dots are
+		      added.
 	\end{itemize}
-	
+
 	\textbf{Special cases:}
-		There is also a special case for input variables. This shares all arguments with \texttt{model.plotVarsAndRefinement}, but only contains the plots of the input variables by default.
-		\begin{lstlisting}
+	There is also a special case for input variables. This shares
+	all arguments with \texttt{model.plotVarsAndRefinement}, but only contains the
+	plots of the input variables by default.
+	\begin{lstlisting}
 model.plotInputsAndRefinement(meshIteration=None, interval=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.BASE)    
 		\end{lstlisting}
-			
+
 	\textbf{Example:}
-\begin{lstlisting}
+	\begin{lstlisting}
 model.plotInputsAndRefinement()
 \end{lstlisting}
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=1\textwidth]{images/refinement.png}
-	\caption{Mesh refinement and temperature control in an "Oil Shale Pyrolysis"}
-	\label{fig:osp}
-\end{figure}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\textwidth]{images/refinement.png}
+		\caption{Mesh refinement and temperature control in an "Oil Shale
+			Pyrolysis"}
+		\label{fig:osp}
+	\end{figure}
 \end{mdframed}
 
-Additionally, the framework is capable of drawing sparsity patterns. To be able to draw a given sparsity pattern the flag \texttt{"exportJacobianPath"} \eqref{flag:exportJacobianPath} or \texttt{"exportHessianPath"} \eqref{flag:exportHessianPath} has to be set.
+Additionally, the framework is capable of drawing sparsity patterns. To be able
+to draw a given sparsity pattern the flag \texttt{"exportJacobianPath"}
+\eqref{flag:exportJacobianPath} or \texttt{"exportHessianPath"}
+\eqref{flag:exportHessianPath} has to be set.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-	
-	Draws the Jacobian or Hessian sparsity pattern of the resulting large-scale NLP.
- 
+
+	Draws the Jacobian or Hessian sparsity pattern of the resulting
+	large-scale NLP.
+
 	\begin{lstlisting}
 model.plotSparseMatrix(matrixType)
 		\end{lstlisting}
 	\label{plotSparseMatrix}
 	\textbf{Parameters:}
 	\begin{itemize}
-		\item \texttt{MatrixType matrixType}: Sets the matrix. This has to be an element of the \texttt{MatrixType} enumeration \eqref{enum:MatrixType}.
+		\item \texttt{MatrixType matrixType}: Sets the matrix. This has
+		      to be an element of the \texttt{MatrixType} enumeration
+		      \eqref{enum:MatrixType}.
 	\end{itemize}
-	
+
 	\textbf{Example:}
-\begin{lstlisting}
+	\begin{lstlisting}
 model.plotSparseMatrix(MatrixType.JACOBIAN)   
 \end{lstlisting}
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=1\textwidth]{images/sparse.png}
-	\caption{Jacobian sparsity pattern of the "Batch Reactor" example}
-	\label{fig:sparseBatch}
-\end{figure}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=1\textwidth]{images/sparse.png}
+		\caption{Jacobian sparsity pattern of the "Batch Reactor" example}
+		\label{fig:sparseBatch}
+	\end{figure}
 \end{mdframed}
 
 \section{Utilities}
@@ -1538,7 +1806,8 @@ and discontinuous functions.
 \end{itemize}
 
 Note that \texttt{Piecewise} is the native SymEngine function to define
-piecewise functions. For code generation to work, this function has to have the fallback
+piecewise functions. For code generation to work, this function has to have the
+fallback
 case \texttt{(0, True)}, i.e. the function is constant $0$ anywhere, where it
 was not explicitly defined. This inconvenience is addressed with the custom
 \texttt{piecewise} function. It is a basic wrapper around \texttt{Piecewise},
@@ -1709,6 +1978,8 @@ the NLP are assumed to be constant:
 	      or \texttt{model.hasQuadraticObjective()})
 \end{itemize}
 
+Note that it is also possible to set the flags \texttt{"linearObjective"} \eqref{flag:linearObjective}, \texttt{"quadraticObjective"} \eqref{flag:quadraticObjective}, and \texttt{"linearConstraints"} \eqref{flag:linearConstraints} to tell the solver that constant derivatives are present.
+
 \subsection{Enumerations}
 
 \subsubsection{Objective}
@@ -1716,7 +1987,8 @@ the NLP are assumed to be constant:
 		linewidth=1pt]
 	Enumeration for the attribute \texttt{obj} of
 	\texttt{model.addMayer} \eqref{addMayer}, \texttt{model.addLagrange}
-	\eqref{addLagrange}, and \texttt{model.addObjective} \eqref{addObjective}:
+	\eqref{addLagrange}, and \texttt{model.addObjective}
+	\eqref{addObjective}:
 	Objective goal.
 
 	\begin{lstlisting}
@@ -1775,7 +2047,8 @@ LinearSolver(Enum)
 
 	Note that the initial guess for the parameters and input
 	trajectories are given by the \texttt{guess} argument in
-	\texttt{model.addInput} \eqref{addInput} and \texttt{model.addParameter}
+	\texttt{model.addInput} \eqref{addInput} and
+	\texttt{model.addParameter}
 	\eqref{addParameter} respectively.
 
 	\begin{lstlisting}
@@ -1846,7 +2119,7 @@ IVPSolver(Enum)
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-	Enumeration for the mesh flag \texttt{"meshAlgorithm"}
+	Enumeration for the mesh flag \texttt{"algorithm"}
 	\eqref{flag:MeshAlgorithm}:
 	Sets the mesh algorithm.
 
@@ -1927,7 +2200,8 @@ MatrixType(Enum)
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
 	Enumeration for the \texttt{dots} argument in all plotting methods.
-	\eqref{c:Plotting} Determines if and which values are added to the plot as a dot.
+	\eqref{c:Plotting} Determines if and which values are added to the plot
+	as a dot.
 
 	\begin{lstlisting}
 Dots(Enum)
@@ -1946,7 +2220,9 @@ Dots(Enum)
 \newpage
 \section{Example Code}
 
-Note that the previously mentioned GitHub repository offers many more examples to get an easy introduction to modeling with this framework. Nevertheless some basic and instructive examples are also provided in this User's Guide.
+Note that the previously mentioned GitHub repository offers many more examples
+to get an easy introduction to modeling with this framework. Nevertheless some
+basic and instructive examples are also provided in this User's Guide.
 
 \subsection{Batch Reactor}
 
@@ -1984,8 +2260,8 @@ model.optimize(tf=1, steps=250, rksteps=3,
 		"initVars": InitVars.SOLVE
 	},
 	meshFlags={
-		"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-		"meshIterations": 6
+		"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+		"iterations": 6
 	}
 )
 model.printResults()
@@ -2032,8 +2308,8 @@ model.optimize(
 	        "linearSolver": LinearSolver.MA57
         },
 	meshFlags={
-		"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-		"meshIterations": 5
+		"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+		"iterations": 5
 	}
 )
 
@@ -2071,8 +2347,8 @@ model.optimize(
 		"linearSolver": LinearSolver.MUMPS
 	},
 	meshFlags={
-		"meshAlgorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
-		"meshIterations": 5,
+		"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
+		"iterations": 5,
 		"refinementMethod": RefinementMethod.POLYNOMIAL
 	}
 )
@@ -2131,41 +2407,49 @@ model.plot(dots=Dots.BASE)
 \thispagestyle{fancy}
 
 \begin{thebibliography}{9}
-	
-	
-	
-	\bibitem{wachter2006implementation}
-	Wächter, A. and L. T. Biegler, “On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming”, \textit{Mathematical Programming}, 106(1):25-57, 2006.
-	
-	\bibitem{amestoy2001fully}
-	Amestoy, P. R., Duff, I. S., L’Excellent, J.-Y., \& Koster, J. (2001). A fully asynchronous multifrontal solver using distributed dynamic scheduling. \textit{SIAM Journal on Matrix Analysis and Applications}, 23(1), 15-41.
-	
-	\bibitem{hsl2013collection}
-	HSL. (2013). A collection of Fortran codes for large-scale scientific computation. \url{http://www.hsl.rl.ac.uk}.
-	
-	\bibitem{symengine}
-	SymEngine Developers, 
-	\textit{SymEngine: A Fast Symbolic Manipulation Library}, 
-	GitHub repository, 
-	\url{https://github.com/symengine/symengine}, 
-	accessed September 27, 2024.
-	
-	\bibitem{harris2020array}
-	Harris, C. R., Millman, K. J., et al. (2020). Array programming with NumPy. \textit{Nature}, 585(7825), 357-362.
-	
-	\bibitem{virtanen2020scipy}
-	Virtanen, P., et al. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python. \textit{Nature Methods}, 17(3), 261-272.
-	
-	\bibitem{mckinney2010data}
-	McKinney, W. (2010). Data structures for statistical computing in Python. In \textit{Proceedings of the 9th Python in Science Conference} (Vol. 445, pp. 51-56).
-	
-	\bibitem{hunter2007matplotlib}
-	Hunter, J. D. (2007). Matplotlib: A 2D graphics environment. \textit{Computing in Science} \& \textit{Engineering}, 9(3), 90-95.
-	
-	\bibitem{openmodelica}
-	OpenModelica. (n.d.). OpenModelica User's Guide. Retrieved from \url{https://openmodelica.org/doc/OpenModelicaUsersGuide/latest/optimization.html}.
-	
-\end{thebibliography}
 
+	\bibitem{wachter2006implementation}
+	Wächter, A. and L. T. Biegler, “On the Implementation of an
+	Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear
+	Programming”, \textit{Mathematical Programming}, 106(1):25-57, 2006.
+
+	\bibitem{amestoy2001fully}
+	Amestoy, P. R., Duff, I. S., L’Excellent, J.-Y., \& Koster, J. (2001).
+	A fully asynchronous multifrontal solver using distributed dynamic scheduling.
+	\textit{SIAM Journal on Matrix Analysis and Applications}, 23(1), 15-41.
+
+	\bibitem{hsl2013collection}
+	HSL. (2013). A collection of Fortran codes for large-scale scientific
+	computation. \url{http://www.hsl.rl.ac.uk}.
+
+	\bibitem{symengine}
+	SymEngine Developers,
+	\textit{SymEngine: A Fast Symbolic Manipulation Library},
+	GitHub repository,
+	\url{https://github.com/symengine/symengine},
+	accessed September 27, 2024.
+
+	\bibitem{harris2020array}
+	Harris, C. R., Millman, K. J., et al. (2020). Array programming with
+	NumPy. \textit{Nature}, 585(7825), 357-362.
+
+	\bibitem{virtanen2020scipy}
+	Virtanen, P., et al. (2020). SciPy 1.0: Fundamental algorithms for
+	scientific computing in Python. \textit{Nature Methods}, 17(3), 261-272.
+
+	\bibitem{mckinney2010data}
+	McKinney, W. (2010). Data structures for statistical computing in
+	Python. In \textit{Proceedings of the 9th Python in Science Conference} (Vol.
+	445, pp. 51-56).
+
+	\bibitem{hunter2007matplotlib}
+	Hunter, J. D. (2007). Matplotlib: A 2D graphics environment.
+	\textit{Computing in Science} \& \textit{Engineering}, 9(3), 90-95.
+
+	\bibitem{openmodelica}
+	OpenModelica. (n.d.). OpenModelica User's Guide. Retrieved from
+	\url{https://openmodelica.org/doc/OpenModelicaUsersGuide/latest/optimization.html}.
+
+\end{thebibliography}
 
 \end{document}

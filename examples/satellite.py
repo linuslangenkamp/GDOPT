@@ -53,7 +53,6 @@ model.optimize(
         "linearSolver": LinearSolver.MUMPS,
         "tolerance": 1e-12,
     },
-    meshFlags={},
 )
 
 model.plotInputs()
