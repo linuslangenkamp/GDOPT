@@ -966,7 +966,7 @@ int main() {{
     def printResultParameters(self, meshIteration=None):
         meshIteration = self.checkMeshIteration(meshIteration)
         self.getResults(meshIteration)
-        print("[GDOPT] Optimal parameters:")
+        print("Optimal parameters:")
         for p, pValue in self.resultHistory[meshIteration][self.pVarNames].iloc[0].items():
             print(f"{p} = {pValue}")
         print("")
@@ -983,7 +983,7 @@ int main() {{
             return maxMeshIteration
         if type(meshIteration) == int:
             if meshIteration > maxMeshIteration:
-                print(f"[GDOPT] meshIteration too large. Setting meshIteration to maximum value of {maxMeshIteration}.")
+                print(f"meshIteration too large. Setting meshIteration to maximum value of {maxMeshIteration}.")
                 meshIteration = maxMeshIteration
         return meshIteration
 
