@@ -64,6 +64,7 @@ class Integrator {
 public:
     static Integrator radauIIA(IntegratorSteps steps);
     static Integrator testIntegrator(const double a);
+    static Integrator testCollocation2Step(const double c1);
     const std::vector<double> c;
     const std::vector<double> c0;  // c including 0 point, i.e. [0, c1, c2, ..., cm]
     const std::vector<std::vector<double>> A;

@@ -248,7 +248,7 @@ std::vector<int> Solver::L2BoundaryNorm() const {
                     cornerTrigger = true;
                 }
             }
-            lastDiffs[u] = {p_uDiff[sz(_priv->gdop->rk.c)], p_uDiff2[sz(_priv->gdop->rk.c)]};
+            lastDiffs[u] = {p_uDiff[_priv->gdop->rk.steps], p_uDiff2[_priv->gdop->rk.steps]};
 
             // detection which intervals should be bisected
             if (L2Diff1 > boundsDiff[u] || L2Diff2 > boundsDiff2[u] || cornerTrigger) {

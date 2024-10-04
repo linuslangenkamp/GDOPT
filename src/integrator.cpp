@@ -298,6 +298,17 @@ Integrator Integrator::testIntegrator(const double a) {
     return {{a, 1.}, {{a, 0.}, {1. - a, a}}, {{1 / a, 0.}, {(a - 1) / (a * a), 1. / a}}, {1 / a, (2 * a - 1) / (a * a)}, 2};
 }
 
+Integrator Integrator::testCollocation2Step(const double c1) {
+    // arbitrary 2 step collocation scheme with nodes at c1 and 1: c1 = 1/3 -> RadauIIA, seems to work poorly for non Radau, maybe some special dependencies on
+    // Radau quadraure -> TODO maybe
+    const double det = 0.5 / (c1 - 1.);
+    return {{c1, 1.0},
+            {{(-2 * c1 + c1 * c1) / det, c1 * c1 / det}, {-1. / det, (2. * c1 - 1.) / det}},
+            {{(2 * c1 - 1) / (c1 * c1 - c1), -c1 / (c1 - 1)}, {1. / (c1 * c1 - c1), (c1 - 2.) / (c1 - 1.)}},
+            {1. / c1 - 1., 1. - 1. / c1},
+            2};
+}
+
 Integrator Integrator::radauIIA(IntegratorSteps steps) {
     /*
     Schema has to be of the following structure:
