@@ -251,7 +251,7 @@ class Model:
 
         for f in self.F:
             if diffVar == f.diffVar:
-                fail = f"Equation for diff({diffVar}) has been added already"
+                fail = f"[GDOPT - ERROR] Equation for diff({diffVar}) has been added already"
                 raise InvalidModel(fail)
         self.F.append(DynExpression(diffVar, expr, nominal=nominal))
         self.checkNominalNone(nominal)
@@ -272,8 +272,7 @@ class Model:
 
         # adds a path constraint: lb <= g(.(t)) <= ub or g(.(t)) == eq
 
-        if eq is not None and (lb != -float("inf") or ub != float("inf")):
-            raise InvalidModel("Can't set eq and lb or ub.")
+        self.checkBounds(lb, ub, eq)
         self.G.append(Constraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
         self.checkNominalNone(nominal)
 
@@ -287,8 +286,7 @@ class Model:
 
         # adds a final constraint: lb <= r(.(tf)) <= ub or r(.(tf)) == eq
 
-        if eq is not None and (lb != -float("inf") or ub != float("inf")):
-            raise InvalidModel("Can't set eq and lb or ub.")
+        self.checkBounds(lb, ub, eq)
         self.R.append(Constraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
         self.checkNominalNone(nominal)
 
@@ -302,17 +300,26 @@ class Model:
 
         # adds a parametric constraint: lb <= a(p) <= ub or a(p) == eq
 
-        if set(self.pVars).issuperset(expr.free_symbols):
-            self.A.append(ParametricConstraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
-        else:
-            raise InvalidModel("Parametric constraints only allow parametric variables")
+        if not set(self.pVars).issuperset(expr.free_symbols):
+            raise InvalidModel("[GDOPT - ERROR] Parametric constraints only allow parametric variables")
+
+        self.checkBounds(lb, ub, eq)
         self.checkNominalNone(nominal)
+        self.A.append(ParametricConstraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
 
     def addA(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
 
         # alias for addParametric()
 
         self.addParametric(expr, lb=lb, ub=ub, eq=eq, nominal=nominal)
+
+    def checkBounds(self, lb, ub, eq):
+        if eq is not None and (lb != -float("inf") or ub != float("inf")):
+            raise InvalidModel("[GDOPT - ERROR] Can't set eq and lb or ub.")
+        elif lb > ub:
+            raise InvalidModel("[GDOPT - ERROR] lb > ub.")
+        else:
+            return
 
     def _addDummy(self):
 
@@ -347,7 +354,7 @@ class Model:
             out += "\n"
 
         for r in self.R:
-            out += f"{r.lb} <= {str(r.expr)}(tf) <= {r.ub}\n"
+            out += f"{r.lb} <= {str(r.expr)}(tf) <= {r.ub}\n" if r.lb != r.ub else f"{str(r.expr)}(tf) = {r.lb}\n"
         if len(self.R) > 0:
             out += "\n"
 
@@ -1005,7 +1012,9 @@ int main(int argc, char** argv) {{
             return maxMeshIteration
         if type(meshIteration) == int:
             if meshIteration > maxMeshIteration:
-                print(f"meshIteration too large. Setting meshIteration to maximum value of {maxMeshIteration}.")
+                print(
+                    f"[GDOPT - ERROR] meshIteration too large. Setting meshIteration to maximum value of {maxMeshIteration}."
+                )
                 meshIteration = maxMeshIteration
         return meshIteration
 
@@ -1319,3 +1328,34 @@ int main(int argc, char** argv) {{
         plt.tight_layout()
         plt.subplots_adjust(left=0.075, right=0.95, top=0.925, bottom=0.075, hspace=0.1)
         plt.show()
+
+
+def HelloWorld():
+
+    # MWE with u*(t) = 1 constant.
+
+    print("[GDOPT - Hello World] Running the Hello World problem...")
+    print("[GDOPT - Hello World] u*(t) = 1, x*(t) = t - t², obj* = 1.\n")
+
+    hw = Model("Hello World")
+
+    x = hw.addState(start=0)
+    u = hw.addControl(lb=0, ub=2, guess=(-2 + 2 * sqrt(exp(1))) / (1 + (-1 + sqrt(exp(1))) * t))
+
+    hw.addDynamic(x, 2 * t - u)
+
+    hw.addFinal(x, eq=0)
+
+    hw.addLagrange(u**2, obj=Objective.MINIMIZE)
+
+    print(hw)
+
+    hw.hasLinearConstraints()
+    hw.hasQuadraticObjective()
+
+    # steps=1, rksteps=2 would be sufficient for the analytic solution!
+    hw.solve(tf=1, steps=15, rksteps=3, flags={"tolerance": 1e-14})
+
+    hw.plot(dots=Dots.ALL)
+
+    print("[GDOPT - Hello World] Success!")

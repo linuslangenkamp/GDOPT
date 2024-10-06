@@ -215,25 +215,25 @@ efficiently.
 
 \section{Installation}
 
-First, clone the GDOPT repository from GitHub:
-
-\begin{lstlisting}[language=bash]
-git clone https://github.com/linuslangenkamp/GDOPT.git
-\end{lstlisting}
-
 Depending on your operating system, follow the installation instructions.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
 
-	\textbf{Ubuntu:}
+	\textbf{Ubuntu / Debian:}
 
 	Make sure that the dependencies (git, curl, gfortran, LAPACK, CMake, g++,
-	Python3, Python3-Venv, Python3-Build) are installed on the system.
+	Python3, Python3-Venv, Python3-Build) are installed on the system:
 
-	\begin{lstlisting}[language=bash]
+\begin{lstlisting}[language=bash]
 sudo apt-get install git curl gfortran liblapack-dev cmake g++ python3 python3-venv
 pip install build
+\end{lstlisting}
+
+Clone the GDOPT repository from GitHub:
+
+\begin{lstlisting}[language=bash]
+git clone https://github.com/linuslangenkamp/GDOPT.git
 \end{lstlisting}
 
 	To keep the environment isolated, it is advised to create and activate a
@@ -255,12 +255,19 @@ source .venv/bin/activate
 	\begin{lstlisting}[language=bash]
 pip install .
 \end{lstlisting}
-\end{mdframed}
 
 Now it is possible to use GDOPT in your Python scripts:
 \begin{lstlisting}[language=python]
 import gdopt
 \end{lstlisting}
+
+To test whether the framework is set up correctly, execute the \texttt{Hello World} model:
+\begin{lstlisting}[language=python]
+gdopt.HelloWorld()
+\end{lstlisting}
+
+\end{mdframed}
+
 In addition to MUMPS, linear solvers from the HSL suite such as MA27, MA57,
 MA77, MA86, MA97\cite{hsl2013collection} may also be used if a license is
 present. To do this, the environment variable “LIB\_HSL” must be set to the
