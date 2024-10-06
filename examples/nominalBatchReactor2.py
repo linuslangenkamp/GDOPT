@@ -21,7 +21,6 @@ model.optimize(
     steps=500,
     rksteps=3,
     flags={
-        "outputPath": "/tmp",
         "linearSolver": LinearSolver.MA57,
         "initVars": InitVars.SOLVE,
         "tolerance": 1e-12,

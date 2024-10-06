@@ -26,7 +26,6 @@ model.hasLinearObjective()
 # optimizer attributes can be set directly as well
 model.meshAlgorithm = MeshAlgorithm.L2_BOUNDARY_NORM
 model.meshIterations = 6
-model.outputFilePath = "/tmp"
 model.tolerance = 1e-12
 
 model.optimize(tf=0.5, steps=100, rksteps=2)

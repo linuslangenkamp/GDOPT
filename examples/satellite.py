@@ -49,7 +49,6 @@ model.optimize(
     rksteps=3,
     tf=100,
     flags={
-        "outputPath": "/tmp",
         "linearSolver": LinearSolver.MUMPS,
         "tolerance": 1e-12,
     },

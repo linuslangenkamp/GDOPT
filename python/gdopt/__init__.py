@@ -55,7 +55,7 @@ class Model:
         self.tf = None
         self.steps = None
         self.rksteps = None
-        self.outputFilePath = None
+        self.outputFilePath = f".generated/{self.name}"
         self.maxIterations = 5000
         self.ipoptPrintLevel = None
         self.kktMuGlobalization = None
@@ -208,15 +208,14 @@ class Model:
 
         # adds the mayer term: min/max expr(tf)
         # if mayer and lagrange have a nominal -> sum is used as nominal value
+        if self.M is not None:
+            print("[GDOPT - ATTENTION] Mayer term already set! Overwriting previous Mayer term.")
 
-        if self.M:
-            raise InvalidModel("Mayer term already set")
+        if obj == Objective.MAXIMIZE:
+            self.M = Expression(-1 * expr, nominal=nominal)
+            print("[GDOPT - ATTENTION] Setting Mayer term as -1 * mayer, since maximization is chosen.")
         else:
-            if obj == Objective.MAXIMIZE:
-                self.M = Expression(-1 * expr, nominal=nominal)
-                print("[GDOPT] Setting Mayer term as -1 * mayer, since maximization is chosen.")
-            else:
-                self.M = Expression(expr, nominal=nominal)
+            self.M = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
 
     def addM(self, expr, obj=Objective.MINIMIZE, nominal=None):
@@ -230,14 +229,14 @@ class Model:
         # adds the lagrange term: min/max integral_0_tf expr dt
         # if mayer and lagrange have a nominal -> sum is used as nominal value
 
-        if self.L:
-            raise InvalidModel("Lagrange term already set")
+        if self.L is not None:
+            print("[GDOPT - ATTENTION] Lagrange term already set! Overwriting previous Lagrange term.")
+
+        if obj == Objective.MAXIMIZE:
+            self.L = Expression(-1 * expr, nominal=nominal)
+            print("[GDOPT - ATTENTION] Setting Lagrange term as -1 * lagrange, since maximization is chosen.")
         else:
-            if obj == Objective.MAXIMIZE:
-                self.L = Expression(-1 * expr, nominal=nominal)
-                print("[GDOPT] Setting Lagrange term as -1 * lagrange, since maximization is chosen.")
-            else:
-                self.L = Expression(expr, nominal=nominal)
+            self.L = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
 
     def addL(self, expr, obj=Objective.MINIMIZE, nominal=None):
@@ -511,9 +510,18 @@ class Model:
 
         Expression.simplification = simp
 
+    def disableOutputPath(self, disable):
+        if disable:
+            print(
+                "[GDOPT - ATTENTION] Output of optimal solution has been disabled. Thus, the analysis can not be used."
+            )
+            self.outputFilePath = None
+
     def setFlags(self, flags):
         if "outputPath" in flags:
             self.setOutputPath(flags["outputPath"])
+        if "disableOutput" in flags:
+            self.disableOutputPath(flags["disableOutput"])
         if "linearSolver" in flags:
             self.setLinearSolver(flags["linearSolver"])
         if "tolerance" in flags:
@@ -610,7 +618,7 @@ class Model:
         # codegen
         filename = self.name + "Generated"
 
-        print("[GDOPT] Starting .cpp codegen...")
+        print("[GDOPT - INFO] Starting .cpp codegen...")
 
         OUTPUT = f"""// CODEGEN FOR MODEL "{self.name}"\n
 // includes
@@ -640,40 +648,40 @@ class Model:
         if self.M:
             OUTPUT += "// mayer term\n"
             OUTPUT += self.M.codegen("Mayer" + self.name)
-            print("[GDOPT] Mayer: codegen done.")
+            print("[GDOPT - INFO] Mayer: codegen done.")
 
         if self.L:
             OUTPUT += "// lagrange term\n"
             OUTPUT += self.L.codegen("Lagrange" + self.name)
-            print("[GDOPT] Lagrange: codegen done.")
+            print("[GDOPT - INFO] Lagrange: codegen done.")
 
         if self.F:
             OUTPUT += "// dynamic constraints\n"
 
         for n, f in enumerate(self.F):
             OUTPUT += f.codegen("F" + str(n) + self.name)
-            print(f"[GDOPT] Dynamic constraint {n}: codegen done.")
+            print(f"[GDOPT - INFO] Dynamic constraint {n}: codegen done.")
 
         if self.G:
             OUTPUT += "// path constraints\n"
 
         for n, g in enumerate(self.G):
             OUTPUT += g.codegen("G" + str(n) + self.name)
-            print(f"[GDOPT] Path constraint {n}: codegen done.")
+            print(f"[GDOPT - INFO] Path constraint {n}: codegen done.")
 
         if self.R:
             OUTPUT += "// final constraints\n"
 
         for n, r in enumerate(self.R):
             OUTPUT += r.codegen("R" + str(n) + self.name)
-            print(f"[GDOPT] Final constraint {n}: codegen done.")
+            print(f"[GDOPT - INFO] Final constraint {n}: codegen done.")
 
         if self.A:
             OUTPUT += "// parametric constraints\n"
 
         for n, a in enumerate(self.A):
             OUTPUT += a.codegen("A" + str(n) + self.name)
-            print(f"[GDOPT] Parametric constraints {n}: codegen done.")
+            print(f"[GDOPT - INFO] Parametric constraints {n}: codegen done.")
 
         OUTPUT += self.uInitialGuessCodegen()
 
@@ -766,16 +774,16 @@ int main(int argc, char** argv) {{
         with open(f".generated/{self.name}/{filename}.cpp", "w") as file:
             file.write(OUTPUT)
 
-        print(f"[GDOPT] Generated model to .generated/{self.name}/{filename}.cpp.")
+        print(f"[GDOPT - INFO] Generated model to .generated/{self.name}/{filename}.cpp.")
         print(
-            f"[GDOPT] Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds."
+            f"[GDOPT - TIMING] Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds."
         )
 
         self.compile()
 
     def compile(self):
 
-        print("[GDOPT] Compiling generated code...")
+        print("[GDOPT - INFO] Compiling generated code...")
         compileStart = timer.time()
 
         with resources.as_file(resources.files(__package__)) as package_path:
@@ -801,11 +809,13 @@ int main(int argc, char** argv) {{
             capture_output=True,
         )
         if compileResult.returncode != 0:
-            print("[GDOPT] Compilation failed!")
+            print(f"[GDOPT - ERROR] Compilation failed! Check compile_{self.name}_err.log!")
             with open(f"compile_{self.name}_err.log", "w+") as errorFile:
-                errorFile.write(compileResult.stderr.decode())
+                decoded = compileResult.stderr.decode()
+                errorFile.write(decoded)
+                print(decoded)
             exit()
-        print(f"[GDOPT] Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.")
+        print(f"[GDOPT - TIMING] Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.")
 
     def solve(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
 
@@ -826,7 +836,9 @@ int main(int argc, char** argv) {{
                 self.setSteps(steps)
                 self.setRkSteps(rksteps)
             else:  # purely parametric
-                print("[GDOPT] Setting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric.")
+                print(
+                    "[GDOPT - ATTENTION] Setting tf = 0, steps = 1, rksteps = 1, since the model is purely parametric."
+                )
                 self.setFinalTime(0)
                 self.setSteps(1)
                 self.setRkSteps(1)
@@ -838,32 +850,31 @@ int main(int argc, char** argv) {{
 
         # solve the IVP with scipy if set
         if self.initVars == InitVars.SOLVE:
-            print("[GDOPT] Solving IVP for initial state guesses...")
             self.initialStatesCode()
-            print("[GDOPT] Initial guesses done.")
 
         # configuration codegen
-        print(f"[GDOPT] Creation of configuration .generated/{self.name}/{self.name}.config...")
+        print(f"[GDOPT - INFO] Creation of configuration .generated/{self.name}/{self.name}.config...")
         with open(f".generated/{self.name}/{self.name}.config", "w") as file:
             file.write(self.createConfigurationCode())
-        print("[GDOPT] Configuration done.")
+        print("[GDOPT - INFO] Configuration done.")
 
         self.execute()
 
     def execute(self, args=""):
         argList = args.split() if args else []
-        print(f"[GDOPT] Executing...")
+        print(f"[GDOPT - INFO] Executing...")
         runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"] + argList)
-        print(f"\n[GDOPT] Exit: {backendReturnCode(runResult.returncode).replace('_', ' ')}.\n")
+        print(f"\n[GDOPT - INFO] Exit: {backendReturnCode(runResult.returncode).replace('_', ' ')}.\n")
 
         self.initAnalysis()
 
     def initialStatesCode(self):
+        print("[GDOPT - INFO] Solving IVP for initial state guesses...")
         solveStart = timer.time()
         timeVals, stateVals = self.solveDynamic()
-        print(f"[GDOPT] Solving the IVP took {round(timer.time() - solveStart, 4)} seconds.")
+        print(f"[GDOPT - TIMING] Solving the IVP took {round(timer.time() - solveStart, 4)} seconds.")
 
-        print(f"[GDOPT] Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...")
+        print(f"[GDOPT - INFO] Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...")
         with open(self.initialStatesPath + "/initialValues.csv", "w") as file:
             for i in range(len(timeVals)):
                 row = (
@@ -873,6 +884,7 @@ int main(int argc, char** argv) {{
                     row.append(str(stateVals[dim][i]))
 
                 file.write(",".join(row) + "\n")
+        print("[GDOPT - INFO] Initial guesses done.")
 
     def createConfigurationCode(self):
 

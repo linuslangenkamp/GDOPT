@@ -58,7 +58,7 @@ model.optimize(
     tf=1,
     steps=25,
     rksteps=3,
-    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "exportJacobianPath": "/tmp"},
+    flags={"linearSolver": LinearSolver.MA57, "exportJacobianPath": "/tmp"},
     meshFlags={
         "algorithm": MeshAlgorithm.L2_BOUNDARY_NORM,
         "iterations": 5,

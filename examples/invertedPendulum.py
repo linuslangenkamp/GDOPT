@@ -34,7 +34,7 @@ model.optimize(
     steps=10000,
     rksteps=1,
     tf=8,
-    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "kktMuGlobalization": False},
+    flags={"linearSolver": LinearSolver.MA57, "kktMuGlobalization": False},
 )
 
 model.plot(meshIteration=0)

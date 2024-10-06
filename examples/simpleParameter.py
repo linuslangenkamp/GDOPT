@@ -30,7 +30,7 @@ model.optimize(
     steps=25,
     rksteps=3,
     tf=1,
-    flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MUMPS, "tolerance": 1e-14},
+    flags={"linearSolver": LinearSolver.MUMPS, "tolerance": 1e-14},
 )
 
 model.printResultParameters()

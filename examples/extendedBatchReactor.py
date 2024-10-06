@@ -29,7 +29,6 @@ model.optimize(
     steps=250,
     rksteps=3,
     flags={
-        "outputPath": "/tmp",
         "linearSolver": LinearSolver.MA57,
         "initVars": InitVars.SOLVE,
         "exportJacobianPath": "/tmp",

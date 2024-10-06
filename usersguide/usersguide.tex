@@ -1118,7 +1118,6 @@ model.optimize(
 	steps=250,
 	rksteps=3,
 	flags={
-		"outputPath": "/tmp",
 		"linearSolver": LinearSolver.MUMPS,
 		"initVars": InitVars.SOLVE_EXPLICIT,
 		"exportJacobianPath": "/tmp",
@@ -1207,18 +1206,6 @@ are presented below.
 	\begin{itemize}
 
 		\phantomsection
-		\label{flag:outputPath}
-		\item \texttt{"outputPath" $\rightarrow$ str}: Sets the path to
-		which
-		the optimal solution is output as a text file. If this
-		value is not provided,
-		the optimal solution \textbf{can not be accessed}. This flag does
-		not have a standard
-		path, since I/O operations can slow down the framework
-		and are obsolete in some
-		cases.
-		
-		\phantomsection
 		\label{flag:tolerance}
 		\item \texttt{"tolerance" $\rightarrow$ float}
 		      (\emph{default}=\texttt{1e-14}): Sets the optimization
@@ -1265,6 +1252,19 @@ are presented below.
 			\label{flag:kktmuglobalization}
 			\item \texttt{"kktMuGlobalization" $\rightarrow$ bool}
 			(\emph{default}=\texttt{True}): Turns the IPOPT adaptive mu globalization based on KKT errors on or off. In many cases, it is advantageous to use this, which is why this strategy is set as the default. For poorly conditioned problems, it is advised to disable this.
+
+			
+			\label{flag:outputPath}
+			\item \texttt{"outputPath" $\rightarrow$ str} (\emph{default} = \texttt{"cwd\textbackslash .generated\textbackslash modelname\textbackslash modelname\\\{it\}.csv"}): Sets the path to
+			which the optimal solution is output as a text file. If this
+			value is not provided,
+			the optimal solution for every mesh iteration $it=0, \ldots,
+			maxMeshIteration$ will be written to the .generated directory.
+			
+			\phantomsection
+			\label{flag:disableOutput}
+			\item \texttt{"disableOutput" $\rightarrow$ bool} (\emph{default} = \texttt{False}): If set to true, the output of the optimal solution will be disabled. This may be useful when benchmarks are carried out.
+			Note that the analysis \eqref{c:Analysis} can not be accessed, if \texttt{"disableOutput"} is set to true.
 
 		      \phantomsection
 		      \label{flag:ipoptPrintLevel}
@@ -1417,9 +1417,7 @@ are presented below.
 \label{c:Analysis}
 The \texttt{gdopt} package offers the possibility to directly analyze the
 optimal solution with  \texttt{pandas} and \texttt{Matplotlib} functions. To
-access the features described in this section, it is mandatory to set the
-\texttt{"outputPath"} flag \eqref{flag:outputPath} in \texttt{model.optimize}
-\eqref{optimize}. Otherwise, the solution will not be written to a file.
+access the features described in this section, it is mandatory that \texttt{"disableOutput"} \eqref{flag:disableOutput} is not set to \texttt{True}. Otherwise the analysis can not be accessed.
 
 \subsection{Results}
 \label{c:Results}
@@ -1443,7 +1441,7 @@ well. The elements of the dictionary are
 	      operations
 \end{itemize}
 
-If the \texttt{"outputPath"} flag \eqref{flag:outputPath} is set, the framework
+If the \texttt{"disableOutput"} flag \eqref{flag:disableOutput} is not set to \texttt{True}, the framework
 can directly import the optimal solution from the back-end as a
 \texttt{pandas.DataFrame}. Note that the names of the variables are taken from
 the \texttt{symbol} argument in \texttt{addState} \eqref{addState},
@@ -2255,7 +2253,6 @@ model.generate()
 
 model.optimize(tf=1, steps=250, rksteps=3,
 	flags={
-		"outputPath": "/tmp",
 		"linearSolver": LinearSolver.MUMPS,
 		"initVars": InitVars.SOLVE
 	},
@@ -2303,7 +2300,6 @@ model.optimize(
 	steps=200,
 	rksteps=3,
 	flags={
-		"outputPath": "/tmp",
 		"tolerance": 1e-14,
 	        "linearSolver": LinearSolver.MA57
         },
@@ -2343,7 +2339,6 @@ model.optimize(
 	steps=50,
 	rksteps=3,
 	flags={
-		"outputPath": "/tmp",
 		"linearSolver": LinearSolver.MUMPS
 	},
 	meshFlags={
@@ -2391,7 +2386,7 @@ model.optimize(
 tf=1,
 steps=500,
 rksteps=3,
-flags={"outputPath": "/tmp", "linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE, "tolerance": 1e-14},
+flags={"linearSolver": LinearSolver.MA57, "initVars": InitVars.SOLVE, "tolerance": 1e-14},
 )
 
 model.setValue(NOM, 1e10)

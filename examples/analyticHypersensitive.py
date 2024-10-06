@@ -30,7 +30,6 @@ model.optimize(
     steps=100,
     rksteps=9,
     flags={
-        "outputPath": "/tmp",
         "linearSolver": LinearSolver.MA57,
         "quadraticObjective": True,
         "linearConstraints": True,
