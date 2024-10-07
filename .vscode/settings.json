@@ -82,4 +82,5 @@
   "clang-format.language.objc": true,
   "editor.fontFamily": "Hack, Source Code Pro, Consolas, monospace",
   "terminal.integrated.fontFamily": "",
+  "editor.cursorStyle": "block"
 }

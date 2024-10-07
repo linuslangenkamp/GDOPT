@@ -597,6 +597,10 @@ class Model:
             self.userScaling = True
 
     def initAnalysis(self):
+        
+        # clear result history for new optimization
+        self.resultHistory = {}  
+
         with open("/tmp/modelinfo.txt", "r") as file:
             for line in file:
                 line = line.strip()
@@ -852,8 +856,6 @@ int main(int argc, char** argv) {{
 
             self.setFlags(flags)
             self.setMeshFlags(meshFlags)
-        else:
-            self.resultHistory = {}  # clear result history for new optimization
 
         # solve the IVP with scipy if set
         if self.initVars == InitVars.SOLVE:
