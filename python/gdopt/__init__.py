@@ -607,9 +607,9 @@ class Model:
                 key, value = line.split(",")
                 key = key.strip()
                 value = value.strip()
-                if key == "maxMeshIteration":
+                if key in ["maxMeshIteration", "initialIntervals", "insertedIntervals", "finalIntervals"]:
                     self.modelInfo[key] = int(value)
-                elif key in ["totalTimeInSolver", "actualTimeInSolver", "totalTimeInIO"]:
+                elif key in ["totalTimeInSolver", "actualTimeInSolver", "totalTimeInIO", "objective"]:
                     self.modelInfo[key] = float(value)
 
     def generate(self):
@@ -701,7 +701,7 @@ class Model:
         pushR = "\n    ".join("R.push_back(" + "R" + str(n) + self.name + "::create());" for n in range(len(self.R)))
         pushA = "\n    ".join("A.push_back(" + "A" + str(n) + self.name + "::create());" for n in range(len(self.A)))
 
-        OUTPUT += f"""Problem createProblem_{self.name}() {{
+        OUTPUT += f"""Problem createProblem{self.name}() {{
 
     std::vector<std::unique_ptr<Expression>> F;
     {pushF}
@@ -760,22 +760,19 @@ int main(int argc, char** argv) {{
     setGlobalStandardConfiguration(config);
     setGlobalRuntimeParameters(config);
 
-    // problem and solver creation
-    auto problem = std::make_shared<const Problem>(createProblem_{self.name}());
-    InitVars initVars = INIT_VARS;
-    Integrator rk = Integrator::radauIIA(RADAU_INTEGRATOR);
+    // TODO: set argv "TF=5 STEPS=500 ..." basically all runtimeParameters 
+
+    // problem specific structures
+    auto problem = std::make_shared<const Problem>(createProblem{self.name}());
+    Integrator radau = Integrator::radauIIA(RADAU_INTEGRATOR);
     Mesh mesh = Mesh::createEquidistantMesh(INTERVALS, FINAL_TIME);
-    LinearSolver linearSolver = LINEAR_SOLVER;
-    MeshAlgorithm meshAlgorithm = MESH_ALGORITHM;
-    int meshIterations = MESH_ITERATIONS;
 
-    Solver solver = Solver(create_gdop(problem, mesh, rk, initVars), meshIterations, linearSolver, meshAlgorithm);
-
-    // set all flags based on the global configuration
-    solver.setGlobalFlags();
+    // create the solver
+    Solver solver = Solver(createGDOP(problem, mesh, radau, INIT_VARS), MESH_ITERATIONS, LINEAR_SOLVER, MESH_ALGORITHM);
 
     // optimize
     int status = solver.solve();
+
     return status;
 }}        
         """

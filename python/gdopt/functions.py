@@ -95,4 +95,4 @@ def backendReturnCode(code):
     if code in IPOPT_RETURN_CODES:
         return IPOPT_RETURN_CODES[code]
     else:
-        return "Unknown return code"
+        return f"Unknown return code: {code}"

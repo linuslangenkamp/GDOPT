@@ -531,6 +531,9 @@ void Solver::setRefinementMethod(RefinementMethod method) {
 }
 
 void Solver::initSolvingProcess() {
+    // set all flags based on the global configuration, mandatory
+    setGlobalFlags();
+
     printASCIIArt();
     setRefinementParameters();
     solveStartTime = std::chrono::high_resolution_clock::now();
@@ -546,13 +549,13 @@ void Solver::initSolvingProcess() {
 }
 
 void Solver::postOptimization() {
-    auto io_start = std::chrono::high_resolution_clock::now();
+    auto ioStart = std::chrono::high_resolution_clock::now();
     objectiveHistory.push_back(_priv->gdop->objective);
     if (exportOptimum) {
         _priv->gdop->exportOptimum(exportOptimumPath + "/" + _priv->gdop->problem->name + std::to_string(meshIteration) + ".csv");
     }
     meshIteration++;
-    timedeltaIO += std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - io_start);
+    timedeltaIO += std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - ioStart);
 }
 
 void Solver::printObjectiveHistory() {
@@ -574,10 +577,16 @@ void Solver::createModelInfo() const {
                   << "/tmp/modelinfo.txt" << std::endl;
         return;
     }
+
+    outFile << std::fixed << std::setprecision(16);
     outFile << "maxMeshIteration, " << meshIteration - 1 << "\n";
     outFile << "totalTimeInSolver, " << solveTotalTimeTaken.count() << "\n";
     outFile << "actualTimeInSolver, " << solveActualTimeTaken.count() << "\n";
     outFile << "totalTimeInIO, " << timedeltaIO.count() << "\n";
+    outFile << "objective, " << _priv->gdop->objective << "\n";
+    outFile << "initialIntervals, " << initialIntervals << "\n";
+    outFile << "insertedIntervals, " << _priv->gdop->mesh.intervals - initialIntervals << "\n";
+    outFile << "finalIntervals, " << _priv->gdop->mesh.intervals << "\n";;
     outFile.close();
 }
 

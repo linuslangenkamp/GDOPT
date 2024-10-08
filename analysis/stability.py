@@ -14,59 +14,15 @@ c | A
 # Define z as a symbolic variable
 z = symbols("z")
 
-
-# custom 2 step order 2
-# Redefine the matrix A using symbolic z
-"""
-4/7 | G   :  G-4/7
- 1  | 7/6 :  -1/6
-------------------
-	| 7/6 :  -1/6
-"""
-"""
-G = 4/7
-A_sym = Matrix([
-    [G, 4/7-G],
-    [7/6, -1/6],
-])	
-
-# Define the b vector and ones vector symbolically
-b_sym = Matrix([7/6, -1/6])
-
-
--> general c = [n / (2n + 1), 1] for some n
--> a21, a22 != b -> b = a2: = [(2n+1)/(2n+2), 1/(2n+2)];; RadauIIA 2 step 1/3, 1 -> 3/4 1/4
-"""
-"""
-RK 4
-
-A_sym = Matrix([
-    [0, 0, 0, 0],
-    [0.5, 0, 0, 0],
-    [0, 0.5, 0, 0],
-    [0, 0, 1, 0]
-])
-
-# Define the b vector using floats
-b_sym = Matrix([
-    1/6,
-    1/3,
-    1/3,
-    1/6
-])
-"""
-
-c1 = 1/2
-det = 0.5 / (c1 - 1)
 A = Matrix(
     [
-        [(-2 * c1 + c1 * c1) / det, c1 * c1 / det],
-        [-1.0 / det, (2.0 * c1 - 1.0) / det],
+        [5/12, -1/12],
+        [3/4, 1/4],
     ]
 )
 
 # Define the b vector and ones vector symbolically
-b = Matrix([-1.0 / det, (2.0 * c1 - 1.0) / det])
+b = Matrix([3/4, 1/4])
 
 size = 5
 

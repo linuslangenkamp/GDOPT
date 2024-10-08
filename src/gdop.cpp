@@ -1268,6 +1268,6 @@ GDOP::GDOP(const std::shared_ptr<const Problem>& problem, Mesh& mesh, Integrator
     : problem(problem), mesh(mesh), rk(rk), initVars(initVars) {
 }
 
-GDOP* create_gdop(const std::shared_ptr<const Problem>& problem, Mesh& mesh, Integrator& rk, InitVars initVars) {
+GDOP* createGDOP(const std::shared_ptr<const Problem>& problem, Mesh& mesh, Integrator& rk, InitVars initVars) {
     return new GDOP(problem, mesh, rk, initVars);
 }
