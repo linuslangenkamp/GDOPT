@@ -66,6 +66,11 @@ def guessPiecewise(*args):
 
     return Piecewise(*args, (0, True))
 
+def Abs(expr):
+
+    # custom Abs as piecewise function because symengine.Abs() doesn't work in codegen?!
+
+    return Piecewise((-expr, expr < 0), (expr, True))
 
 def backendReturnCode(code):
     code = int(code)

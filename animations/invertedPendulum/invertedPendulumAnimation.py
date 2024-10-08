@@ -1,6 +1,6 @@
 import pygame
 import csv
-
+import math
 import graphics
 
 def load_data(file_path):
@@ -12,7 +12,7 @@ def load_data(file_path):
                 "time": float(row['time']),
                 "s": float(row['x[0]']),
                 "v": float(row['x[1]']),
-                "phi": float(row['x[2]']),
+                "phi": -float(row['x[2]']) + 2*math.pi,
                 "vphi": float(row['x[3]']),
                 "tau": float(row['u[0]'])
             })
@@ -78,8 +78,7 @@ def main(data):
 
 
 if __name__ == "__main__":
-	# "/home/linus/Documents/outputsGDOP"
-    path = "/tmp"
+    path = "/home/linus/masterarbeit/ipopt_do/examples/.generated/invertedPendulum"
     model = "invertedPendulum"
     it = 0
     file_path = path + "/" + model + str(it) + ".csv"
