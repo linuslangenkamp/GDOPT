@@ -612,7 +612,7 @@ class Model:
                 elif key in ["totalTimeInSolver", "actualTimeInSolver", "totalTimeInIO", "objective"]:
                     self.modelInfo[key] = float(value)
 
-    def generate(self):
+    def generate(self, compiler="g++", compileFlags=["-O3", "-ffast-math"]):
 
         # does the entire code generation and compilation of the model
 
@@ -760,7 +760,7 @@ int main(int argc, char** argv) {{
     setGlobalStandardConfiguration(config);
     setGlobalRuntimeParameters(config);
 
-    // TODO: set argv "TF=5 STEPS=500 ..." basically all runtimeParameters 
+    // TODO: set argv, basically all runtimeParameters 
 
     // problem specific structures
     auto problem = std::make_shared<const Problem>(createProblem{self.name}());
@@ -768,7 +768,7 @@ int main(int argc, char** argv) {{
     Mesh mesh = Mesh::createEquidistantMesh(INTERVALS, FINAL_TIME);
 
     // create the solver
-    Solver solver = Solver(createGDOP(problem, mesh, radau, INIT_VARS), MESH_ITERATIONS, LINEAR_SOLVER, MESH_ALGORITHM);
+    Solver solver = Solver(createGDOP(problem, mesh, radau, INIT_VARS));
 
     // optimize
     int status = solver.solve();
@@ -787,18 +787,15 @@ int main(int argc, char** argv) {{
             f"[GDOPT - TIMING] Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds."
         )
 
-        self.compile()
+        self.compile(compiler=compiler, compileFlags=compileFlags)
 
-    def compile(self):
+    def compile(self, compiler="g++", compileFlags=["-O3", "-ffast-math"]):
 
         print("[GDOPT - INFO] Compiling generated code...")
         compileStart = timer.time()
 
         with resources.as_file(resources.files(__package__)) as package_path:
-            # TODO: investigate if -ffast-math is save here
-            compileFlags = [
-                "-O3",
-                "-ffast-math",
+            compileFlags += [
                 f"-L{package_path / 'lib'}",
                 f"-I{package_path / 'include'}",
                 f"-Wl,-rpath",
@@ -807,7 +804,7 @@ int main(int argc, char** argv) {{
 
         compileResult = subprocess.run(
             [
-                "g++",
+                compiler,
                 "-std=c++17",
                 f".generated/{self.name}/{self.name}Generated.cpp",
                 "-lgdopt",
@@ -817,19 +814,17 @@ int main(int argc, char** argv) {{
             capture_output=True,
         )
         if compileResult.returncode != 0:
-            print(f"[GDOPT - ERROR] Compilation failed! Check compile_{self.name}_err.log!")
             with open(f"compile_{self.name}_err.log", "w+") as errorFile:
                 decoded = compileResult.stderr.decode()
                 errorFile.write(decoded)
-                print(decoded)
-            exit()
+                raise RuntimeError(f"[GDOPT - ERROR] Compilation failed! Check compile_{self.name}_err.log!\n\n" + decoded)
         print(f"[GDOPT - TIMING] Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.")
 
-    def solve(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
+    def solve(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False, compiler="g++", compileFlags=["-O3", "-ffast-math"]):
 
         # generate and optimize pipelines sequentially
 
-        self.generate()
+        self.generate(compiler=compiler, compileFlags=compileFlags)
         self.optimize(tf=tf, steps=steps, rksteps=rksteps, flags=flags, meshFlags=meshFlags, resimulate=resimulate)
 
     def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):

@@ -9,27 +9,35 @@
 
 // declaration of global variables
 
-// always set
+// parameters that always have to be given
 InitVars INIT_VARS;
 IntegratorSteps RADAU_INTEGRATOR;
-RefinementMethod REFINEMENT_METHOD;
-LinearSolver LINEAR_SOLVER;
-MeshAlgorithm MESH_ALGORITHM;
-
-double TOLERANCE = 1e-12;
 double FINAL_TIME;
 int INTERVALS;
-int MAX_ITERATIONS;
-int MESH_ITERATIONS;
+
+// parameters with default values
+RefinementMethod REFINEMENT_METHOD = RefinementMethod::LINEAR_SPLINE;
+LinearSolver LINEAR_SOLVER = LinearSolver::MUMPS;
+MeshAlgorithm MESH_ALGORITHM = MeshAlgorithm::L2_BOUNDARY_NORM;
+
+double TOLERANCE = 1e-14;
+int MAX_ITERATIONS = 5000;
+int MESH_ITERATIONS = 0;
 bool USER_SCALING = false;
+
+// ipopt flags
+int IPOPT_PRINT_LEVEL = 5;
+bool KKT_ERROR_MU_GLOBALIZATION = true;
+
+// mesh parameters
+double SIGMA = 2.5;     // basicStrategy: std deviation sigma 
+double LEVEL = 0;       // L2BN: L2 criterion factor, log scale, std range -2.5 - 2.5
+double C_TOL = 0.1;     // L2BN: corner criterion P1-error threshold, std range 0.05 - 0.5
 
 // flags for constant derivatives
 bool LINEAR_OBJECTIVE = false;                        // true if M and L are linear
 bool LINEAR_CONSTRAINTS = false;                      // true if f, g, r and a are all linear
 bool QUADRATIC_OBJECTIVE_LINEAR_CONSTRAINTS = false;  // true if f, g, r and a are all linear and M and L are at most quadratic
-
-// an important ipopt flag
-bool KKT_ERROR_MU_GLOBALIZATION = true;
 
 // pseudo optional, if null -> empty string ""
 std::string EXPORT_OPTIMUM_PATH;
@@ -37,11 +45,6 @@ std::string EXPORT_HESSIAN_PATH;
 std::string EXPORT_JACOBIAN_PATH;
 std::string INITIAL_STATES_PATH;
 
-// actual optionals
-std::optional<int> IPOPT_PRINT_LEVEL;
-std::optional<double> SIGMA;
-std::optional<double> LEVEL;
-std::optional<double> C_TOL;
 
 const std::unordered_map<std::string, InitVars> initVarsMap = {{"CONST", InitVars::CONST},
                                                                {"SOLVE", InitVars::SOLVE},
@@ -148,7 +151,7 @@ void setGlobalStandardConfiguration(const std::unordered_map<std::string, std::s
     LINEAR_SOLVER = stringToLinearSolver(configMap.at("LINEAR_SOLVER"));
     REFINEMENT_METHOD = stringToRefinementMethod(configMap.at("REFINEMENT_METHOD"));
     MESH_ALGORITHM = stringToMeshAlgorithm(configMap.at("MESH_ALGORITHM"));
-    RADAU_INTEGRATOR = (IntegratorSteps)std::stoi(configMap.at("RADAU_INTEGRATOR"));
+    RADAU_INTEGRATOR = (IntegratorSteps) std::stoi(configMap.at("RADAU_INTEGRATOR"));
 
     // oconstant derivatives
     LINEAR_OBJECTIVE = configMap.at("LINEAR_OBJECTIVE") == "true";
@@ -177,7 +180,7 @@ void setGlobalStandardConfiguration(const std::unordered_map<std::string, std::s
         INITIAL_STATES_PATH = configMap.at("INITIAL_STATES_PATH");
     }
 
-    // optional double mesh flags
+    // double mesh flags
     if ((configMap.find("SIGMA") != configMap.end())) {
         SIGMA = std::stod(configMap.at("SIGMA"));
     }

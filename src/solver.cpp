@@ -58,8 +58,7 @@ struct SolverPrivate {
     SmartPtr<GDOP> gdop;
 };
 
-Solver::Solver(GDOP* gdop, const int maxMeshIterations, LinearSolver linearSolver, MeshAlgorithm meshAlgorithm)
-    : maxMeshIterations(maxMeshIterations), linearSolver(linearSolver), meshAlgorithm(meshAlgorithm) {
+Solver::Solver(GDOP* gdop) {
     this->_priv = std::make_unique<SolverPrivate>();
     this->_priv->gdop = gdop;
 }
@@ -100,7 +99,7 @@ int Solver::solve() {
     status = app->OptimizeTNLP(_priv->gdop);
     postOptimization();
 
-    while (meshIteration <= maxMeshIterations) {
+    while (meshIteration <= MESH_ITERATIONS) {
         // detect intervals that have to be refined
         auto markedIntervals = detect();
 
@@ -133,7 +132,7 @@ int Solver::solve() {
 }
 
 std::vector<int> Solver::detect() const {
-    switch (meshAlgorithm) {
+    switch (MESH_ALGORITHM) {
         case MeshAlgorithm::NONE:
             return {};
         case MeshAlgorithm::BASIC:
@@ -142,19 +141,6 @@ std::vector<int> Solver::detect() const {
             return L2BoundaryNorm();
         default:
             return {};
-    }
-}
-
-void Solver::setRefinementParameters() {
-    switch (meshAlgorithm) {
-        case MeshAlgorithm::NONE:
-            return;
-        case MeshAlgorithm::BASIC:
-            return setBasicStrategy();
-        case MeshAlgorithm::L2_BOUNDARY_NORM:
-            return setL2BoundaryNorm();
-        default:
-            return;
     }
 }
 
@@ -202,8 +188,8 @@ std::vector<int> Solver::L2BoundaryNorm() const {
     std::vector<double> boundsDiff;
     std::vector<double> boundsDiff2;
     for (int u = 0; u < _priv->gdop->problem->sizeU; u++) {
-        boundsDiff.push_back(cDiff * rangeU[u] / initialIntervals * pow(10, -L2Level));
-        boundsDiff2.push_back(cDiff2 * rangeU[u] / initialIntervals * pow(10, -L2Level));
+        boundsDiff.push_back(cDiff * rangeU[u] / initialIntervals * pow(10, -LEVEL));
+        boundsDiff2.push_back(cDiff2 * rangeU[u] / initialIntervals * pow(10, -LEVEL));
     }
 
     for (int i = 0; i < _priv->gdop->mesh.intervals; i++) {
@@ -244,7 +230,7 @@ std::vector<int> Solver::L2BoundaryNorm() const {
                 double p1ErrorDiff = std::abs(p_uDiff[0] - lastDiffs[u][0]) / (1 + std::min({std::abs(p_uDiff[0]), std::abs(lastDiffs[u][0])}));
                 double p1ErrorDiff2 = std::abs(p_uDiff2[0] - lastDiffs[u][1]) / (1 + std::min({std::abs(p_uDiff2[0]), std::abs(lastDiffs[u][1])}));
 
-                if (p1ErrorDiff > L2CornerTol || p1ErrorDiff2 > L2CornerTol) {
+                if (p1ErrorDiff > C_TOL || p1ErrorDiff2 > C_TOL) {
                     cornerTrigger = true;
                 }
             }
@@ -313,7 +299,7 @@ std::vector<int> Solver::basicStrategy() const {
     for (int i = 0; i < _priv->gdop->mesh.intervals; i++) {
         bool containsInterval = false;
         for (int u = 0; u < _priv->gdop->problem->sizeU; u++) {
-            if (absIntSum[u][i] > means[u] + basicStrategySigma * stds[u] || containsInterval) {
+            if (absIntSum[u][i] > means[u] + SIGMA * stds[u] || containsInterval) {
                 markedIntervals.push_back(i);
                 containsInterval = true;
             }
@@ -323,7 +309,7 @@ std::vector<int> Solver::basicStrategy() const {
 }
 
 void Solver::refine(std::vector<int>& markedIntervals) {
-    switch (refinementMethod) {
+    switch (REFINEMENT_METHOD) {
         case RefinementMethod::LINEAR_SPLINE:
             refineLinear(markedIntervals);
             break;
@@ -469,90 +455,32 @@ void Solver::refinePolynomial(std::vector<int>& markedIntervals) {
     }
 }
 
-void Solver::setGlobalFlags() {
-    // set solver flags
-
-    userScaling = USER_SCALING;
-    setTolerance(TOLERANCE);
-    setRefinementMethod(REFINEMENT_METHOD);
-    setMaxIterations(MAX_ITERATIONS);
-
-    if (EXPORT_OPTIMUM_PATH != "") {
-        setExportOptimumPath(EXPORT_OPTIMUM_PATH);
-    }
-
+void Solver::setExportSparsityPath() {
+    // export paths
     if (EXPORT_HESSIAN_PATH != "") {
-        setExportHessianPath(EXPORT_HESSIAN_PATH);
+        _priv->gdop->exportHessianPath = EXPORT_HESSIAN_PATH;
+        _priv->gdop->exportHessian = true;
     }
 
     if (EXPORT_JACOBIAN_PATH != "") {
-        setExportJacobianPath(EXPORT_JACOBIAN_PATH);
+        _priv->gdop->exportJacobianPath = EXPORT_JACOBIAN_PATH;
+        _priv->gdop->exportJacobian = true;
     }
-
-    // set solver mesh parameters
-    if (LEVEL.has_value()) {
-        setMeshParameter("level", LEVEL.value());
-    }
-
-    if (C_TOL.has_value()) {
-        setMeshParameter("ctol", C_TOL.value());
-    }
-
-    if (SIGMA.has_value()) {
-        setMeshParameter("sigma", SIGMA.value());
-    }
-}
-
-void Solver::setTolerance(double tol) {
-    tolerance = tol;
-}
-
-void Solver::setMaxIterations(int iterations) {
-    maxIterations = iterations;
-}
-
-void Solver::setExportOptimumPath(const std::string& exportPath) {
-    exportOptimumPath = exportPath;
-    exportOptimum = true;
-}
-
-void Solver::setExportHessianPath(const std::string& exportPath) {
-    exportHessianPath = exportPath;
-    exportHessian = true;
-}
-
-void Solver::setExportJacobianPath(const std::string& exportPath) {
-    exportJacobianPath = exportPath;
-    exportJacobian = true;
-}
-
-void Solver::setRefinementMethod(RefinementMethod method) {
-    refinementMethod = method;
 }
 
 void Solver::initSolvingProcess() {
     // set all flags based on the global configuration, mandatory
-    setGlobalFlags();
-
+    setExportSparsityPath();
     printASCIIArt();
-    setRefinementParameters();
     solveStartTime = std::chrono::high_resolution_clock::now();
     initialIntervals = _priv->gdop->mesh.intervals;
-    if (exportHessian) {
-        _priv->gdop->exportHessianPath = exportHessianPath;
-        _priv->gdop->exportHessian = true;
-    }
-    if (exportJacobian) {
-        _priv->gdop->exportJacobianPath = exportJacobianPath;
-        _priv->gdop->exportJacobian = true;
-    }
 }
 
 void Solver::postOptimization() {
     auto ioStart = std::chrono::high_resolution_clock::now();
     objectiveHistory.push_back(_priv->gdop->objective);
-    if (exportOptimum) {
-        _priv->gdop->exportOptimum(exportOptimumPath + "/" + _priv->gdop->problem->name + std::to_string(meshIteration) + ".csv");
+    if (EXPORT_OPTIMUM_PATH != "") {
+        _priv->gdop->exportOptimum(EXPORT_OPTIMUM_PATH + "/" + _priv->gdop->problem->name + std::to_string(meshIteration) + ".csv");
     }
     meshIteration++;
     timedeltaIO += std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - ioStart);
@@ -622,7 +550,7 @@ void Solver::printMeshStats() const {
 }
 
 void Solver::printASCIIArt() const {
-    // slant simple border width 90
+    // slant stars border width 90, h pad 1
     const std::string art = R"(
 ************************************************************************************
 *    __________  ____  ____  ______            ______                           __ *
@@ -634,14 +562,14 @@ void Solver::printASCIIArt() const {
 *   / / / / / / / __ \/ __ `/ __ `__ \/ / ___/                                     *
 *  / /_/ / /_/ / / / / /_/ / / / / / / / /__                                       *
 * /_____/\__, /_/ /_/\__,_/_/ /_/ /_/_/\___/                                       *
-*    ___/____/   __  _           _                          ____   ___ _____       *
-*   / __ \____  / /_(_)___ ___  (_)___  ___  _____  _   __ / __ \ <  /|__  /       *
-*  / / / / __ \/ __/ / __ `__ \/ /_  / / _ \/ ___/ | | / // / / / / /  /_ <        *
-* / /_/ / /_/ / /_/ / / / / / / / / /_/  __/ /     | |/ // /_/ / / / ___/ /        *
-* \____/ .___/\__/_/_/ /_/ /_/_/ /___/\___/_/      |___(_)____(_)_(_)____/         *
+*    ___/____/   __  _           _                          ____   ___ __ __       *
+*   / __ \____  / /_(_)___ ___  (_)___  ___  _____  _   __ / __ \ <  // // /       *
+*  / / / / __ \/ __/ / __ `__ \/ /_  / / _ \/ ___/ | | / // / / / / // // /_       *
+* / /_/ / /_/ / /_/ / / / / / / / / /_/  __/ /     | |/ // /_/ / / //__  __/       *
+* \____/ .___/\__/_/_/ /_/ /_/_/ /___/\___/_/      |___(_)____(_)_(_) /_/          *
 *     /_/                                                                          *
 *                                                                                  *
-* This is GDOPT - General Dynamic Optimizer v.0.1.3, a framework for solving       *
+* This is GDOPT - General Dynamic Optimizer v.0.1.4, a framework for solving       *
 * "General Dynamic Optimization Problems" using local collocation methods, based   *
 * on RadauIIA formulas, and adaptive mesh refinement techniques. GDOPT utilizes    *
 * the capabilities of the nonlinear optimizer IPOPT for solving the resulting      *
@@ -688,17 +616,17 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
     }
 
     // iterations and tolereances
-    app.Options()->SetNumericValue("tol", tolerance);
-    app.Options()->SetNumericValue("acceptable_tol", tolerance * 1e3);
-    app.Options()->SetIntegerValue("max_iter", maxIterations);
+    app.Options()->SetNumericValue("tol", TOLERANCE);
+    app.Options()->SetNumericValue("acceptable_tol", TOLERANCE * 1e3);
+    app.Options()->SetIntegerValue("max_iter", MAX_ITERATIONS);
 
     // ipopt dump
     app.Options()->SetStringValue("timing_statistics", "yes");
-    app.Options()->SetIntegerValue("print_level", IPOPT_PRINT_LEVEL.has_value() ? IPOPT_PRINT_LEVEL.value() : 5);
+    app.Options()->SetIntegerValue("print_level", IPOPT_PRINT_LEVEL);
 
     // linear solver
     auto const libHSLPath = getenv("LIB_HSL");
-    auto const linSolver = getLinearSolverName(linearSolver);
+    auto const linSolver = getLinearSolverName(LINEAR_SOLVER);
     if (libHSLPath != nullptr) {
         // HSL found -> set chosen solver
         app.Options()->SetStringValue("hsllib", libHSLPath);
@@ -715,7 +643,7 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
     }
 
     // scaling
-    if (userScaling) {
+    if (USER_SCALING) {
         app.Options()->SetStringValue("nlp_scaling_method", "user-scaling");
     }
     else {
@@ -733,20 +661,4 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
         app.Options()->SetStringValue("jac_c_constant", "yes");
         app.Options()->SetStringValue("jac_d_constant", "yes");
     }
-}
-
-void Solver::setMeshParameter(const std::string& field, double value) {
-    meshParameters.emplace(field, value);
-}
-
-void Solver::setL2BoundaryNorm() {
-    if (meshParameters.count("level") > 0)
-        L2Level = meshParameters["level"];
-    if (meshParameters.count("ctol") > 0)
-        L2CornerTol = meshParameters["ctol"];
-}
-
-void Solver::setBasicStrategy() {
-    if (meshParameters.count("sigma") > 0)
-        basicStrategySigma = meshParameters["sigma"];
 }
