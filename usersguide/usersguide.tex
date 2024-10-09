@@ -11,6 +11,7 @@
 \usepackage{float}
 \usepackage{bm}
 \usepackage{mdframed}
+\usepackage{setspace} 
 \usepackage{etoolbox}
 \AddToHook{cmd/section/before}{\clearpage}
 
@@ -86,8 +87,12 @@
 \renewcommand{\v}{\bm}
 \date{\today}
 
-\begin{document}
+\RequirePackage[T1]{fontenc}
+\RequirePackage[tt=false, type1=true]{libertine}
+\RequirePackage[varqu]{zi4}
+\RequirePackage[libertine]{newtxmath}
 
+\begin{document}
 \begin{titlepage}
 	\centering
 
@@ -125,7 +130,6 @@
 \clearpage
 \pagestyle{fancy}
 \setcounter{page}{1}
-
 \section{Introduction}
 
 Dynamic optimization is a branch of mathematical optimization that deals with
@@ -1245,7 +1249,7 @@ are presented below.
 		      \texttt{SciPy} integrator,
 		      that solves the arising initial value problem, if
 		      \texttt{"initVars"} is set to
-		      \texttt{InitVars.SOLVE}. The value has to be an element
+		      \texttt{InitVars.\\SOLVE}. The value has to be an element
 		      of the
 		      \texttt{IVPSolver} enumeration \eqref{enum:IVPSolver}.
 
@@ -1305,7 +1309,7 @@ are presented below.
 		      which the solution of
 		      the initial value problem, which arises if
 		      \texttt{"initVars"} is set to
-		      \texttt{InitVars.SOLVE}, is written.
+		      \texttt{Init\\Vars.SOLVE}, is written.
 		      
 		      \phantomsection
 		\label{flag:linearObjective}
@@ -1325,7 +1329,7 @@ are presented below.
 	\end{itemize}
 \end{mdframed}
 
-
+\newpage
 \subsubsection{Mesh Flags}
 \label{c:meshflags}
 
@@ -1359,8 +1363,7 @@ are presented below.
 		      \label{flag:RefinementMethod}
 		\item \texttt{"refinementMethod" $\rightarrow$
 			      RefinementMethod}
-		      (\emph{default}=\texttt{RefinementMethod.LI}
-		      \texttt{NEAR\_SPLINE}): Sets the
+		      (\emph{default}=\texttt{RefinementMethod.LINEAR\\\_SPLINE}): Sets the
 		      refinement method, which is used to interpolate the
 		      optimal solution from the
 		      previous optimization and provide new initial values. The
@@ -1461,7 +1464,7 @@ used.
 
 	Reads in the result file from a specific mesh iteration and saves it to
 	the dictionary \texttt{model.resultHistory} at the key \texttt{meshIteration}.
-	The value \texttt{model.resultHisto\\ ry[meshIteration]}, that is set in the
+	The value \texttt{model.resultHistory} \\ \texttt{[meshIteration]}, that is set in the
 	process, is returned. If no mesh iteration is provided, the last mesh iteration
 	is used automatically.
 
@@ -1487,8 +1490,8 @@ It is also possible to read in the results from all mesh iterations with
 		linewidth=1pt]
 
 	Reads in the result file from all mesh iterations and saves them to the
-	dictionary \texttt{model.resultHistory} at the keys \texttt{0, \ldots,
-		maxMeshIteration}. The entire dictionary \texttt{model.resultsHistory} is
+	dictionary \texttt{model.\\resultHistory} at the keys \texttt{0, \ldots,
+		maxMeshIteration}. The entire dictionary \texttt{model.\\resultHistory} is
 	returned in the process.
 
 	\begin{lstlisting}
@@ -1770,7 +1773,7 @@ model.plotSparseMatrix(matrixType)
 	\textbf{Parameters:}
 	\begin{itemize}
 		\item \texttt{MatrixType matrixType}: Sets the matrix. This has
-		      to be an element of the \texttt{MatrixType} enumeration
+		      to be an element of the \texttt{Matrix\\Type} enumeration
 		      \eqref{enum:MatrixType}.
 	\end{itemize}
 
@@ -1929,9 +1932,7 @@ Solver converges very slowly or diverges.
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
 
-	Tells the solver that the Mayer term $M(\v{x}(t_f), \v{u}(t_f),
-		\v{p}, t_f)$ and Lagrange integrand $L(\v{x}(t), \v{u}(t),
-		\v{p}, t)$ are at
+	Tells the solver that the Mayer term $M(\cdot)$ and Lagrange integrand $L(\cdot)$ are at
 	most linear.
 
 	\begin{lstlisting}
@@ -1943,9 +1944,7 @@ model.hasLinearObjective()
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
 
-	Tells the solver that the Mayer term $M(\v{x}(t_f), \v{u}(t_f),
-		\v{p}, t_f)$ and Lagrange integrand $L(\v{x}(t), \v{u}(t),
-		\v{p}, t)$ are at
+	Tells the solver that the Mayer term $M(\cdot)$ and Lagrange integrand $L(\cdot)$ are at
 	most quadratic.
 
 	\begin{lstlisting}
@@ -1978,7 +1977,7 @@ the NLP are assumed to be constant:
 	\item Jacobian of the constraint vector, if
 	      \texttt{model.hasLinearConstraints()}
 	\item Hessian of the augmented Lagrangian, if
-	      \texttt{model.hasLinearConstraints()} and
+	      \texttt{model.hasLinearConstraints()} and \\
 	      (\texttt{model.hasLinearObjective()}
 	      or \texttt{model.hasQuadraticObjective()})
 \end{itemize}

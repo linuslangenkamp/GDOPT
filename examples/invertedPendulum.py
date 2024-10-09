@@ -12,7 +12,7 @@ G = -9.81
 
 s = model.addState(start=0)
 v = model.addState(start=0)
-phi = model.addState(start=pi - 0.001)
+phi = model.addState(start=pi)
 omega = model.addState(start=0)
 
 u = model.addInput(lb=-15, ub=15, guess=0.1*t)
@@ -29,8 +29,8 @@ model.addDynamic(omega, (sin(-phi) * G - cos(phi) * dvdt) / R)
 # adding this contraints FORCES the global optimal solution,
 # since the lagrange intergrand has to be bounded
 lagrange = sin(phi/2)**2
-model.addPath(piecewise((lagrange, t > 1.35)), ub=0.25)
-model.addLagrange(lagrange, Objective.MINIMIZE)
+model.addPath(piecewise((lagrange, t > 1)), ub=0.1)
+model.addLagrange(u**2, Objective.MINIMIZE)
 
 model.generate()
 

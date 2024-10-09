@@ -3,9 +3,9 @@ from gdopt import *
 model = Model("oilShalePyrolysis")
 
 x1 = model.addState(start=1, symbol="kerogen")
-x2 = model.addState(start=0, symbol="bitumen")
-x3 = model.addState(start=0, symbol="oil")
-x4 = model.addState(start=0, symbol="carbon")
+x2 = model.addState(start=0, symbol="pyrolytic bitumen")
+x3 = model.addState(start=0, symbol="oil & gas")
+x4 = model.addState(start=0, symbol="organic carbon")
 
 T = model.addInput(lb=698.15, ub=748.15, symbol="temperature")
 
@@ -26,11 +26,11 @@ model.generate()
 
 model.optimize(
     tf=8,
-    steps=200,
+    steps=500,
     rksteps=3,
     flags={"tolerance": 1e-15, "linearSolver": LinearSolver.MA57},
     meshFlags={"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "iterations": 5},
 )
 
-model.plot()
+model.plot(specifCols=["pyrolytic bitumen", "temperature"])
 model.plotInputsAndRefinement(dotsGraph=Dots.BASE)
