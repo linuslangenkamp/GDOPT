@@ -82,5 +82,6 @@
   "clang-format.language.objc": true,
   "editor.fontFamily": "Hack, Source Code Pro, Consolas, monospace",
   "terminal.integrated.fontFamily": "",
-  "editor.cursorStyle": "block"
+"editor.cursorStyle": "block",
+"C_Cpp.default.cppStandard": "c++17"
 }

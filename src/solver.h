@@ -53,8 +53,6 @@ public:
     int solve();
     std::vector<int> detect() const;
     void refine(std::vector<int>& markedIntervals);
-    void finalizeOptimization();
-    void postOptimization();
 
     // detection methods
     std::vector<int> basicStrategy() const;
@@ -64,26 +62,35 @@ public:
     void refinePolynomial(std::vector<int>& markedIntervals);
     void refineLinear(std::vector<int>& markedIntervals);
 
-    // mesh variables
-    int meshIteration = 0;         // mesh iteration counter
-    std::vector<double> cbValues;  // starting values after refinement
+    // mesh and mesh refinement
+    int initialIntervals;           // intervals in the first mesh
+    int meshIteration = 0;          // mesh iteration counter
+    std::vector<double> cbValues;   // starting values after refinement
 
     // timing, printing, ...
-    int initialIntervals;
-    std::vector<double> objectiveHistory;
+    std::vector<int> numberOfIntervalsHistory{};
+    std::vector<double> ipoptObjectiveHistory{};
+    std::vector<int> ipoptIterationHistory{};
+    std::vector<double> ipoptIterationTotalTime{};
+    std::vector<double> ipoptIterationFuncEvalTime{};
     std::chrono::high_resolution_clock::time_point solveStartTime;
     std::chrono::duration<double> solveTotalTimeTaken{};   // total time in solver
     std::chrono::duration<double> solveActualTimeTaken{};  // total time in solver - IO
     std::chrono::duration<double> timedeltaIO{0};          // time in IO operations
+    double ipoptFuncTime{};                                // sum of time in ipopt func evals
+    double ipoptTotalTime{};                               // sum of total time in ipopt
+    double ipoptActualTime{};                              // sum of total time - func evals in ipopt
 
-    void setExportSparsityPath();
-    void printASCIIArt() const;
-    void printObjectiveHistory();
-    void printMeshStats() const;
-    void createModelInfo() const;
     void initSolvingProcess();
+    void finalizeOptimization(Ipopt::IpoptApplication& app);
+    void postOptimization(Ipopt::IpoptApplication& app);
     void setSolverFlags(Ipopt::IpoptApplication& app);
     void setStandardSolverFlags(Ipopt::IpoptApplication& app);
+    void createModelInfo(Ipopt::IpoptApplication& app) const;
+    
+    void printASCIIArt() const;
+    void printMeshIterationHistory();
+    void setExportSparsityPath();
 
 private:
     std::unique_ptr<SolverPrivate> _priv;

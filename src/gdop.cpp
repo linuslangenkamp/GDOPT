@@ -1207,7 +1207,6 @@ bool GDOP::eval_h(Index n, const Number* x, bool new_x, Number obj_factor, Index
 void GDOP::finalize_solution(SolverReturn status, Index n, const Number* x, const Number* z_L, const Number* z_U, Index m, const Number* g,
                              const Number* lambda, Number obj_value, const IpoptData* ip_data, IpoptCalculatedQuantities* ip_cq) {
     optimum.assign(x, x + n);
-    objective = obj_value;
 }
 
 void GDOP::exportOptimum(const std::string& filename) const {
@@ -1232,7 +1231,7 @@ void GDOP::exportOptimum(const std::string& filename) const {
     // time = 0 -> interpolate the control backwards
     std::string values = "0";
     for (int vx = 0; vx < problem->sizeX; vx++) {
-        values += "," + double2Str(problem->x0[vx]);
+        values += "," + double2Str(problem->x0[vx], 16);
     }
     for (int vu = 0; vu < problem->sizeU; vu++) {
         std::vector<double> uValues = {};
@@ -1240,24 +1239,24 @@ void GDOP::exportOptimum(const std::string& filename) const {
         for (int j = 0; j < rk.steps; j++) {
             uValues.push_back(optimum[vu + offX + offXU * j]);
         }
-        values += "," + double2Str(Integrator::evalLagrange(rk.c, uValues, 0.0));
+        values += "," + double2Str(Integrator::evalLagrange(rk.c, uValues, 0.0), 16);
     }
     for (int vp = 0; vp < problem->sizeP; vp++) {
-        values += "," + double2Str(optimum[vp + offXUTotal]);
+        values += "," + double2Str(optimum[vp + offXUTotal], 16);
     }
     outFile << values << "\n";
 
     for (int i = 0; i < mesh.intervals; i++) {
         for (int j = 0; j < rk.steps; j++) {
-            values = double2Str(mesh.grid[i] + rk.c[j] * mesh.deltaT[i]);
+            values = double2Str(mesh.grid[i] + rk.c[j] * mesh.deltaT[i], 16);
             for (int vx = 0; vx < problem->sizeX; vx++) {
-                values += "," + double2Str(optimum[vx + offXU * j + offXUBlock * i]);
+                values += "," + double2Str(optimum[vx + offXU * j + offXUBlock * i], 16);
             }
             for (int vu = 0; vu < problem->sizeU; vu++) {
-                values += "," + double2Str(optimum[vu + offX + offXU * j + offXUBlock * i]);
+                values += "," + double2Str(optimum[vu + offX + offXU * j + offXUBlock * i], 16);
             }
             for (int vp = 0; vp < problem->sizeP; vp++) {
-                values += "," + double2Str(optimum[vp + offXUTotal]);
+                values += "," + double2Str(optimum[vp + offXUTotal], 16);
             }
             outFile << values << "\n";
         }

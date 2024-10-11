@@ -29,7 +29,7 @@ model.optimize(
     tf=8,
     steps=500,
     rksteps=3,
-    flags={"tolerance": 1e-14, "linearSolver": LinearSolver.MA57},
+    flags={"tolerance": 1e-15, "linearSolver": LinearSolver.MA57},
     meshFlags={"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "iterations": 5},
 )
 

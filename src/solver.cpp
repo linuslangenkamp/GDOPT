@@ -19,8 +19,10 @@
 #include "solver.h"
 
 #include <chrono>
-
+#include <numeric>  
+#include "IpSolveStatistics.hpp"
 #include "IpIpoptApplication.hpp"
+#include "IpIpoptData.hpp"
 #include "config.h"
 #include "gdop_impl.h"
 
@@ -50,8 +52,7 @@
     12 plotting features for path constraints, lagrange terms            1, 1
     13 splitting const jacobian equality / inequality                    1, 1
     14 use argc, argv                                                    1, 1
-    15 clean up all the flags no optionals in config.h, set everything,  3, 1
-       every default in config.cpp
+    15 do finalize optimization in Solver -> get attributes from app     2, 1
 */
 
 struct SolverPrivate {
@@ -97,14 +98,14 @@ int Solver::solve() {
 
     // initial optimization
     status = app->OptimizeTNLP(_priv->gdop);
-    postOptimization();
+    postOptimization(*app);
 
     while (meshIteration <= MESH_ITERATIONS) {
         // detect intervals that have to be refined
         auto markedIntervals = detect();
 
         if (sz(markedIntervals) == 0) {
-            finalizeOptimization();
+            finalizeOptimization(*app);
             return status;
         }
 
@@ -124,10 +125,10 @@ int Solver::solve() {
 
         // optimize again
         status = app->OptimizeTNLP(_priv->gdop);
-        postOptimization();
+        postOptimization(*app);
     }
 
-    finalizeOptimization();
+    finalizeOptimization(*app);
     return status;
 }
 
@@ -470,15 +471,23 @@ void Solver::setExportSparsityPath() {
 
 void Solver::initSolvingProcess() {
     // set all flags based on the global configuration, mandatory
-    setExportSparsityPath();
     printASCIIArt();
-    solveStartTime = std::chrono::high_resolution_clock::now();
+    setExportSparsityPath();
     initialIntervals = _priv->gdop->mesh.intervals;
+    solveStartTime = std::chrono::high_resolution_clock::now();
 }
 
-void Solver::postOptimization() {
+void Solver::postOptimization(IpoptApplication& app) {
     auto ioStart = std::chrono::high_resolution_clock::now();
-    objectiveHistory.push_back(_priv->gdop->objective);
+    SmartPtr<const SolveStatistics> stats = app.Statistics();
+    SmartPtr<IpoptData> data = app.IpoptDataObject();
+
+    numberOfIntervalsHistory.push_back(_priv->gdop->mesh.intervals);
+    ipoptObjectiveHistory.push_back(stats->FinalObjective());
+    ipoptIterationHistory.push_back(stats->IterationCount());
+    ipoptIterationTotalTime.push_back(stats->TotalWallclockTime());
+    ipoptIterationFuncEvalTime.push_back(data->TimingStats().TotalFunctionEvaluationWallclockTime());
+
     if (EXPORT_OPTIMUM_PATH != "") {
         _priv->gdop->exportOptimum(EXPORT_OPTIMUM_PATH + "/" + _priv->gdop->problem->name + std::to_string(meshIteration) + ".csv");
     }
@@ -486,17 +495,32 @@ void Solver::postOptimization() {
     timedeltaIO += std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - ioStart);
 }
 
-void Solver::printObjectiveHistory() {
-    std::cout << "\n----------------------------------------------------------------" << std::endl;
-    std::cout << "\nMesh refinement history\n" << std::endl;
-    std::cout << std::setw(5) << "iteration" << std::setw(20) << "objective" << std::endl;
-    std::cout << "-----------------------------------" << std::endl;
-    for (int iteration = 0; iteration < sz(objectiveHistory); iteration++) {
-        std::cout << std::setw(5) << iteration << std::setw(30) << double2Str(objectiveHistory[iteration]) << std::endl;
+void Solver::printMeshIterationHistory() {
+    std::cout << "\n---------------------------------------------------------------------------------------------" << std::endl;
+    std::cout << "\nMesh refinement history (times in seconds)\n" << std::endl;
+    std::cout << std::setw(5) << "iteration" << std::setw(17) << "objective" << std::setw(18) << "intervals" << std::setw(8) << "iters" <<
+    std::setw(13) << "ipopt time" << std::setw(15) << "nonfunc time" << std::setw(13) << "func time" << std::endl;
+    std::cout << "---------------------------------------------------------------------------------------------" << std::endl;
+    for (int it = 0; it < meshIteration; it++) {
+        std::cout << std::setw(5) << it <<
+        std::setw(27) << double2Str(ipoptObjectiveHistory[it], 14) <<
+        std::setw(12) << std::to_string(numberOfIntervalsHistory[it]) <<
+        std::setw(8) << std::to_string(ipoptIterationHistory[it]) <<
+        std::setw(13) << printTime(ipoptIterationTotalTime[it]) <<
+        std::setw(15) << printTime(ipoptIterationTotalTime[it] - ipoptIterationFuncEvalTime[it]) <<
+        std::setw(13) << printTime(ipoptIterationFuncEvalTime[it]) << std::endl;
     }
+    std::cout << "---------------------------------------------------------------------------------------------" << std::endl;
+    std::cout << std::setw(5) << " overall" <<
+    std::setw(24) << double2Str(ipoptObjectiveHistory[meshIteration - 1], 14) <<
+    std::setw(12) << std::to_string(numberOfIntervalsHistory[meshIteration - 1]) <<
+    std::setw(8) << std::to_string(std::reduce(ipoptIterationHistory.begin(), ipoptIterationHistory.end())) <<
+    std::setw(13) << printTime(ipoptTotalTime)  <<
+    std::setw(15) << printTime(ipoptActualTime) <<
+    std::setw(13) << printTime(ipoptFuncTime)   << std::endl;
 }
 
-void Solver::createModelInfo() const {
+void Solver::createModelInfo(IpoptApplication& app) const {
     // writes a tmp file that contains all relevant information of the model like
     // the last mesh iteration and so on contains the metadata of the model
     std::ofstream outFile("/tmp/modelinfo.txt");
@@ -506,79 +530,46 @@ void Solver::createModelInfo() const {
         return;
     }
 
+    SmartPtr<const SolveStatistics> stats = app.Statistics();
+    // TODO: refactor the modelinfo like printMeshIterationHistory
     outFile << std::fixed << std::setprecision(16);
     outFile << "maxMeshIteration, " << meshIteration - 1 << "\n";
     outFile << "totalTimeInSolver, " << solveTotalTimeTaken.count() << "\n";
     outFile << "actualTimeInSolver, " << solveActualTimeTaken.count() << "\n";
     outFile << "totalTimeInIO, " << timedeltaIO.count() << "\n";
-    outFile << "objective, " << _priv->gdop->objective << "\n";
+    outFile << "objective, " << stats->FinalObjective() << "\n";
     outFile << "initialIntervals, " << initialIntervals << "\n";
     outFile << "insertedIntervals, " << _priv->gdop->mesh.intervals - initialIntervals << "\n";
     outFile << "finalIntervals, " << _priv->gdop->mesh.intervals << "\n";;
     outFile.close();
 }
 
-void Solver::finalizeOptimization() {
-    std::cout << "\n----------------------------------------------------------------" << std::endl;
-    std::cout << "----------------------------------------------------------------" << std::endl;
-    std::cout << "----------------------------------------------------------------" << std::endl;
+void Solver::finalizeOptimization(IpoptApplication& app) {
+    std::cout << "\n---------------------------------------------------------------------------------------------" << std::endl;
+    std::cout << "---------------------------------------------------------------------------------------------" << std::endl;
+    std::cout << "---------------------------------------------------------------------------------------------" << std::endl;
     std::cout << "\nOutput for optimization of model: " << _priv->gdop->problem->name << std::endl;
 
-    if (meshIteration > 0) {
-        printMeshStats();
-    }
-    printObjectiveHistory();
+    ipoptFuncTime = std::reduce(ipoptIterationFuncEvalTime.begin(), ipoptIterationFuncEvalTime.end()); // func evals in ipopt
+    ipoptTotalTime = std::reduce(ipoptIterationTotalTime.begin(), ipoptIterationTotalTime.end());      // total time in ipopt
+    ipoptActualTime = ipoptTotalTime - ipoptFuncTime;                                                  // total - func evals
+    solveTotalTimeTaken = (std::chrono::high_resolution_clock::now() - solveStartTime);                // total time in framework
+    solveActualTimeTaken = solveTotalTimeTaken - timedeltaIO;                                          // total time in framework w/o I/O
 
-    solveTotalTimeTaken = (std::chrono::high_resolution_clock::now() - solveStartTime);
-    solveActualTimeTaken = solveTotalTimeTaken - timedeltaIO;
+    printMeshIterationHistory();
+
     std::cout << std::fixed << std::setprecision(5);
-    std::cout << "\n----------------------------------------------------------------" << std::endl;
-    std::cout << "\nTotal time in Solver (w/o I/O): " << std::setw(8) << solveActualTimeTaken.count() << " seconds" << std::endl;
-    std::cout << "Total time in I/O: " << std::setw(21) << timedeltaIO.count() << " seconds" << std::endl;
-    std::cout << "Total time in Solver: " << std::setw(18) << solveTotalTimeTaken.count() << " seconds" << std::endl;
+    std::cout << "\n---------------------------------------------------------------------------------------------\n" << std::endl;
+    std::cout << "Framework component timings:\n" << std::endl;
+    std::cout << "Time in IPOPT (w/o func evals): " << std::setw(10) << printTime(ipoptActualTime) << " seconds" << std::endl;
+    std::cout << "Time in IPOPT func evals: " << std::setw(16) << printTime(ipoptFuncTime) << " seconds" << std::endl;
+    std::cout << "Time in GDOPT algorithms: " << std::setw(16) << printTime(solveActualTimeTaken.count() - ipoptTotalTime) << " seconds" << std::endl;
+    std::cout << "Time in GDOPT I/O: " << std::setw(23) << printTime(timedeltaIO.count()) << " seconds" << std::endl;
+    std::cout << "---------------------------------------------------------------------------------------------" << std::endl;
+    std::cout << "Total time in Framework: " << std::setw(17) << printTime(solveTotalTimeTaken.count()) << " seconds" << std::endl;
     std::cout << std::defaultfloat;
 
-    createModelInfo();
-}
-
-void Solver::printMeshStats() const {
-    std::cout << "\n----------------------------------------------------------------" << std::endl;
-    std::cout << "\nNumber of intervals\n" << std::endl;
-    std::cout << "Initial:" << std::setw(7) << initialIntervals << std::endl;
-    std::cout << "Inserted:  " << std::setw(4) << _priv->gdop->mesh.intervals - initialIntervals << std::endl;
-    std::cout << "Final:" << std::setw(9) << _priv->gdop->mesh.intervals << std::endl;
-}
-
-void Solver::printASCIIArt() const {
-    // slant stars border width 90, h pad 1
-    const std::string art = R"(
-************************************************************************************
-*    __________  ____  ____  ______            ______                           __ *
-*   / ____/ __ \/ __ \/ __ \/_  __/           / ____/__  ____  ___  _________ _/ / *
-*  / / __/ / / / / / / /_/ / / /   ______    / / __/ _ \/ __ \/ _ \/ ___/ __ `/ /  *
-* / /_/ / /_/ / /_/ / ____/ / /   /_____/   / /_/ /  __/ / / /  __/ /  / /_/ / /   *
-* \____/_____/\____/_/     /_/          _   \____/\___/_/ /_/\___/_/   \__,_/_/    *
-*    / __ \__  ______  ____ _____ ___  (_)____                                     *
-*   / / / / / / / __ \/ __ `/ __ `__ \/ / ___/                                     *
-*  / /_/ / /_/ / / / / /_/ / / / / / / / /__                                       *
-* /_____/\__, /_/ /_/\__,_/_/ /_/ /_/_/\___/                                       *
-*    ___/____/   __  _           _                          ____   ___ __ __       *
-*   / __ \____  / /_(_)___ ___  (_)___  ___  _____  _   __ / __ \ <  // // /       *
-*  / / / / __ \/ __/ / __ `__ \/ /_  / / _ \/ ___/ | | / // / / / / // // /_       *
-* / /_/ / /_/ / /_/ / / / / / / / / /_/  __/ /     | |/ // /_/ / / //__  __/       *
-* \____/ .___/\__/_/_/ /_/ /_/_/ /___/\___/_/      |___(_)____(_)_(_) /_/          *
-*     /_/                                                                          *
-*                                                                                  *
-* This is GDOPT - General Dynamic Optimizer v.0.1.4, a framework for solving       *
-* "General Dynamic Optimization Problems" using local collocation methods, based   *
-* on RadauIIA formulas, and adaptive mesh refinement techniques. GDOPT utilizes    *
-* the capabilities of the nonlinear optimizer IPOPT for solving the resulting      *
-* large-scale NLPs. For help, visit https://github.com/linuslangenkamp/GDOPT and   *
-* have a look at the provided User's Guide.                                        *
-*                                                                                  *
-************************************************************************************
-)";
-    std::cout << art << "\n";
+    createModelInfo(app);
 }
 
 void Solver::setSolverFlags(IpoptApplication& app) {
@@ -661,4 +652,36 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
         app.Options()->SetStringValue("jac_c_constant", "yes");
         app.Options()->SetStringValue("jac_d_constant", "yes");
     }
+}
+
+void Solver::printASCIIArt() const {
+    // slant stars border width 90, h pad 1
+    const std::string art = R"(
+************************************************************************************
+*    __________  ____  ____  ______            ______                           __ *
+*   / ____/ __ \/ __ \/ __ \/_  __/           / ____/__  ____  ___  _________ _/ / *
+*  / / __/ / / / / / / /_/ / / /   ______    / / __/ _ \/ __ \/ _ \/ ___/ __ `/ /  *
+* / /_/ / /_/ / /_/ / ____/ / /   /_____/   / /_/ /  __/ / / /  __/ /  / /_/ / /   *
+* \____/_____/\____/_/     /_/          _   \____/\___/_/ /_/\___/_/   \__,_/_/    *
+*    / __ \__  ______  ____ _____ ___  (_)____                                     *
+*   / / / / / / / __ \/ __ `/ __ `__ \/ / ___/                                     *
+*  / /_/ / /_/ / / / / /_/ / / / / / / / /__                                       *
+* /_____/\__, /_/ /_/\__,_/_/ /_/ /_/_/\___/                                       *
+*    ___/____/   __  _           _                          ____   ___ __ __       *
+*   / __ \____  / /_(_)___ ___  (_)___  ___  _____  _   __ / __ \ <  // // /       *
+*  / / / / __ \/ __/ / __ `__ \/ /_  / / _ \/ ___/ | | / // / / / / // // /_       *
+* / /_/ / /_/ / /_/ / / / / / / / / /_/  __/ /     | |/ // /_/ / / //__  __/       *
+* \____/ .___/\__/_/_/ /_/ /_/_/ /___/\___/_/      |___(_)____(_)_(_) /_/          *
+*     /_/                                                                          *
+*                                                                                  *
+* This is GDOPT - General Dynamic Optimizer v.0.1.4, a framework for solving       *
+* "General Dynamic Optimization Problems" using local collocation methods, based   *
+* on RadauIIA formulas, and adaptive mesh refinement techniques. GDOPT utilizes    *
+* the capabilities of the nonlinear optimizer IPOPT for solving the resulting      *
+* large-scale NLPs. For help, visit https://github.com/linuslangenkamp/GDOPT and   *
+* have a look at the provided User's Guide.                                        *
+*                                                                                  *
+************************************************************************************
+)";
+    std::cout << art << "\n";
 }

@@ -38,7 +38,6 @@ public:
     Integrator rk;                           // RadauIIA scheme
     Mesh mesh;                               // mesh for discretization
 
-    double objective{};                 // optimal solution - objective
     std::vector<double> optimum;        // optimal solution - variables
     std::vector<double> xInitCallback;  // optimal solution (interpolated after refinement)
 

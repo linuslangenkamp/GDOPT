@@ -76,9 +76,15 @@ inline void exportSparsity(const int* iRow, const int* jCol, const int L, const 
     outFile.close();
 }
 
-inline std::string double2Str(double value) {
-    std::ostringstream out;
-    out << std::scientific << std::setprecision(16) << value;
+inline std::string double2Str(double value, int prec) {
+    std::stringstream out;
+    out << std::scientific << std::setprecision(prec) << value;
+    return out.str();
+}
+
+inline std::string printTime(double value) {
+    std::stringstream out;
+    out << std::fixed << std::setprecision(5) << value;
     return out.str();
 }
 
