@@ -15,6 +15,7 @@ k3 = exp(23.67 - (33800 / 1.9872) / T)
 k4 = exp(18.75 - (28200 / 1.9872) / T)
 k5 = exp(20.70 - (31000 / 1.9872) / T)
 
+# its possible to remove states x3, x4 cause they are 'waste products' and used in the dynamic
 model.addDynamic(x1, -k1 * x1 - (k3 + k4 + k5) * x1 * x2)
 model.addDynamic(x2, k1 * x1 - k2 * x2 + k3 * x1 * x2)
 model.addDynamic(x3, k2 * x2 + k4 * x1 * x2)
@@ -28,7 +29,7 @@ model.optimize(
     tf=8,
     steps=500,
     rksteps=3,
-    flags={"tolerance": 1e-15, "linearSolver": LinearSolver.MA57},
+    flags={"tolerance": 1e-14, "linearSolver": LinearSolver.MA57},
     meshFlags={"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "iterations": 5},
 )
 

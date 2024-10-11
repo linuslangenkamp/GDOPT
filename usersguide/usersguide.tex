@@ -226,11 +226,11 @@ Depending on your operating system, follow the installation instructions.
 
 	\textbf{Ubuntu / Debian:}
 
-	Make sure that the dependencies (git, curl, gfortran, LAPACK, CMake, g++,
+	Make sure that the dependencies (git, curl, pkgconf, gfortran, LAPACK, CMake, g++,
 	Python3, Python3-Venv, Python3-Build) are installed on the system:
 
 \begin{lstlisting}[language=bash]
-sudo apt-get install git curl gfortran liblapack-dev cmake g++ python3 python3-venv
+sudo apt-get install git curl pkg-config gfortran liblapack-dev cmake g++ python3 python3-venv
 pip install build
 \end{lstlisting}
 
@@ -256,7 +256,7 @@ source .venv/bin/activate
 	SciPy\cite{virtanen2020scipy}, pandas\cite{mckinney2010data}, and
 	Matplotlib\cite{hunter2007matplotlib}:
 
-	\begin{lstlisting}[language=bash]
+\begin{lstlisting}[language=bash]
 pip install .
 \end{lstlisting}
 
@@ -268,6 +268,12 @@ import gdopt
 To test whether the framework is set up correctly, execute the \texttt{Hello World} model:
 \begin{lstlisting}[language=python]
 gdopt.HelloWorld()
+\end{lstlisting}
+
+In case the plotting features are not working correctly, it is advised to install PyQt5 to the virtual environment:
+
+\begin{lstlisting}[language=bash]
+pip install PyQt5
 \end{lstlisting}
 
 \end{mdframed}
