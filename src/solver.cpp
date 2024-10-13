@@ -52,7 +52,6 @@
     12 plotting features for path constraints, lagrange terms            1, 1
     13 splitting const jacobian equality / inequality                    1, 1
     14 use argc, argv                                                    1, 1
-    15 do finalize optimization in Solver -> get attributes from app     2, 1
 */
 
 struct SolverPrivate {
@@ -498,7 +497,7 @@ void Solver::postOptimization(IpoptApplication& app) {
 
 void Solver::printMeshIterationHistory() {
     std::cout << "\n---------------------------------------------------------------------------------------------" << std::endl;
-    std::cout << "\nMesh refinement history (times in seconds)\n" << std::endl;
+    std::cout << "\nMesh refinement history (times in seconds):\n" << std::endl;
     std::cout << std::setw(5) << "iteration" << std::setw(17) << "objective" << std::setw(18) << "intervals" << std::setw(8) << "iters" <<
     std::setw(13) << "ipopt time" << std::setw(15) << "nonfunc time" << std::setw(13) << "func time" << std::endl;
     std::cout << "---------------------------------------------------------------------------------------------" << std::endl;
@@ -615,7 +614,7 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
 
     // mu-update strategy
     // turns out kkt-error adaptive_mu works really well for the provided examples (excluding poorly conditioned)
-    // can be turned of with a flag
+    // can be turned off with a flag
     app.Options()->SetStringValue("mu_strategy", "adaptive");
     if (KKT_ERROR_MU_GLOBALIZATION) {
         app.Options()->SetStringValue("adaptive_mu_globalization", "kkt-error");

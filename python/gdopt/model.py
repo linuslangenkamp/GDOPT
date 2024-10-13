@@ -830,7 +830,7 @@ int main(int argc, char** argv) {{
                 decoded = compileResult.stderr.decode()
                 errorFile.write(decoded)
                 raise RuntimeError(f"[GDOPT - ERROR] Compilation failed! Check compile_{self.name}_err.log!\n\n" + decoded)
-        print(f"[GDOPT - TIMING] Compiling to C++ took {round(timer.time() - compileStart, 4)} seconds.")
+        print(f"[GDOPT - TIMING] Compiling generated C++ code took {round(timer.time() - compileStart, 4)} seconds.")
 
     def solve(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False, compiler="g++", compileFlags=["-O3", "-ffast-math"]):
 
