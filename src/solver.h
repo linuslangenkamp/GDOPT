@@ -73,6 +73,7 @@ public:
     std::vector<int> ipoptIterationHistory{};
     std::vector<double> ipoptIterationTotalTime{};
     std::vector<double> ipoptIterationFuncEvalTime{};
+    std::vector<double> ipoptIterationNonfuncEvalTime{};
     std::chrono::high_resolution_clock::time_point solveStartTime;
     std::chrono::duration<double> solveTotalTimeTaken{};   // total time in solver
     std::chrono::duration<double> solveActualTimeTaken{};  // total time in solver - IO

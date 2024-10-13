@@ -604,13 +604,25 @@ class Model:
         with open("/tmp/modelinfo.txt", "r") as file:
             for line in file:
                 line = line.strip()
-                key, value = line.split(",")
+                key, value = line.split(":")
                 key = key.strip()
                 value = value.strip()
-                if key in ["maxMeshIteration", "initialIntervals", "insertedIntervals", "finalIntervals"]:
+                if key in ["maxMeshIteration", "initialIntervals", "ipoptIterationsOverall"]:
+                    # int singleton
                     self.modelInfo[key] = int(value)
-                elif key in ["totalTimeInSolver", "actualTimeInSolver", "totalTimeInIO", "objective"]:
+                elif key in ["objective", "ipoptTimeTotal", "ipoptTimeNonfunc", "ipoptTimeFunc",
+                             "gdoptTimeAlgorithms", "gdoptTimeIO", "totalTime"]:
+                    # float singleton
                     self.modelInfo[key] = float(value)
+                elif key in ["intervalHistory", "ipoptIterationHistory"]:
+                    # list int
+                    values = value.split(",")
+                    self.modelInfo[key] = list(map(int, values))
+                elif key in ["objectiveHistory", "ipoptTimeTotalHistory", "ipoptTimeNonfuncHistory",
+                             "ipoptTimeFuncHistory"]:
+                    # list float
+                    values = value.split(",")
+                    self.modelInfo[key] = list(map(float, values))
 
     def generate(self, compiler="g++", compileFlags=["-O3", "-ffast-math"]):
 

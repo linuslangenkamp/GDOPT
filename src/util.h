@@ -34,6 +34,32 @@ inline int sz(const std::vector<T>& vec) {
     return int(vec.size());
 }
 
+template <typename T>
+inline std::string vectorToString(const std::vector<T>& vec) {
+    std::stringstream out;
+    out << std::fixed << std::setprecision(15);
+    if (!vec.empty()) {
+        out << vec[0];
+        for (int i = 1; i < vec.size(); ++i) {
+            out << ", " << vec[i];
+        }
+    }
+    return out.str();
+}
+
+template <typename T>
+inline std::string vectorToScientificString(const std::vector<T>& vec) {
+    std::stringstream out;
+    out << std::scientific << std::setprecision(15);
+    if (!vec.empty()) {
+        out << vec[0];
+        for (int i = 1; i < vec.size(); ++i) {
+            out << ", " << vec[i];
+        }
+    }
+    return out.str();
+}
+
 struct n2hash {
     std::size_t operator()(const std::tuple<int, int>& v) const {
         auto const [t1, t2] = v;
