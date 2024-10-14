@@ -1105,6 +1105,9 @@ int main(int argc, char** argv) {{
 
         fig, axs = plt.subplots(len(axsGraph) + 1, 1, figsize=(12, 10))
 
+        for i in range(1, len(axs)):
+            axs[i].sharex(axs[0])
+
         for i in range(len(axsGraph)):
             axs[i].set_xticks([])
             axs[i].plot(axsGraph[i].lines[0].get_xdata(), axsGraph[i].lines[0].get_ydata())

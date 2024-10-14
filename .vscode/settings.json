@@ -67,7 +67,6 @@
     "optional": "cpp"
   },
   "editor.tabSize": 4,
-  "editor.formatOnSave": true,
   "clang-format.executable": "/usr/bin/clang-format",
   "clang-format.style": "file",
   "cmake.configureOnOpen": true,
@@ -77,11 +76,30 @@
     "Ninja",
     "Unix Makefiles"
   ],
-  "clang-format.language.cpp": true,
-  "clang-format.language.c": true,
-  "clang-format.language.objc": true,
   "editor.fontFamily": "Hack, Source Code Pro, Consolas, monospace",
   "terminal.integrated.fontFamily": "",
-"editor.cursorStyle": "block",
-"C_Cpp.default.cppStandard": "c++17"
+    "editor.cursorStyle": "block",
+"C_Cpp.default.cppStandard": "c++17",
+"notebook.output.scrolling": true,
+"workbench.iconTheme": "icons",
+"workbench.colorTheme": "Atom Material Theme",
+"cmake.showOptionsMovedNotification": false,
+"remote.autoForwardPortsSource": "hybrid",
+"cmake.pinnedCommands": [
+    "workbench.action.tasks.configureTaskRunner",
+    "workbench.action.tasks.runTask"
+],
+"clangd.detectExtensionConflicts": false,
+
+"C_Cpp.clang_format_path": "/usr/bin/clang-format", // Path to clang-format in WSL
+"C_Cpp.formatting": "clangFormat",                 // Use clang-format for C/C++
+"editor.formatOnSave": true,                       // Enable formatting on save
+"editor.defaultFormatter": "xaver.clang-format",   // Default C++ formatter
+"C_Cpp.clang_format_fallbackStyle": "file",  // Use .clang-format file if present
+"editor.tokenColorCustomizations": {
+    "comments": "#7FBF7F",
+},
+    "editor.detectIndentation": false,
+    "C_Cpp.enhancedColorization": "enabled"
+
 }

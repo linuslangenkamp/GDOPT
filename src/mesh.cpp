@@ -35,10 +35,10 @@ Mesh Mesh::createEquidistantMesh(int intervals, double tf) {
 
 void Mesh::update(std::vector<int>& markedIntervals) {
     int index = 0;
-    std::vector<double> newGrid;
+    std::vector<double> newGrid{};
     for (int i = 0; i < intervals; i++) {
         newGrid.push_back(grid[i]);
-        if (markedIntervals[index] == i) {
+        if (markedIntervals[index] == i && index < sz(markedIntervals)) {
             newGrid.push_back(grid[i] + deltaT[i] / 2);
             index++;
         }

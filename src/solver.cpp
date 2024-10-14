@@ -102,7 +102,6 @@ int Solver::solve() {
     while (meshIteration <= MESH_ITERATIONS) {
         // detect intervals that have to be refined
         auto markedIntervals = detect();
-
         if (sz(markedIntervals) == 0) {
             finalizeOptimization(*app);
             return status;
@@ -335,9 +334,9 @@ void Solver::refineLinear(std::vector<int>& markedIntervals) {
     // interpolate all values on marked intervals
     int index = 0;
     for (int i = 0; i < oldIntervalLen; i++) {
-        if (markedIntervals[index] == i) {
+        if (markedIntervals[index] == i && index < sz(markedIntervals)) {
             for (int v = 0; v < _priv->gdop->offXU; v++) {  // iterate over every var in {x, u} -> interpolate
-                std::vector<double> localVars = {};
+                std::vector<double> localVars{};
                 // i > 0 interval cases
                 if (i > 0) {
                     for (int j = -1; j < _priv->gdop->rk.steps; j++) {
