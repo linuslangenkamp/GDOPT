@@ -100,6 +100,8 @@
     "comments": "#7FBF7F",
 },
     "editor.detectIndentation": false,
-    "C_Cpp.enhancedColorization": "enabled"
-
+    "C_Cpp.enhancedColorization": "enabled",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
 }

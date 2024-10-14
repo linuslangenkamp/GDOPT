@@ -15,7 +15,7 @@ v = model.addState(start=0)
 phi = model.addState(start=pi)
 omega = model.addState(start=0)
 
-u = model.addInput(lb=-15, ub=15, guess=0.1*t)
+u = model.addInput(lb=-15, ub=15, guess=0.1 * t)
 
 dvdt = u + (sin(-phi) * Mp * R * omega**2 - cos(phi) * sin(-phi) * Mp * G) / (Ms + Mp * sin(-phi) ** 2)
 
@@ -28,7 +28,7 @@ model.addDynamic(omega, (sin(-phi) * G - cos(phi) * dvdt) / R)
 # the problem has MANY local optima. Therefore it is hard to converge to the global optimum, if only a poor guess is provided.
 # adding this contraints FORCES the global optimal solution,
 # since the lagrange intergrand has to be bounded
-lagrange = sin(phi/2)**2
+lagrange = sin(phi / 2) ** 2
 model.addPath(piecewise((lagrange, t > 1)), ub=0.1)
 model.addLagrange(u**2, Objective.MINIMIZE)
 

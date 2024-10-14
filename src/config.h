@@ -34,7 +34,6 @@ extern std::string EXPORT_HESSIAN_PATH;
 extern std::string EXPORT_JACOBIAN_PATH;
 extern std::string INITIAL_STATES_PATH;
 
-
 std::unordered_map<std::string, std::string> readConfig(const std::string& filename);
 void setGlobalStandardConfiguration(const std::unordered_map<std::string, std::string>& configMap);
 

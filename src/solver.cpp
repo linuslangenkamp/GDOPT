@@ -622,20 +622,20 @@ void Solver::setStandardSolverFlags(IpoptApplication& app) {
 
     // linear solver
     auto const libHSLPath = getenv("LIB_HSL");
-    auto const linSolver = getLinearSolverName(LINEAR_SOLVER);
+    auto const linearSolver = getLinearSolverName(LINEAR_SOLVER);
     if (libHSLPath != nullptr) {
         // HSL found -> set chosen solver
         app.Options()->SetStringValue("hsllib", libHSLPath);
-        app.Options()->SetStringValue("linear_solver", linSolver);
+        app.Options()->SetStringValue("linear_solver", linearSolver);
     }
-    else if ((libHSLPath == nullptr and linSolver != "MUMPS")) {
+    else if ((libHSLPath == nullptr and linearSolver != "MUMPS")) {
         // HSL not found but set -> set MUMPS as fallback
         std::cout << "\nEnvironment variable 'LIB_HSL' not found! Fallback to standard linear solver 'MUMPS'\n" << std::endl;
         app.Options()->SetStringValue("linear_solver", "MUMPS");
     }
     else {
         // set chosen solver
-        app.Options()->SetStringValue("linear_solver", linSolver);
+        app.Options()->SetStringValue("linear_solver", linearSolver);
     }
 
     // scaling

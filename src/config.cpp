@@ -1,6 +1,4 @@
 #include <fstream>
-#include <iostream>
-#include <optional>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -30,9 +28,9 @@ int IPOPT_PRINT_LEVEL = 5;
 bool KKT_ERROR_MU_GLOBALIZATION = true;
 
 // mesh parameters
-double SIGMA = 2.5;     // basicStrategy: std deviation sigma 
-double LEVEL = 0;       // L2BN: L2 criterion factor, log scale, std range -2.5 - 2.5
-double C_TOL = 0.1;     // L2BN: corner criterion P1-error threshold, std range 0.05 - 0.5
+double SIGMA = 2.5;  // basicStrategy: std deviation sigma
+double LEVEL = 0;    // L2BN: L2 criterion factor, log scale, std range -2.5 - 2.5
+double C_TOL = 0.1;  // L2BN: corner criterion P1-error threshold, std range 0.05 - 0.5
 
 // flags for constant derivatives
 bool LINEAR_OBJECTIVE = false;                        // true if M and L are linear
@@ -44,7 +42,6 @@ std::string EXPORT_OPTIMUM_PATH;
 std::string EXPORT_HESSIAN_PATH;
 std::string EXPORT_JACOBIAN_PATH;
 std::string INITIAL_STATES_PATH;
-
 
 const std::unordered_map<std::string, InitVars> initVarsMap = {{"CONST", InitVars::CONST},
                                                                {"SOLVE", InitVars::SOLVE},
@@ -151,7 +148,7 @@ void setGlobalStandardConfiguration(const std::unordered_map<std::string, std::s
     LINEAR_SOLVER = stringToLinearSolver(configMap.at("LINEAR_SOLVER"));
     REFINEMENT_METHOD = stringToRefinementMethod(configMap.at("REFINEMENT_METHOD"));
     MESH_ALGORITHM = stringToMeshAlgorithm(configMap.at("MESH_ALGORITHM"));
-    RADAU_INTEGRATOR = (IntegratorSteps) std::stoi(configMap.at("RADAU_INTEGRATOR"));
+    RADAU_INTEGRATOR = (IntegratorSteps)std::stoi(configMap.at("RADAU_INTEGRATOR"));
 
     // oconstant derivatives
     LINEAR_OBJECTIVE = configMap.at("LINEAR_OBJECTIVE") == "true";

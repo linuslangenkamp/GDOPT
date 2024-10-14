@@ -597,9 +597,9 @@ class Model:
             self.userScaling = True
 
     def initAnalysis(self):
-        
+
         # clear result history for new optimization
-        self.resultHistory = {}  
+        self.resultHistory = {}
 
         with open("/tmp/modelinfo.txt", "r") as file:
             for line in file:
@@ -610,16 +610,27 @@ class Model:
                 if key in ["maxMeshIteration", "initialIntervals", "ipoptIterationsOverall"]:
                     # int singleton
                     self.modelInfo[key] = int(value)
-                elif key in ["objective", "ipoptTimeTotal", "ipoptTimeNonfunc", "ipoptTimeFunc",
-                             "gdoptTimeAlgorithms", "gdoptTimeIO", "totalTime"]:
+                elif key in [
+                    "objective",
+                    "ipoptTimeTotal",
+                    "ipoptTimeNonfunc",
+                    "ipoptTimeFunc",
+                    "gdoptTimeAlgorithms",
+                    "gdoptTimeIO",
+                    "totalTime",
+                ]:
                     # float singleton
                     self.modelInfo[key] = float(value)
                 elif key in ["intervalHistory", "ipoptIterationHistory"]:
                     # list int
                     values = value.split(",")
                     self.modelInfo[key] = list(map(int, values))
-                elif key in ["objectiveHistory", "ipoptTimeTotalHistory", "ipoptTimeNonfuncHistory",
-                             "ipoptTimeFuncHistory"]:
+                elif key in [
+                    "objectiveHistory",
+                    "ipoptTimeTotalHistory",
+                    "ipoptTimeNonfuncHistory",
+                    "ipoptTimeFuncHistory",
+                ]:
                     # list float
                     values = value.split(",")
                     self.modelInfo[key] = list(map(float, values))
@@ -829,10 +840,22 @@ int main(int argc, char** argv) {{
             with open(f"compile_{self.name}_err.log", "w+") as errorFile:
                 decoded = compileResult.stderr.decode()
                 errorFile.write(decoded)
-                raise RuntimeError(f"[GDOPT - ERROR] Compilation failed! Check compile_{self.name}_err.log!\n\n" + decoded)
+                raise RuntimeError(
+                    f"[GDOPT - ERROR] Compilation failed! Check compile_{self.name}_err.log!\n\n" + decoded
+                )
         print(f"[GDOPT - TIMING] Compiling generated C++ code took {round(timer.time() - compileStart, 4)} seconds.")
 
-    def solve(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False, compiler="g++", compileFlags=["-O3", "-ffast-math"]):
+    def solve(
+        self,
+        tf=1,
+        steps=1,
+        rksteps=1,
+        flags={},
+        meshFlags={},
+        resimulate=False,
+        compiler="g++",
+        compileFlags=["-O3", "-ffast-math"],
+    ):
 
         # generate and optimize pipelines sequentially
 

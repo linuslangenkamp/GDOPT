@@ -63,9 +63,9 @@ public:
     void refineLinear(std::vector<int>& markedIntervals);
 
     // mesh and mesh refinement
-    int initialIntervals;           // intervals in the first mesh
-    int meshIteration = 0;          // mesh iteration counter
-    std::vector<double> cbValues;   // starting values after refinement
+    int initialIntervals;          // intervals in the first mesh
+    int meshIteration = 0;         // mesh iteration counter
+    std::vector<double> cbValues;  // starting values after refinement
 
     // timing, printing, ...
     std::vector<int> numberOfIntervalsHistory{};
@@ -88,7 +88,7 @@ public:
     void setSolverFlags(Ipopt::IpoptApplication& app);
     void setStandardSolverFlags(Ipopt::IpoptApplication& app);
     void createModelInfo(Ipopt::IpoptApplication& app) const;
-    
+
     void printASCIIArt() const;
     void printMeshIterationHistory();
     void setExportSparsityPath();

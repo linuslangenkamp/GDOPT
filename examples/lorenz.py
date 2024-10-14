@@ -4,7 +4,7 @@ m = Model("lorenzAttractor")
 
 rho = m.addRuntimeParameter(default=28, symbol="rho")
 sigma = m.addRuntimeParameter(default=10, symbol="sigma")
-beta = m.addRuntimeParameter(default=8/3, symbol="beta")
+beta = m.addRuntimeParameter(default=8 / 3, symbol="beta")
 
 x = m.addState(start=1, nominal=15)
 y = m.addState(start=-1, nominal=15)
@@ -20,9 +20,13 @@ m.addMayer(x, nominal=15)
 
 m.generate()
 
-m.optimize(tf=15, steps=200, rksteps=5,
+m.optimize(
+    tf=15,
+    steps=200,
+    rksteps=5,
     flags={"tolerance": 1e-14, "linearSolver": LinearSolver.MA57},
-    meshFlags={"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "iterations": 5},)
+    meshFlags={"algorithm": MeshAlgorithm.L2_BOUNDARY_NORM, "iterations": 5},
+)
 
-m.plot(dots=Dots.ALL)
+m.plot(dots=Dots.BASE)
 m.plotInputsAndRefinement()
