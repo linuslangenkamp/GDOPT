@@ -19,10 +19,11 @@
 #include "solver.h"
 
 #include <chrono>
-#include <numeric>  
-#include "IpSolveStatistics.hpp"
+#include <numeric>
+
 #include "IpIpoptApplication.hpp"
 #include "IpIpoptData.hpp"
+#include "IpSolveStatistics.hpp"
 #include "config.h"
 #include "gdop_impl.h"
 
@@ -30,7 +31,7 @@
  * TODO:
 
     main todos:
-    1 add, construct, test more mesh refinement algorithms!              4, 4
+    1 add, construct, test more mesh refinement algorithms!              5, 4
     2 OpenModelica interface                                             4, 5
     3 test framework for huge examples / industry relevant               3, 2
     4 play with setting in ipopt / pivoting etc. -> basically done       2, 3
@@ -44,14 +45,11 @@
     9 detection for nominal, linear, quadratic, const hessian            1, 2
     10 constructing a p / hp-method?                                     3, 5
 
-    abandoned:
-    10 saving of local hessian and jacobian structures (contained in 4?) 0, 1
-    11 creation of local jacobian structure (contained in 4?)            0, 1
-
     others:
-    12 plotting features for path constraints, lagrange terms            1, 1
-    13 splitting const jacobian equality / inequality                    1, 1
-    14 use argc, argv                                                    1, 1
+    11 plotting features for path constraints, lagrange terms            1, 1
+    12 splitting const jacobian equality / inequality                    1, 1
+    13 use argc, argv                                                    1, 1
+    14 better memory management, not always vector.push_back             2, 1
 */
 
 struct SolverPrivate {
@@ -399,7 +397,7 @@ void Solver::refinePolynomial(std::vector<int>& markedIntervals) {
     // interpolate all values on marked intervals
     int index = 0;
     for (int i = 0; i < oldIntervalLen; i++) {
-        if (markedIntervals[index] == i) {
+        if (markedIntervals[index] == i && index < sz(markedIntervals)) {
             for (int v = 0; v < _priv->gdop->offXU; v++) {  // iterate over every var in {x, u} -> interpolate
                 std::vector<double> localVars = {};
                 // i > 0 interval cases
@@ -497,26 +495,20 @@ void Solver::postOptimization(IpoptApplication& app) {
 void Solver::printMeshIterationHistory() {
     std::cout << "\n---------------------------------------------------------------------------------------------" << std::endl;
     std::cout << "\nMesh refinement history (times in seconds):\n" << std::endl;
-    std::cout << std::setw(5) << "iteration" << std::setw(17) << "objective" << std::setw(18) << "intervals" << std::setw(8) << "iters" <<
-    std::setw(13) << "ipopt time" << std::setw(15) << "nonfunc time" << std::setw(13) << "func time" << std::endl;
+    std::cout << std::setw(5) << "iteration" << std::setw(17) << "objective" << std::setw(18) << "intervals" << std::setw(8) << "iters" << std::setw(13)
+              << "ipopt time" << std::setw(15) << "nonfunc time" << std::setw(13) << "func time" << std::endl;
     std::cout << "---------------------------------------------------------------------------------------------" << std::endl;
     for (int it = 0; it < meshIteration; it++) {
-        std::cout << std::setw(5) << it <<
-        std::setw(27) << double2Str(ipoptObjectiveHistory[it], 14) <<
-        std::setw(12) << std::to_string(numberOfIntervalsHistory[it]) <<
-        std::setw(8) << std::to_string(ipoptIterationHistory[it]) <<
-        std::setw(13) << printTime(ipoptIterationTotalTime[it]) <<
-        std::setw(15) << printTime(ipoptIterationNonfuncEvalTime[it]) <<
-        std::setw(13) << printTime(ipoptIterationFuncEvalTime[it]) << std::endl;
+        std::cout << std::setw(5) << it << std::setw(27) << double2Str(ipoptObjectiveHistory[it], 14) << std::setw(12)
+                  << std::to_string(numberOfIntervalsHistory[it]) << std::setw(8) << std::to_string(ipoptIterationHistory[it]) << std::setw(13)
+                  << printTime(ipoptIterationTotalTime[it]) << std::setw(15) << printTime(ipoptIterationNonfuncEvalTime[it]) << std::setw(13)
+                  << printTime(ipoptIterationFuncEvalTime[it]) << std::endl;
     }
     std::cout << "---------------------------------------------------------------------------------------------" << std::endl;
-    std::cout << std::setw(5) << " overall" <<
-    std::setw(24) << double2Str(ipoptObjectiveHistory[meshIteration - 1], 14) <<
-    std::setw(12) << std::to_string(numberOfIntervalsHistory[meshIteration - 1]) <<
-    std::setw(8) << std::to_string(std::reduce(ipoptIterationHistory.begin(), ipoptIterationHistory.end())) <<
-    std::setw(13) << printTime(ipoptTotalTime)  <<
-    std::setw(15) << printTime(ipoptActualTime) <<
-    std::setw(13) << printTime(ipoptFuncTime)   << std::endl;
+    std::cout << std::setw(5) << " overall" << std::setw(24) << double2Str(ipoptObjectiveHistory[meshIteration - 1], 14) << std::setw(12)
+              << std::to_string(numberOfIntervalsHistory[meshIteration - 1]) << std::setw(8)
+              << std::to_string(std::reduce(ipoptIterationHistory.begin(), ipoptIterationHistory.end())) << std::setw(13) << printTime(ipoptTotalTime)
+              << std::setw(15) << printTime(ipoptActualTime) << std::setw(13) << printTime(ipoptFuncTime) << std::endl;
 }
 
 void Solver::createModelInfo(IpoptApplication& app) const {
@@ -537,7 +529,7 @@ void Solver::createModelInfo(IpoptApplication& app) const {
     outFile << "maxMeshIteration: " << meshIteration - 1 << "\n";
     outFile << "initialIntervals: " << initialIntervals << "\n";
 
-    // history 
+    // history
     outFile << "objectiveHistory: " << vectorToScientificString(ipoptObjectiveHistory) << "\n";
     outFile << "intervalHistory: " << vectorToString(numberOfIntervalsHistory) << "\n";
     outFile << "ipoptIterationHistory: " << vectorToString(ipoptIterationHistory) << "\n";
@@ -563,11 +555,11 @@ void Solver::finalizeOptimization(IpoptApplication& app) {
     std::cout << "---------------------------------------------------------------------------------------------" << std::endl;
     std::cout << "\nOutput for optimization of model: " << _priv->gdop->problem->name << std::endl;
 
-    ipoptFuncTime = std::reduce(ipoptIterationFuncEvalTime.begin(), ipoptIterationFuncEvalTime.end()); // func evals in ipopt
-    ipoptTotalTime = std::reduce(ipoptIterationTotalTime.begin(), ipoptIterationTotalTime.end());      // total time in ipopt
-    ipoptActualTime = ipoptTotalTime - ipoptFuncTime;                                                  // total - func evals
-    solveTotalTimeTaken = std::chrono::high_resolution_clock::now() - solveStartTime;                  // total time in framework
-    solveActualTimeTaken = solveTotalTimeTaken - timedeltaIO;                                          // total time in framework w/o I/O
+    ipoptFuncTime = std::reduce(ipoptIterationFuncEvalTime.begin(), ipoptIterationFuncEvalTime.end());  // func evals in ipopt
+    ipoptTotalTime = std::reduce(ipoptIterationTotalTime.begin(), ipoptIterationTotalTime.end());       // total time in ipopt
+    ipoptActualTime = ipoptTotalTime - ipoptFuncTime;                                                   // total - func evals
+    solveTotalTimeTaken = std::chrono::high_resolution_clock::now() - solveStartTime;                   // total time in framework
+    solveActualTimeTaken = solveTotalTimeTaken - timedeltaIO;                                           // total time in framework w/o I/O
 
     printMeshIterationHistory();
 
