@@ -221,10 +221,10 @@ efficiently.
 
 Depending on your operating system, follow the installation instructions.
 
+\subsection{Ubuntu / Debian}
+
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
 		linewidth=1pt]
-
-	\textbf{Ubuntu / Debian:}
 
 	Make sure that the dependencies (git, curl, pkgconf, gfortran, LAPACK, CMake, g++,
 	Python3, Python3-Venv, Python3-Build) are installed on the system:
@@ -270,7 +270,7 @@ To test whether the framework is set up correctly, execute the \texttt{Hello Wor
 gdopt.HelloWorld()
 \end{lstlisting}
 
-In case the plotting features are not working correctly, it is advised to install PyQt5 to the virtual environment:
+In case the plotting features are not working correctly, it is advised to install Qt5:
 
 \begin{lstlisting}[language=bash]
 pip install PyQt5
@@ -278,6 +278,66 @@ pip install PyQt5
 
 \end{mdframed}
 
+\newpage
+
+\subsection{Fedora}
+\begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
+	linewidth=1pt]
+	
+	Make sure that the dependencies (git, curl, pkgconf, gfortran, LAPACK, CMake, g++, patch,
+	Python3, Python3-Venv, Python3-Pip, Python3-Build) are installed on the system:
+	
+	\begin{lstlisting}[language=bash]
+sudo dnf install git curl pkgconf gfortran lapack-devel cmake gcc-c++ python3 python3-pip python3-virtualenv patch
+pip install build
+	\end{lstlisting}
+	
+	Clone the GDOPT repository from GitHub:
+	
+	\begin{lstlisting}[language=bash]
+git clone https://github.com/linuslangenkamp/GDOPT.git
+	\end{lstlisting}
+	
+	To keep the environment isolated, it is advised to create and activate a
+	virtual environment:
+	
+	\begin{lstlisting}[language=bash]
+python3 -m venv .venv
+source .venv/bin/activate
+	\end{lstlisting}
+	
+	With the virtual environment activated, install the package. This will
+	automatically install
+	IPOPT\cite{wachter2006implementation}, the linear solver
+	MUMPS\cite{amestoy2001fully}, and the Python packages used in the front-end,
+	i.e. SymEngine\cite{symengine}, NumPy\cite{harris2020array},
+	SciPy\cite{virtanen2020scipy}, pandas\cite{mckinney2010data}, and
+	Matplotlib\cite{hunter2007matplotlib}:
+	
+	\begin{lstlisting}[language=bash]
+pip install .
+	\end{lstlisting}
+	
+	Now it is possible to use GDOPT in your Python scripts:
+	\begin{lstlisting}[language=python]
+import gdopt
+	\end{lstlisting}
+	
+	To test whether the framework is set up correctly, execute the \texttt{Hello World} model:
+	\begin{lstlisting}[language=python]
+gdopt.HelloWorld()
+	\end{lstlisting}
+
+	In case the plotting features are not working correctly, it is advised to install Qt5:
+	
+	\begin{lstlisting}[language=bash]
+pip install PyQt5
+sudo dnf install qt5-qtbase-gui
+	\end{lstlisting}
+	
+\end{mdframed}
+
+\subsection{HSL Linear Solvers}
 In addition to MUMPS, linear solvers from the HSL suite such as MA27, MA57,
 MA77, MA86, MA97\cite{hsl2013collection} may also be used if a license is
 present. To do this, the environment variable “LIB\_HSL” must be set to the
