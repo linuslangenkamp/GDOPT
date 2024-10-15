@@ -639,6 +639,7 @@ class Model:
 
         # does the entire code generation and compilation of the model
 
+        timeStartGenerate = timer.time()
         if len(self.F) != len(self.xVars):
             raise InvalidModel("#states != #differential equations")
         elif len(self.xVars) == 0:
@@ -807,7 +808,7 @@ int main(int argc, char** argv) {{
 
         print(f"[GDOPT - INFO] Generated model to .generated/{self.name}/{filename}.cpp.")
         print(
-            f"[GDOPT - TIMING] Model creation, derivative calculations, and code generation took {round(timer.process_time() - self.creationTime, 4)} seconds."
+            f"[GDOPT - TIMING] Derivative calculations and code generation took {round(timer.time() - timeStartGenerate, 4)} seconds."
         )
 
         self.compile(compiler=compiler, compileFlags=compileFlags)
