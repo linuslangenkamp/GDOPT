@@ -91,7 +91,10 @@
 \RequirePackage[tt=false, type1=true]{libertine}
 \RequirePackage[varqu]{zi4}
 \RequirePackage[libertine]{newtxmath}
-
+%%% TODO
+% add compiler, compileFlags
+%
+%%%
 \begin{document}
 \begin{titlepage}
 	\centering
@@ -100,7 +103,7 @@
 
 	{\LARGE\bfseries User's Guide:}\\[1em]
 
-	{\LARGE\bfseries GDOPT - General Dynamic Optimizer}\\[0.5em]
+	{\LARGE\bfseries GDOPT - General Dynamic Optimizer v.0.1.3}\\[0.5em]
 	\textcolor{gray}{\large A Python Environment for Optimizing
 		Dynamic Models}\\[1em]
 
@@ -229,14 +232,14 @@ Depending on your operating system, follow the installation instructions.
 	Make sure that the dependencies (git, curl, pkgconf, gfortran, LAPACK, CMake, g++,
 	Python3, Python3-Venv, Python3-Build) are installed on the system:
 
-\begin{lstlisting}[language=bash]
+	\begin{lstlisting}[language=bash]
 sudo apt-get install git curl pkg-config gfortran liblapack-dev cmake g++ python3 python3-venv
 pip install build
 \end{lstlisting}
 
-Clone the GDOPT repository from GitHub:
+	Clone the GDOPT repository from GitHub:
 
-\begin{lstlisting}[language=bash]
+	\begin{lstlisting}[language=bash]
 git clone https://github.com/linuslangenkamp/GDOPT.git
 \end{lstlisting}
 
@@ -256,23 +259,23 @@ source .venv/bin/activate
 	SciPy\cite{virtanen2020scipy}, pandas\cite{mckinney2010data}, and
 	Matplotlib\cite{hunter2007matplotlib}:
 
-\begin{lstlisting}[language=bash]
+	\begin{lstlisting}[language=bash]
 pip install .
 \end{lstlisting}
 
-Now it is possible to use GDOPT in your Python scripts:
-\begin{lstlisting}[language=python]
+	Now it is possible to use GDOPT in your Python scripts:
+	\begin{lstlisting}[language=python]
 import gdopt
 \end{lstlisting}
 
-To test whether the framework is set up correctly, execute the \texttt{Hello World} model:
-\begin{lstlisting}[language=python]
+	To test whether the framework is set up correctly, execute the \texttt{Hello World} model:
+	\begin{lstlisting}[language=python]
 gdopt.HelloWorld()
 \end{lstlisting}
 
-In case the plotting features are not working correctly, it is advised to install Qt5:
+	In case the plotting features are not working correctly, it is advised to install Qt5:
 
-\begin{lstlisting}[language=bash]
+	\begin{lstlisting}[language=bash]
 pip install PyQt5
 \end{lstlisting}
 
@@ -282,30 +285,30 @@ pip install PyQt5
 
 \subsection{Fedora}
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
-	linewidth=1pt]
-	
+		linewidth=1pt]
+
 	Make sure that the dependencies (git, curl, pkgconf, gfortran, LAPACK, CMake, g++, patch,
 	Python3, Python3-Venv, Python3-Pip, Python3-Build) are installed on the system:
-	
+
 	\begin{lstlisting}[language=bash]
 sudo dnf install git curl pkgconf gfortran lapack-devel cmake gcc-c++ python3 python3-pip python3-virtualenv patch
 pip install build
 	\end{lstlisting}
-	
+
 	Clone the GDOPT repository from GitHub:
-	
+
 	\begin{lstlisting}[language=bash]
 git clone https://github.com/linuslangenkamp/GDOPT.git
 	\end{lstlisting}
-	
+
 	To keep the environment isolated, it is advised to create and activate a
 	virtual environment:
-	
+
 	\begin{lstlisting}[language=bash]
 python3 -m venv .venv
 source .venv/bin/activate
 	\end{lstlisting}
-	
+
 	With the virtual environment activated, install the package. This will
 	automatically install
 	IPOPT\cite{wachter2006implementation}, the linear solver
@@ -313,28 +316,28 @@ source .venv/bin/activate
 	i.e. SymEngine\cite{symengine}, NumPy\cite{harris2020array},
 	SciPy\cite{virtanen2020scipy}, pandas\cite{mckinney2010data}, and
 	Matplotlib\cite{hunter2007matplotlib}:
-	
+
 	\begin{lstlisting}[language=bash]
 pip install .
 	\end{lstlisting}
-	
+
 	Now it is possible to use GDOPT in your Python scripts:
 	\begin{lstlisting}[language=python]
 import gdopt
 	\end{lstlisting}
-	
+
 	To test whether the framework is set up correctly, execute the \texttt{Hello World} model:
 	\begin{lstlisting}[language=python]
 gdopt.HelloWorld()
 	\end{lstlisting}
 
 	In case the plotting features are not working correctly, it is advised to install Qt5:
-	
+
 	\begin{lstlisting}[language=bash]
 pip install PyQt5
 sudo dnf install qt5-qtbase-gui
 	\end{lstlisting}
-	
+
 \end{mdframed}
 
 \subsection{HSL Linear Solvers}
@@ -1252,11 +1255,11 @@ model.solve(tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False)
 If the \texttt{Model} has to be optimized several times, e.g. for benchmarks, one can call \texttt{execute}. This method executes the previously compiled model using the existing initial states and configuration file. Obviously \texttt{solve} or \texttt{optimize} has to be called previously. Additionally command-line arguments can be provided to the back-end.
 
 \begin{mdframed}[backgroundcolor=gray!10, roundcorner=10pt,
-	linewidth=1pt]
-	
+		linewidth=1pt]
+
 	Runs the optimization given a previously compiled model, calculated initial states, if \texttt{"initVars"} is set to \texttt{InitVars.SOLVE} \eqref{flag:initVars}, and an existing configuration.
 	Command-line arguments can be provided to \texttt{execute} via the \texttt{args} argument (currently in development).
-	
+
 	\begin{lstlisting}
 model.execute(args="")
 	\end{lstlisting}
@@ -1265,7 +1268,7 @@ model.execute(args="")
 	\begin{itemize}
 		\item \texttt{string args} \emph{(optional)}: Command line arguments for the back-end.
 	\end{itemize}
-	
+
 \end{mdframed}
 
 
@@ -1326,22 +1329,22 @@ are presented below.
 		      number of iterations in IPOPT.
 
 		      \phantomsection
-			\label{flag:kktmuglobalization}
-			\item \texttt{"kktMuGlobalization" $\rightarrow$ bool}
-			(\emph{default}=\texttt{True}): Turns the IPOPT adaptive mu globalization based on KKT errors on or off. In many cases, it is advantageous to use this, which is why this strategy is set as the default. For poorly conditioned problems, it is advised to disable this.
+		      \label{flag:kktmuglobalization}
+		\item \texttt{"kktMuGlobalization" $\rightarrow$ bool}
+		      (\emph{default}=\texttt{True}): Turns the IPOPT adaptive mu globalization based on KKT errors on or off. In many cases, it is advantageous to use this, which is why this strategy is set as the default. For poorly conditioned problems, it is advised to disable this.
 
-			
-			\label{flag:outputPath}
-			\item \texttt{"outputPath" $\rightarrow$ str} (\emph{default} = \texttt{"cwd\textbackslash .generated\textbackslash modelname\textbackslash modelname\\\{it\}.csv"}): Sets the path to
-			which the optimal solution is output as a text file. If this
-			value is not provided,
-			the optimal solution for every mesh iteration $it=0, \ldots,
-			maxMeshIteration$ will be written to the .generated directory.
-			
-			\phantomsection
-			\label{flag:disableOutput}
-			\item \texttt{"disableOutput" $\rightarrow$ bool} (\emph{default} = \texttt{False}): If set to true, the output of the optimal solution will be disabled. This may be useful when benchmarks are carried out.
-			Note that the analysis \eqref{c:Analysis} can not be accessed, if \texttt{"disableOutput"} is set to true.
+
+		      \label{flag:outputPath}
+		\item \texttt{"outputPath" $\rightarrow$ str} (\emph{default} = \texttt{"cwd\textbackslash .generated\textbackslash modelname\textbackslash modelname\\\{it\}.csv"}): Sets the path to
+		      which the optimal solution is output as a text file. If this
+		      value is not provided,
+		      the optimal solution for every mesh iteration $it=0, \ldots,
+			      maxMeshIteration$ will be written to the .generated directory.
+
+		      \phantomsection
+		      \label{flag:disableOutput}
+		\item \texttt{"disableOutput" $\rightarrow$ bool} (\emph{default} = \texttt{False}): If set to true, the output of the optimal solution will be disabled. This may be useful when benchmarks are carried out.
+		      Note that the analysis \eqref{c:Analysis} can not be accessed, if \texttt{"disableOutput"} is set to true.
 
 		      \phantomsection
 		      \label{flag:ipoptPrintLevel}
@@ -1376,21 +1379,21 @@ are presented below.
 		      the initial value problem, which arises if
 		      \texttt{"initVars"} is set to
 		      \texttt{Init\\Vars.SOLVE}, is written.
-		      
+
 		      \phantomsection
-		\label{flag:linearObjective}
+		      \label{flag:linearObjective}
 		\item \texttt{"linearObjective" $\rightarrow$ bool}
-		(\emph{default}=\texttt{False}): Tells the solver that the Mayer term and Lagrange integrand are at most linear. This can improve the runtime, but be aware that this flag should only be set, if the criterion is met. 
-		
+		      (\emph{default}=\texttt{False}): Tells the solver that the Mayer term and Lagrange integrand are at most linear. This can improve the runtime, but be aware that this flag should only be set, if the criterion is met.
+
 		      \phantomsection
-		\label{flag:quadraticObjective}
+		      \label{flag:quadraticObjective}
 		\item \texttt{"quadraticObjective" $\rightarrow$ bool}
-		(\emph{default}=\texttt{False}): Tells the solver that the Mayer term and Lagrange integrand are at most quadratic. This can improve the runtime, but be aware that this flag should only be set, if the criterion is met. 
-		
-		\phantomsection
-		\label{flag:linearConstraints}
+		      (\emph{default}=\texttt{False}): Tells the solver that the Mayer term and Lagrange integrand are at most quadratic. This can improve the runtime, but be aware that this flag should only be set, if the criterion is met.
+
+		      \phantomsection
+		      \label{flag:linearConstraints}
 		\item \texttt{"linearConstraints" $\rightarrow$ bool}
-		(\emph{default}=\texttt{False}): Tells the solver that all constraints, i.e. $\v{f}, \v{g}, \v{r}, \v{a}$, are at most linear. This can improve the runtime, but be aware that this flag should only be set, if the criterion is met. 
+		      (\emph{default}=\texttt{False}): Tells the solver that all constraints, i.e. $\v{f}, \v{g}, \v{r}, \v{a}$, are at most linear. This can improve the runtime, but be aware that this flag should only be set, if the criterion is met.
 
 	\end{itemize}
 \end{mdframed}

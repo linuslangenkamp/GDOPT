@@ -35,7 +35,6 @@ pd.set_option("display.precision", 8)
 
 
 class Model:
-
     def __init__(self, name="DummyName"):
         self.creationTime = timer.process_time()
         self.xVars = []
@@ -75,9 +74,7 @@ class Model:
         self.quadraticObjective = False
         self.linearObjective = False
         self.linearConstraints = False
-        self.autoVariableNominals = (
-            False  # TODO: not in use: automatically scale variables and equations that dont have a nominal value
-        )
+        self.autoVariableNominals = False  # TODO: not in use: automatically scale variables and equations that dont have a nominal value
         self.userScaling = False
 
         # stuff for analyzing the results
@@ -88,8 +85,9 @@ class Model:
         self.pVarNames = []
         self.rpVarNames = []
 
-    def addState(self, start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None):
-
+    def addState(
+        self, start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None
+    ):
         # adds a state x for optimization, must a have starting value
         # specify lb or ub if needed
 
@@ -101,62 +99,72 @@ class Model:
         return variable
 
     def addX(self, start, symbol=None, lb=-float("inf"), ub=float("inf"), nominal=None):
-
         # alias for addState()
 
         return self.addState(start, symbol=symbol, lb=lb, ub=ub, nominal=nominal)
 
-    def addInput(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-
+    def addInput(
+        self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None
+    ):
         # adds an input / control u for optimization
         # specify lb or ub, start/initialGuess if needed
         # only provide a guess if you are certain that it will benefit
 
-        info = InputStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
+        info = InputStruct(
+            symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal
+        )
         variable = Symbol(f"u[{info.id}]")
         varInfo[variable] = info
         self.uVars.append(variable)
         self.checkNominalNone(nominal)
         return variable
 
-    def addControl(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-
+    def addControl(
+        self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None
+    ):
         # alias for addInput()
 
         return self.addInput(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
 
-    def addContinuous(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-
+    def addContinuous(
+        self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None
+    ):
         # alias for addInput()
 
         return self.addInput(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
 
-    def addU(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-
+    def addU(
+        self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None
+    ):
         # alias for addInput()
 
         return self.addInput(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
 
-    def addParameter(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-
+    def addParameter(
+        self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None
+    ):
         # adds a parameter p for optimization
         # specify lb or ub if needed, start/initialGuess if needed
 
-        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
+        info = ParameterStruct(
+            symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal
+        )
         variable = Symbol(f"p[{info.id}]")
         varInfo[variable] = info
         self.pVars.append(variable)
         self.checkNominalNone(nominal)
         return variable
 
-    def addP(self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None):
-
+    def addP(
+        self, symbol=None, lb=-float("inf"), ub=float("inf"), guess=0, nominal=None
+    ):
         # alias for addParameter()
 
-        return self.addParameter(symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal)
+        return self.addParameter(
+            symbol=symbol, lb=lb, ub=ub, guess=guess, nominal=nominal
+        )
 
     def addBinaryParameter(self, lb=0, ub=1, symbol=None, guess=None, nominal=None):
-
         # dangerous, might break the code
         # adds a binary parameter p for optimization
         # specify lb or ub, start/initialGuess if needed
@@ -164,16 +172,19 @@ class Model:
 
         if guess is None:
             guess = (lb + ub) / 2
-        info = ParameterStruct(symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal)
+        info = ParameterStruct(
+            symbol=symbol, lb=lb, ub=ub, initialGuess=guess, nominal=nominal
+        )
         variable = Symbol(f"p[{info.id}]")
         varInfo[variable] = info
         self.pVars.append(variable)
-        self.addParametric(variable**2 - variable * (lb + ub) + lb * ub, eq=0)  # forces binary type
+        self.addParametric(
+            variable**2 - variable * (lb + ub) + lb * ub, eq=0
+        )  # forces binary type
         self.checkNominalNone(nominal)
         return variable
 
     def addRuntimeParameter(self, default, symbol=None):
-
         # adds a runtime parameter: can be changed for optimization
         # will be handled symbolically -> thus quite slow
         # for actual constants simply write pythonic var = value
@@ -185,19 +196,16 @@ class Model:
         return variable
 
     def addRP(self, default, symbol=None):
-
         # alias for addRuntimeParameter()
 
         return self.addRuntimeParameter(default, symbol=symbol)
 
     def setValue(self, runtimeParameter, value):
-
         # sets a runtime parameter value
 
         varInfo[runtimeParameter].value = value
 
     def addObjective(self, mayer, lagrange, obj=Objective.MINIMIZE, nominal=None):
-
         # adds the mayer and lagrange term
         # if mayer and lagrange have a nominal -> sum is used as nominal value
 
@@ -205,48 +213,51 @@ class Model:
         self.addLagrange(lagrange, obj, nominal=nominal / 2)
 
     def addMayer(self, expr, obj=Objective.MINIMIZE, nominal=None):
-
         # adds the mayer term: min/max expr(tf)
         # if mayer and lagrange have a nominal -> sum is used as nominal value
         if self.M is not None:
-            print("[GDOPT - ATTENTION] Mayer term already set! Overwriting previous Mayer term.")
+            print(
+                "[GDOPT - ATTENTION] Mayer term already set! Overwriting previous Mayer term."
+            )
 
         if obj == Objective.MAXIMIZE:
             self.M = Expression(-1 * expr, nominal=nominal)
-            print("[GDOPT - ATTENTION] Setting Mayer term as -1 * mayer, since maximization is chosen.")
+            print(
+                "[GDOPT - ATTENTION] Setting Mayer term as -1 * mayer, since maximization is chosen."
+            )
         else:
             self.M = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
 
     def addM(self, expr, obj=Objective.MINIMIZE, nominal=None):
-
         # alias for addMayer()
 
         self.addMayer(expr, obj=obj, nominal=nominal)
 
     def addLagrange(self, expr, obj=Objective.MINIMIZE, nominal=None):
-
         # adds the lagrange term: min/max integral_0_tf expr dt
         # if mayer and lagrange have a nominal -> sum is used as nominal value
 
         if self.L is not None:
-            print("[GDOPT - ATTENTION] Lagrange term already set! Overwriting previous Lagrange term.")
+            print(
+                "[GDOPT - ATTENTION] Lagrange term already set! Overwriting previous Lagrange term."
+            )
 
         if obj == Objective.MAXIMIZE:
             self.L = Expression(-1 * expr, nominal=nominal)
-            print("[GDOPT - ATTENTION] Setting Lagrange term as -1 * lagrange, since maximization is chosen.")
+            print(
+                "[GDOPT - ATTENTION] Setting Lagrange term as -1 * lagrange, since maximization is chosen."
+            )
         else:
             self.L = Expression(expr, nominal=nominal)
         self.checkNominalNone(nominal)
 
     def addL(self, expr, obj=Objective.MINIMIZE, nominal=None):
-
         # alias for addLagrange()
 
         self.addLagrange(expr, obj=obj, nominal=nominal)
 
     def addDynamic(self, diffVar, expr, nominal=None):
-
         # adds a dynamic constraint: diffVar' = expr
 
         for f in self.F:
@@ -257,19 +268,16 @@ class Model:
         self.checkNominalNone(nominal)
 
     def addF(self, diffVar, expr, nominal=None):
-
         # alias for addDynamic()
 
         self.addDynamic(diffVar, expr, nominal=nominal)
 
     def addOde(self, diffVar, expr, nominal=None):
-
         # alias for addDynamic()
 
         self.addDynamic(diffVar, expr, nominal=nominal)
 
     def addPath(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-
         # adds a path constraint: lb <= g(.(t)) <= ub or g(.(t)) == eq
 
         self.checkBounds(lb, ub, eq)
@@ -277,13 +285,11 @@ class Model:
         self.checkNominalNone(nominal)
 
     def addG(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-
         # alias for addPath()
 
         self.addPath(expr, lb=lb, ub=ub, eq=eq, nominal=nominal)
 
     def addFinal(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-
         # adds a final constraint: lb <= r(.(tf)) <= ub or r(.(tf)) == eq
 
         self.checkBounds(lb, ub, eq)
@@ -291,24 +297,25 @@ class Model:
         self.checkNominalNone(nominal)
 
     def addR(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-
         # alias for addFinal()
 
         self.addFinal(expr, lb=lb, ub=ub, eq=eq, nominal=nominal)
 
-    def addParametric(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-
+    def addParametric(
+        self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None
+    ):
         # adds a parametric constraint: lb <= a(p) <= ub or a(p) == eq
 
         if not set(self.pVars).issuperset(expr.free_symbols):
-            raise InvalidModel("[GDOPT - ERROR] Parametric constraints only allow parametric variables")
+            raise InvalidModel(
+                "[GDOPT - ERROR] Parametric constraints only allow parametric variables"
+            )
 
         self.checkBounds(lb, ub, eq)
         self.checkNominalNone(nominal)
         self.A.append(ParametricConstraint(expr, lb=lb, ub=ub, eq=eq, nominal=nominal))
 
     def addA(self, expr, lb=-float("inf"), ub=float("inf"), eq=None, nominal=None):
-
         # alias for addParametric()
 
         self.addParametric(expr, lb=lb, ub=ub, eq=eq, nominal=nominal)
@@ -322,7 +329,6 @@ class Model:
             return
 
     def _addDummy(self):
-
         # adds a dummy state for purely parametric models
 
         x = self.addState(start=0)
@@ -354,7 +360,11 @@ class Model:
             out += "\n"
 
         for r in self.R:
-            out += f"{r.lb} <= {str(r.expr)}(tf) <= {r.ub}\n" if r.lb != r.ub else f"{str(r.expr)}(tf) = {r.lb}\n"
+            out += (
+                f"{r.lb} <= {str(r.expr)}(tf) <= {r.ub}\n"
+                if r.lb != r.ub
+                else f"{str(r.expr)}(tf) = {r.lb}\n"
+            )
         if len(self.R) > 0:
             out += "\n"
 
@@ -367,7 +377,6 @@ class Model:
         return str(self)
 
     def solveDynamic(self):
-
         # solves the dynamic system with the given initial u(t), p, x0
 
         # define the rhs, uCallback function
@@ -378,7 +387,9 @@ class Model:
                 + [u for u in self.uVars]
                 + [p for p in self.pVars]
                 + [rp for rp in self.rpVars],
-                dynEq.expr.subs(FINAL_TIME_SYMBOL, self.tf) if hasattr(dynEq.expr, "subs") else dynEq.expr,
+                dynEq.expr.subs(FINAL_TIME_SYMBOL, self.tf)
+                if hasattr(dynEq.expr, "subs")
+                else dynEq.expr,
             )
             for dynEq in self.F
         ]
@@ -413,13 +424,22 @@ class Model:
         runtimeConstantsDict = {rpVar: varInfo[rpVar].value for rpVar in self.rpVars}
         runtimeConstantsDict[FINAL_TIME_SYMBOL] = self.tf
         x0 = [
-            varInfo[x].start.subs(runtimeConstantsDict) if hasattr(varInfo[x].start, "subs") else varInfo[x].start
+            varInfo[x].start.subs(runtimeConstantsDict)
+            if hasattr(varInfo[x].start, "subs")
+            else varInfo[x].start
             for x in self.xVars
         ]
         timeHorizon = [0, self.tf]
 
         # scipy.solve_ivp
-        solution = solve_ivp(ode, timeHorizon, x0, method=self.ivpSolver.name, dense_output=True, rtol=1e-10)
+        solution = solve_ivp(
+            ode,
+            timeHorizon,
+            x0,
+            method=self.ivpSolver.name,
+            dense_output=True,
+            rtol=1e-10,
+        )
 
         # get solution at the RadauIIA nodes (based on self.rksteps)
         timeVals = generateRadauNodes(timeHorizon, self.steps, self.rksteps)
@@ -466,7 +486,6 @@ class Model:
         self.initialStatesPath = path
 
     def setIVPSolver(self, solver: IVPSolver):
-
         # set IVP Solver for initial guess of states. (see scipy.solve_ivp)
         # default = IVPSolver.Radau (should be best), others: BDF, LSODA, RK45, DOP853, RK23
 
@@ -494,25 +513,21 @@ class Model:
         self.userScaling = userScaling
 
     def hasLinearObjective(self, linearObjective=True):
-
         # set this if both Mayer and Lagrange are linear
 
         self.linearObjective = linearObjective
 
     def hasQuadraticObjective(self, quadraticObjective=True):
-
         # set this if both Mayer and Lagrange are quadratic
 
         self.quadraticObjective = quadraticObjective
 
     def hasLinearConstraints(self, linearConstraints=True):
-
         # set this if all constraints, i.e. f, g, r and a are linear
 
         self.linearConstraints = linearConstraints
 
     def setExpressionSimplification(self, simp):
-
         # turn initial simplification of expression at generation on / off, standard = off, good for large models
 
         Expression.simplification = simp
@@ -597,7 +612,6 @@ class Model:
             self.userScaling = True
 
     def initAnalysis(self):
-
         # clear result history for new optimization
         self.resultHistory = {}
 
@@ -607,7 +621,11 @@ class Model:
                 key, value = line.split(":")
                 key = key.strip()
                 value = value.strip()
-                if key in ["maxMeshIteration", "initialIntervals", "ipoptIterationsOverall"]:
+                if key in [
+                    "maxMeshIteration",
+                    "initialIntervals",
+                    "ipoptIterationsOverall",
+                ]:
                     # int singleton
                     self.modelInfo[key] = int(value)
                 elif key in [
@@ -635,8 +653,9 @@ class Model:
                     values = value.split(",")
                     self.modelInfo[key] = list(map(float, values))
 
-    def generate(self, compiler="g++", compileFlags=["-O3", "-ffast-math"]):
-
+    def generate(
+        self, compiler="g++", compileFlags=["-O3", "-ffast-math", "-lstdc++", "-lm"]
+    ):
         # does the entire code generation and compilation of the model
 
         timeStartGenerate = timer.time()
@@ -669,9 +688,13 @@ class Model:
 #include <libgdopt/config.h>
 \n\n"""
 
-        rpStrings = [f"{str(varInfo[rp].symbol).upper().strip(' ')}_VALUE" for rp in self.rpVars]
+        rpStrings = [
+            f"{str(varInfo[rp].symbol).upper().strip(' ')}_VALUE" for rp in self.rpVars
+        ]
         if len(self.rpVars) != 0:
-            OUTPUT += "// declaration of global runtime parameters (read from .config)\n"
+            OUTPUT += (
+                "// declaration of global runtime parameters (read from .config)\n"
+            )
         for rpString in rpStrings:
             OUTPUT += f"double {rpString};\n"
 
@@ -720,10 +743,22 @@ class Model:
 
         OUTPUT += self.uInitialGuessCodegen()
 
-        pushF = "\n    ".join("F.push_back(" + "F" + str(n) + self.name + "::create());" for n in range(len(self.F)))
-        pushG = "\n    ".join("G.push_back(" + "G" + str(n) + self.name + "::create());" for n in range(len(self.G)))
-        pushR = "\n    ".join("R.push_back(" + "R" + str(n) + self.name + "::create());" for n in range(len(self.R)))
-        pushA = "\n    ".join("A.push_back(" + "A" + str(n) + self.name + "::create());" for n in range(len(self.A)))
+        pushF = "\n    ".join(
+            "F.push_back(" + "F" + str(n) + self.name + "::create());"
+            for n in range(len(self.F))
+        )
+        pushG = "\n    ".join(
+            "G.push_back(" + "G" + str(n) + self.name + "::create());"
+            for n in range(len(self.G))
+        )
+        pushR = "\n    ".join(
+            "R.push_back(" + "R" + str(n) + self.name + "::create());"
+            for n in range(len(self.R))
+        )
+        pushA = "\n    ".join(
+            "A.push_back(" + "A" + str(n) + self.name + "::create());"
+            for n in range(len(self.A))
+        )
 
         OUTPUT += f"""Problem createProblem{self.name}() {{
 
@@ -806,7 +841,9 @@ int main(int argc, char** argv) {{
         with open(f".generated/{self.name}/{filename}.cpp", "w") as file:
             file.write(OUTPUT)
 
-        print(f"[GDOPT - INFO] Generated model to .generated/{self.name}/{filename}.cpp.")
+        print(
+            f"[GDOPT - INFO] Generated model to .generated/{self.name}/{filename}.cpp."
+        )
         print(
             f"[GDOPT - TIMING] Derivative calculations and code generation took {round(timer.time() - timeStartGenerate, 4)} seconds."
         )
@@ -814,7 +851,6 @@ int main(int argc, char** argv) {{
         self.compile(compiler=compiler, compileFlags=compileFlags)
 
     def compile(self, compiler="g++", compileFlags=["-O3", "-ffast-math"]):
-
         print("[GDOPT - INFO] Compiling generated code...")
         compileStart = timer.time()
 
@@ -842,9 +878,12 @@ int main(int argc, char** argv) {{
                 decoded = compileResult.stderr.decode()
                 errorFile.write(decoded)
                 raise RuntimeError(
-                    f"[GDOPT - ERROR] Compilation failed! Check compile_{self.name}_err.log!\n\n" + decoded
+                    f"[GDOPT - ERROR] Compilation failed! Check compile_{self.name}_err.log!\n\n"
+                    + decoded
                 )
-        print(f"[GDOPT - TIMING] Compiling generated C++ code took {round(timer.time() - compileStart, 4)} seconds.")
+        print(
+            f"[GDOPT - TIMING] Compiling generated C++ code took {round(timer.time() - compileStart, 4)} seconds."
+        )
 
     def solve(
         self,
@@ -857,14 +896,21 @@ int main(int argc, char** argv) {{
         compiler="g++",
         compileFlags=["-O3", "-ffast-math"],
     ):
-
         # generate and optimize pipelines sequentially
 
         self.generate(compiler=compiler, compileFlags=compileFlags)
-        self.optimize(tf=tf, steps=steps, rksteps=rksteps, flags=flags, meshFlags=meshFlags, resimulate=resimulate)
+        self.optimize(
+            tf=tf,
+            steps=steps,
+            rksteps=rksteps,
+            flags=flags,
+            meshFlags=meshFlags,
+            resimulate=resimulate,
+        )
 
-    def optimize(self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False):
-
+    def optimize(
+        self, tf=1, steps=1, rksteps=1, flags={}, meshFlags={}, resimulate=False
+    ):
         # sets the runtime configuration with flags, mesh, refinement, runtime parameters
         # get and write initial states, if set InitVars.SOLVE
         # run the code
@@ -890,7 +936,9 @@ int main(int argc, char** argv) {{
             self.initialStatesCode()
 
         # configuration codegen
-        print(f"[GDOPT - INFO] Creation of configuration .generated/{self.name}/{self.name}.config...")
+        print(
+            f"[GDOPT - INFO] Creation of configuration .generated/{self.name}/{self.name}.config..."
+        )
         with open(f".generated/{self.name}/{self.name}.config", "w") as file:
             file.write(self.createConfigurationCode())
         print("[GDOPT - INFO] Configuration done.")
@@ -901,7 +949,9 @@ int main(int argc, char** argv) {{
         argList = args.split() if args else []
         print(f"[GDOPT - INFO] Executing...")
         runResult = subprocess.run([f"./.generated/{self.name}/{self.name}"] + argList)
-        print(f"\n[GDOPT - INFO] Exit: {backendReturnCode(runResult.returncode).replace('_', ' ')}.\n")
+        print(
+            f"\n[GDOPT - INFO] Exit: {backendReturnCode(runResult.returncode).replace('_', ' ')}.\n"
+        )
 
         self.initAnalysis()
 
@@ -909,14 +959,16 @@ int main(int argc, char** argv) {{
         print("[GDOPT - INFO] Solving IVP for initial state guesses...")
         solveStart = timer.time()
         timeVals, stateVals = self.solveDynamic()
-        print(f"[GDOPT - TIMING] Solving the IVP took {round(timer.time() - solveStart, 4)} seconds.")
+        print(
+            f"[GDOPT - TIMING] Solving the IVP took {round(timer.time() - solveStart, 4)} seconds."
+        )
 
-        print(f"[GDOPT - INFO] Writing guesses to {self.initialStatesPath + '/initialValues.csv'}...")
+        print(
+            f"[GDOPT - INFO] Writing guesses to {self.initialStatesPath + '/initialValues.csv'}..."
+        )
         with open(self.initialStatesPath + "/initialValues.csv", "w") as file:
             for i in range(len(timeVals)):
-                row = (
-                    []
-                )  # could add timeColumn for debugging by adding: row = [str(timeVals[i])] -> change JUMP1 as well
+                row = []  # could add timeColumn for debugging by adding: row = [str(timeVals[i])] -> change JUMP1 as well
                 for dim in range(len(self.xVars)):
                     row.append(str(stateVals[dim][i]))
 
@@ -924,7 +976,6 @@ int main(int argc, char** argv) {{
         print("[GDOPT - INFO] Initial guesses done.")
 
     def createConfigurationCode(self):
-
         # generates the code for the .config file
 
         OUTPUT = "[standard model parameters]\n"
@@ -943,7 +994,9 @@ int main(int argc, char** argv) {{
         OUTPUT += "\n[constant derivatives]\n"
         OUTPUT += f"LINEAR_OBJECTIVE {'true' if self.linearObjective else 'false'}\n"
         OUTPUT += f"QUADRATIC_OBJECTIVE_LINEAR_CONSTRAINTS {'true' if ((self.quadraticObjective or self.linearObjective) and self.linearConstraints) else 'false'}\n"
-        OUTPUT += f"LINEAR_CONSTRAINTS {'true' if self.linearConstraints else 'false'}\n"
+        OUTPUT += (
+            f"LINEAR_CONSTRAINTS {'true' if self.linearConstraints else 'false'}\n"
+        )
 
         OUTPUT += "\n[optionals: ipopt flags]\n"
         if self.kktMuGlobalization is not None:
@@ -977,10 +1030,22 @@ int main(int argc, char** argv) {{
         return OUTPUT
 
     def initVarNames(self):
-        self.xVarNames = [info.symbol for info in varInfo.values() if isinstance(info, StateStruct)]
-        self.uVarNames = [info.symbol for info in varInfo.values() if isinstance(info, InputStruct)]
-        self.pVarNames = [info.symbol for info in varInfo.values() if isinstance(info, ParameterStruct)]
-        self.rpVarNames = [info.symbol for info in varInfo.values() if isinstance(info, RuntimeParameterStruct)]
+        self.xVarNames = [
+            info.symbol for info in varInfo.values() if isinstance(info, StateStruct)
+        ]
+        self.uVarNames = [
+            info.symbol for info in varInfo.values() if isinstance(info, InputStruct)
+        ]
+        self.pVarNames = [
+            info.symbol
+            for info in varInfo.values()
+            if isinstance(info, ParameterStruct)
+        ]
+        self.rpVarNames = [
+            info.symbol
+            for info in varInfo.values()
+            if isinstance(info, RuntimeParameterStruct)
+        ]
 
     def getResults(self, meshIteration=None):
         meshIteration = self.checkMeshIteration(meshIteration)
@@ -988,7 +1053,8 @@ int main(int argc, char** argv) {{
         if meshIteration not in self.resultHistory:
             try:
                 results = pd.read_csv(
-                    self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv", delimiter=","
+                    self.outputFilePath + "/" + self.name + str(meshIteration) + ".csv",
+                    delimiter=",",
                 )
             except:
                 raise Exception(
@@ -1026,13 +1092,22 @@ int main(int argc, char** argv) {{
         meshIteration = self.checkMeshIteration(meshIteration)
         self.getResults(meshIteration)
         print("Optimal parameters:")
-        for p, pValue in self.resultHistory[meshIteration][self.pVarNames].iloc[0].items():
+        for p, pValue in (
+            self.resultHistory[meshIteration][self.pVarNames].iloc[0].items()
+        ):
             print(f"{p} = {pValue}")
         print("")
 
     def _printFull(self, data):
         with pd.option_context(
-            "display.max_rows", None, "display.max_columns", None, "display.width", 2000, "display.max_colwidth", None
+            "display.max_rows",
+            None,
+            "display.max_columns",
+            None,
+            "display.width",
+            2000,
+            "display.max_colwidth",
+            None,
         ):
             print(data)
 
@@ -1072,24 +1147,53 @@ int main(int argc, char** argv) {{
 
     def plot(self, specifCols=None, meshIteration=None, interval=None, dots=Dots.OFF):
         self.initVarNames()
-        self.plotGeneral(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=specifCols)
+        self.plotGeneral(
+            meshIteration=meshIteration,
+            interval=interval,
+            dots=dots,
+            specifCols=specifCols,
+        )
 
     def plotStates(self, meshIteration=None, interval=None, dots=Dots.OFF):
         self.initVarNames()
-        self.plotGeneral(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.xVarNames)
+        self.plotGeneral(
+            meshIteration=meshIteration,
+            interval=interval,
+            dots=dots,
+            specifCols=self.xVarNames,
+        )
 
     def plotInputs(self, meshIteration=None, interval=None, dots=Dots.OFF):
         self.initVarNames()
-        self.plotGeneral(meshIteration=meshIteration, interval=interval, dots=dots, specifCols=self.uVarNames)
+        self.plotGeneral(
+            meshIteration=meshIteration,
+            interval=interval,
+            dots=dots,
+            specifCols=self.uVarNames,
+        )
 
-    def parametricPlot(self, varX, varY, meshIteration=None, interval=None, dots=Dots.OFF):
+    def parametricPlot(
+        self, varX, varY, meshIteration=None, interval=None, dots=Dots.OFF
+    ):
         self.initVarNames()
         if interval is None:
             interval = [0, self.tf]
-        self._parametricPlot(varX=varX, varY=varY, meshIteration=meshIteration, interval=interval, dots=dots)
+        self._parametricPlot(
+            varX=varX,
+            varY=varY,
+            meshIteration=meshIteration,
+            interval=interval,
+            dots=dots,
+        )
 
     def plotInputsAndRefinement(
-        self, meshIteration=None, interval=None, markerSize=30, dotsMesh=Dots.BASE, dotsGraph=Dots.BASE, epsilon=1e-14
+        self,
+        meshIteration=None,
+        interval=None,
+        markerSize=30,
+        dotsMesh=Dots.BASE,
+        dotsGraph=Dots.BASE,
+        epsilon=1e-14,
     ):
         self.initVarNames()
         self.plotVarsAndRefinement(
@@ -1121,7 +1225,10 @@ int main(int argc, char** argv) {{
             interval=interval, markerSize=markerSize, dots=dotsMesh, epsilon=epsilon
         )
         figGraph, axsGraph = self._plotGeneral(
-            meshIteration=meshIteration, interval=interval, specifCols=specifCols, dots=dotsGraph
+            meshIteration=meshIteration,
+            interval=interval,
+            specifCols=specifCols,
+            dots=dotsGraph,
         )
 
         plt.close(figGraph)
@@ -1134,21 +1241,34 @@ int main(int argc, char** argv) {{
 
         for i in range(len(axsGraph)):
             axs[i].set_xticks([])
-            axs[i].plot(axsGraph[i].lines[0].get_xdata(), axsGraph[i].lines[0].get_ydata())
+            axs[i].plot(
+                axsGraph[i].lines[0].get_xdata(), axsGraph[i].lines[0].get_ydata()
+            )
             axs[i].set_ylabel(axsGraph[i].get_ylabel())
             axs[i].set_xlim(interval)
             if axsGraph[i].collections:
                 for coll in axsGraph[i].collections:
                     offsets = coll.get_offsets()
                     axs[i].scatter(
-                        offsets[:, 0], offsets[:, 1], color="red", s=30, edgecolor="black", alpha=0.8, zorder=5
+                        offsets[:, 0],
+                        offsets[:, 1],
+                        color="red",
+                        s=30,
+                        edgecolor="black",
+                        alpha=0.8,
+                        zorder=5,
                     )
 
         if axMesh.collections:
             for coll in axMesh.collections:
                 offsets = coll.get_offsets()
                 axs[len(axs) - 1].scatter(
-                    offsets[:, 0], offsets[:, 1], color="red", s=markerSize, edgecolor="black", alpha=0.8
+                    offsets[:, 0],
+                    offsets[:, 1],
+                    color="red",
+                    s=markerSize,
+                    edgecolor="black",
+                    alpha=0.8,
                 )
             axs[len(axs) - 1].set_ylabel(axMesh.get_ylabel())
             axs[len(axs) - 1].set_xlim(interval)
@@ -1158,23 +1278,36 @@ int main(int argc, char** argv) {{
         plt.subplots_adjust(left=0.075, right=0.95, top=0.925, bottom=0.075, hspace=0.1)
         plt.show()
 
-    def plotMeshRefinement(self, interval=None, markerSize=30, dots=Dots.BASE, epsilon=1e-14):
-        fig, ax = self._plotMeshRefinement(interval=interval, markerSize=markerSize, dots=dots, epsilon=epsilon)
+    def plotMeshRefinement(
+        self, interval=None, markerSize=30, dots=Dots.BASE, epsilon=1e-14
+    ):
+        fig, ax = self._plotMeshRefinement(
+            interval=interval, markerSize=markerSize, dots=dots, epsilon=epsilon
+        )
         ax.set_xlabel("Time")
         ax.set_title("Inserted Mesh Points Over Time")
         plt.tight_layout()
         plt.subplots_adjust(left=0.075, right=0.95, top=0.925, bottom=0.075, hspace=0.1)
         plt.show()
 
-    def plotGeneral(self, meshIteration=None, interval=None, specifCols=None, dots=Dots.OFF):
-        fig, axs = self._plotGeneral(meshIteration=meshIteration, interval=interval, specifCols=specifCols, dots=dots)
+    def plotGeneral(
+        self, meshIteration=None, interval=None, specifCols=None, dots=Dots.OFF
+    ):
+        fig, axs = self._plotGeneral(
+            meshIteration=meshIteration,
+            interval=interval,
+            specifCols=specifCols,
+            dots=dots,
+        )
         axs[-1].set_xlabel("Time")
         axs[0].set_title(f"Optimal Solution: {self.name}")
         plt.tight_layout()
         plt.subplots_adjust(left=0.075, right=0.95, top=0.925, bottom=0.075, hspace=0.1)
         plt.show()
 
-    def _plotGeneral(self, meshIteration=None, interval=None, specifCols=None, dots=Dots.OFF):
+    def _plotGeneral(
+        self, meshIteration=None, interval=None, specifCols=None, dots=Dots.OFF
+    ):
         self.setPlotDefaults()
 
         meshIteration = self.checkMeshIteration(meshIteration)
@@ -1184,7 +1317,9 @@ int main(int argc, char** argv) {{
 
         columns_to_plot = specifCols or self.resultHistory[meshIteration].columns[1:]
 
-        fig, axs = plt.subplots(len(columns_to_plot), 1, figsize=(12, 8 * len(columns_to_plot)), sharex=True)
+        fig, axs = plt.subplots(
+            len(columns_to_plot), 1, figsize=(12, 8 * len(columns_to_plot)), sharex=True
+        )
 
         if len(columns_to_plot) == 1:
             axs = [axs]
@@ -1206,7 +1341,9 @@ int main(int argc, char** argv) {{
 
         return fig, axs
 
-    def _parametricPlot(self, varX, varY, meshIteration=None, interval=None, dots=Dots.OFF):
+    def _parametricPlot(
+        self, varX, varY, meshIteration=None, interval=None, dots=Dots.OFF
+    ):
         self.setPlotDefaults()
 
         meshIteration = self.checkMeshIteration(meshIteration)
@@ -1223,7 +1360,9 @@ int main(int argc, char** argv) {{
         plt.plot(x_data[time_filtered], y_data[time_filtered])
 
         if dots != Dots.OFF:
-            self._applyDotsParametric(x_data[time_filtered], y_data[time_filtered], dots)
+            self._applyDotsParametric(
+                x_data[time_filtered], y_data[time_filtered], dots
+            )
 
         plt.title(f"{varInfo[varX].symbol} vs {varInfo[varY].symbol}")
         plt.xlabel(varInfo[varX].symbol)
@@ -1245,8 +1384,16 @@ int main(int argc, char** argv) {{
             )
         elif dots == Dots.BASE:
             ax.scatter(
-                [x for i, x in enumerate(self.resultHistory[meshIteration]["time"]) if i % self.rksteps == 0],
-                [x for i, x in enumerate(self.resultHistory[meshIteration][column]) if i % self.rksteps == 0],
+                [
+                    x
+                    for i, x in enumerate(self.resultHistory[meshIteration]["time"])
+                    if i % self.rksteps == 0
+                ],
+                [
+                    x
+                    for i, x in enumerate(self.resultHistory[meshIteration][column])
+                    if i % self.rksteps == 0
+                ],
                 color="red",
                 s=30,
                 edgecolor="black",
@@ -1257,7 +1404,15 @@ int main(int argc, char** argv) {{
     # helper function to apply dots in parametric plots
     def _applyDotsParametric(self, x_data, y_data, dots):
         if dots == Dots.ALL:
-            plt.scatter(x_data, y_data, color="red", s=30, edgecolor="black", alpha=0.8, zorder=5)
+            plt.scatter(
+                x_data,
+                y_data,
+                color="red",
+                s=30,
+                edgecolor="black",
+                alpha=0.8,
+                zorder=5,
+            )
         elif dots == Dots.BASE:
             plt.scatter(
                 [x for i, x in enumerate(x_data) if i % self.rksteps == 0],
@@ -1270,7 +1425,9 @@ int main(int argc, char** argv) {{
             )
 
     # private mesh refinement plot function
-    def _plotMeshRefinement(self, ax=None, interval=None, markerSize=30, dots=Dots.BASE, epsilon=1e-14):
+    def _plotMeshRefinement(
+        self, ax=None, interval=None, markerSize=30, dots=Dots.BASE, epsilon=1e-14
+    ):
         self.setPlotDefaults()
         from matplotlib.ticker import MaxNLocator
 
@@ -1287,11 +1444,22 @@ int main(int argc, char** argv) {{
 
             if m == 0:
                 ax.scatter(
-                    arr, np.ones_like(arr) * m, color="red", s=markerSize, edgecolor="black", alpha=0.8, zorder=5
+                    arr,
+                    np.ones_like(arr) * m,
+                    color="red",
+                    s=markerSize,
+                    edgecolor="black",
+                    alpha=0.8,
+                    zorder=5,
                 )
             else:
                 new_points = np.array(
-                    [pt for pt in arr if prev_points.size == 0 or not np.any(np.abs(prev_points - pt) < epsilon)]
+                    [
+                        pt
+                        for pt in arr
+                        if prev_points.size == 0
+                        or not np.any(np.abs(prev_points - pt) < epsilon)
+                    ]
                 )
                 ax.scatter(
                     new_points,
@@ -1324,7 +1492,9 @@ int main(int argc, char** argv) {{
         elif matrixType == MatrixType.HESSIAN:
             file_path = self.exportHessianPath + f"/{self.name}_hessian.csv"
         else:
-            raise InvalidMatrix("Plotting is only possible for matrixTypes JACOBIAN or HESSIAN.")
+            raise InvalidMatrix(
+                "Plotting is only possible for matrixTypes JACOBIAN or HESSIAN."
+            )
 
         with open(file_path, "r") as f:
             lines = f.readlines()
@@ -1343,7 +1513,16 @@ int main(int argc, char** argv) {{
         fig, ax = plt.subplots()
 
         for x, y, data in zip(m.col, m.row, m.data):
-            ax.add_patch(Rectangle(xy=(x, y), width=1, height=1, edgecolor="black", facecolor="blue", alpha=0.6))
+            ax.add_patch(
+                Rectangle(
+                    xy=(x, y),
+                    width=1,
+                    height=1,
+                    edgecolor="black",
+                    facecolor="blue",
+                    alpha=0.6,
+                )
+            )
 
         ax.set_xlim(0, m.shape[1])
         ax.set_ylim(0, m.shape[0])
@@ -1364,7 +1543,6 @@ int main(int argc, char** argv) {{
 
 
 def HelloWorld():
-
     # MWE with u*(t) = 1 constant.
 
     print("[GDOPT - Hello World] Running the Hello World problem...")
@@ -1373,7 +1551,9 @@ def HelloWorld():
     hw = Model("Hello World")
 
     x = hw.addState(start=0)
-    u = hw.addControl(lb=0, ub=2, guess=(-2 + 2 * sqrt(exp(1))) / (1 + (-1 + sqrt(exp(1))) * t))
+    u = hw.addControl(
+        lb=0, ub=2, guess=(-2 + 2 * sqrt(exp(1))) / (1 + (-1 + sqrt(exp(1))) * t)
+    )
 
     hw.addDynamic(x, 2 * t - u)
 
