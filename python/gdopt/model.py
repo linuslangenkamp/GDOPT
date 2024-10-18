@@ -653,9 +653,8 @@ class Model:
                     values = value.split(",")
                     self.modelInfo[key] = list(map(float, values))
 
-    def generate(
-        self, compiler="g++", compileFlags=["-O3", "-ffast-math", "-lstdc++", "-lm"]
-    ):
+    def generate(self, compiler="g++", compileFlags=["-O3", "-ffast-math"]):
+
         # does the entire code generation and compilation of the model
 
         timeStartGenerate = timer.time()
@@ -860,6 +859,8 @@ int main(int argc, char** argv) {{
                 f"-I{package_path / 'include'}",
                 f"-Wl,-rpath",
                 f"-Wl,{package_path / 'lib'}",
+                "-lstdc++",
+                "-lm",
             ]
 
         compileResult = subprocess.run(

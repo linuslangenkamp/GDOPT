@@ -35,13 +35,15 @@
     2 OpenModelica interface                                             4, 5
     3 test framework for huge examples / industry relevant               3, 2
     4 play with setting in ipopt / pivoting etc. -> basically done       2, 3
-    5 check long double to double cast in evals?!                        1, 2
+    5 check long double to double cast in evals, refactor to typedef     2, 2
+      e.g. GNumber, which is long (double) -> cast to double for ipopt
 
     delayed:
     6 tf as free variable                                                2, 4.5
     7 vectorized equation, derivatives with local substitutions          2, 4
-    -> define vec(f,g), vec(r), vec(a(p))
-    8 better initial guess evolutionary algorithms                       1, 3
+    -> define vec(f,g), vec(r), vec(a(p)) : faster compilation, since
+       less classes are generated or does it not matter?
+    8 better initial guess: evolutionary algorithms                      1, 3
     9 detection for nominal, linear, quadratic, const hessian            1, 2
     10 constructing a p / hp-method?                                     3, 5
 
