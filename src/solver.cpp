@@ -52,6 +52,7 @@
     12 splitting const jacobian equality / inequality                    1, 1
     13 use argc, argv                                                    1, 1
     14 better memory management, not always vector.push_back             2, 1
+    15 intergrator refactor
 */
 
 struct SolverPrivate {

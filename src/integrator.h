@@ -57,7 +57,49 @@ enum class IntegratorSteps {
     Steps33 = 33,
     Steps34 = 34,
     Steps35 = 35,
-    Steps36 = 36
+    Steps36 = 36,
+    Steps37 = 37,
+    Steps38 = 38,
+    Steps39 = 39,
+    Steps40 = 40,
+    Steps41 = 41,
+    Steps42 = 42,
+    Steps43 = 43,
+    Steps44 = 44,
+    Steps45 = 45,
+    Steps46 = 46,
+    Steps47 = 47,
+    Steps48 = 48,
+    Steps49 = 49,
+    Steps50 = 50,
+    Steps51 = 51,
+    Steps52 = 52,
+    Steps53 = 53,
+    Steps54 = 54,
+    Steps55 = 55,
+    Steps56 = 56,
+    Steps57 = 57,
+    Steps58 = 58,
+    Steps59 = 59,
+    Steps60 = 60,
+    Steps61 = 61,
+    Steps62 = 62,
+    Steps63 = 63,
+    Steps64 = 64,
+    Steps65 = 65,
+    Steps66 = 66,
+    Steps67 = 67,
+    Steps68 = 68,
+    Steps69 = 69,
+    Steps70 = 70,
+    Steps71 = 71,
+    Steps72 = 72,
+    Steps73 = 73,
+    Steps74 = 74,
+    Steps75 = 75,
+    Steps76 = 76,
+    Steps77 = 77,
+    Steps78 = 78
 };
 
 class Integrator {
@@ -90,10 +132,11 @@ public:
     std::vector<double> evalLinearSplineNewNodes(std::vector<double>& values);
 
     // all basis coefficients at all c_j for p_u, p_u', p_u''
-    std::vector<std::vector<double>> basisPolynomialDiff();
-    std::vector<std::vector<double>> basisPolynomialDiff2();
     std::vector<double> evalLagrangeDiff(std::vector<double>&);
     std::vector<double> evalLagrangeDiff2(std::vector<double>&);
+
+    std::vector<std::vector<double>> basisPolynomialDiff();
+    std::vector<std::vector<double>> basisPolynomialDiff2();
     const std::vector<std::vector<double>> lagrangeBasisDiff;
     const std::vector<std::vector<double>> lagrangeBasisDiff2;
 
