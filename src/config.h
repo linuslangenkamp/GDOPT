@@ -43,4 +43,9 @@ extern std::string INITIAL_STATES_PATH;
 std::unordered_map<std::string, std::string> readConfig(const std::string& filename);
 void setGlobalStandardConfiguration(const std::unordered_map<std::string, std::string>& configMap);
 
+InitVars stringToInitVars(const std::string& str);
+LinearSolver stringToLinearSolver(const std::string& str);
+RefinementMethod stringToRefinementMethod(const std::string& str);
+MeshAlgorithm stringToMeshAlgorithm(const std::string& str);
+
 #endif  // GDOPT_CONFIG_H

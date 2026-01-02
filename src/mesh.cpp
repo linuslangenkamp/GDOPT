@@ -23,7 +23,7 @@
 Mesh Mesh::createEquidistantMesh(int intervals, double tf) {
     std::vector<double> grid(intervals + 1);
     std::vector<double> deltaT(intervals);
-    double h = tf / intervals;
+    double h = intervals > 0 ? tf / intervals : 0.0;
     for (int i = 0; i <= intervals; i++) {
         grid[i] = i * h;
     }
@@ -38,7 +38,7 @@ void Mesh::update(std::vector<int>& markedIntervals) {
     std::vector<double> newGrid{};
     for (int i = 0; i < intervals; i++) {
         newGrid.push_back(grid[i]);
-        if (markedIntervals[index] == i && index < sz(markedIntervals)) {
+        if (index < sz(markedIntervals) && markedIntervals[index] == i) {
             newGrid.push_back(grid[i] + deltaT[i] / 2);
             index++;
         }

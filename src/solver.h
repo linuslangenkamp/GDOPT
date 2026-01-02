@@ -21,6 +21,7 @@
 
 #include <chrono>
 #include <set>
+#include <string>
 #include <unordered_map>
 
 #include "gdop.h"
@@ -38,6 +39,8 @@ enum class RefinementMethod { POLYNOMIAL, LINEAR_SPLINE };
 
 // TODO: add L2BN variants: quadsection, non bisective -> blurry split, remove consts!
 enum class MeshAlgorithm { NONE, BASIC, L2_BOUNDARY_NORM };
+
+std::string getLinearSolverName(LinearSolver solver);
 
 struct SolverPrivate;
 namespace Ipopt {
