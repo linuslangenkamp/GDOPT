@@ -45,6 +45,8 @@ public:
     explicit Expression(Adjacency adj, AdjacencyDiff adjDiff) : adj{std::move(adj)}, adjDiff{std::move(adjDiff)} {
     }
 
+    virtual ~Expression() = default;
+
     virtual double eval(const double* x, const double* u, const double* p, double t) = 0;
 
     // returns {evalDiff(indX), evalDiff(indU), evalDiff(indP)} - same sorting as adj!!
@@ -71,6 +73,8 @@ class ParamExpression {
 public:
     explicit ParamExpression(ParamAdjacency adj, ParamAdjacencyDiff adjDiff) : adj{std::move(adj)}, adjDiff{std::move(adjDiff)} {
     }
+
+    virtual ~ParamExpression() = default;
 
     virtual double eval(const double* p) = 0;
 

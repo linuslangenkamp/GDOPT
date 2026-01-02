@@ -123,8 +123,7 @@ public:
     std::vector<double> evalLinearSplineNewNodes(std::vector<double>& values);
 
     // all basis coefficients at all c_j for p_u, p_u', p_u''
-    std::vector<double> evalLagrangeDiff(std::vector<double>&);
-    std::vector<double> evalLagrangeDiff2(std::vector<double>&);
+    void evalLagrangeDiff(const std::vector<double>& coefficients, std::vector<double>& lagrangeDiff) const;
 
 private:
     Integrator(const std::vector<double>& c, const std::vector<double>& c0, const std::vector<double>& cBisection, const std::vector<double>& c0Bisection,

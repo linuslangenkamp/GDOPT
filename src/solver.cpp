@@ -18,7 +18,10 @@
 
 #include "solver.h"
 
+#include <algorithm>
+#include <array>
 #include <chrono>
+#include <cmath>
 #include <numeric>
 
 #include "IpIpoptApplication.hpp"
@@ -142,79 +145,87 @@ std::vector<int> Solver::L2BoundaryNorm() const {
 
     const double cDiff = 1;
     const double cDiff2 = cDiff / 2;
+    const double scale = std::pow(10.0, -LEVEL);
+
+    const int steps = _priv->gdop->rk.steps;
+    const int offXUBlock = _priv->gdop->offXUBlock;
+    const int offXU = _priv->gdop->offXU;
 
     std::set<int> markerSet;
 
     // init last derivatives v^(d)_{i-1,m} as 0
-    std::vector<std::vector<double>> lastDiffs;
-    lastDiffs.reserve(vLength);
-    for (int v = 0; v < vLength; v++) {
-        lastDiffs.push_back({0, 0});
-    }
+    std::vector<std::array<double, 2>> lastDiffs(vLength, {0.0, 0.0});
 
     // calculate max, min of v^(d)
-    std::vector<double> maxV;
-    std::vector<double> minV;
-    maxV.reserve(vLength);
-    minV.reserve(vLength);
+    std::vector<double> maxV(vLength, 0.0);
+    std::vector<double> minV(vLength, 0.0);
+    std::vector<char> hasValue(vLength, 0);
     for (int i = 0; i < _priv->gdop->mesh.intervals; i++) {
-        for (int j = 0; j < _priv->gdop->rk.steps; j++) {
+        for (int j = 0; j < steps; j++) {
             for (int v = 0; v < vLength; v++) {
-                if (i == 0 && j == 0) {
-                    maxV.push_back(_priv->gdop->optimum[v + vOffset]);
-                    minV.push_back(_priv->gdop->optimum[v + vOffset]);
+                const double value = _priv->gdop->optimum[v + vOffset + i * offXUBlock + j * offXU];
+                if (!hasValue[v]) {
+                    hasValue[v] = 1;
+                    maxV[v] = value;
+                    minV[v] = value;
                 }
                 else {
-                    if (_priv->gdop->optimum[v + vOffset + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU] > maxV[v]) {
-                        maxV[v] = _priv->gdop->optimum[v + vOffset + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU];
+                    if (value > maxV[v]) {
+                        maxV[v] = value;
                     }
-                    else if (_priv->gdop->optimum[v + vOffset + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU] < minV[v]) {
-                        minV[v] = _priv->gdop->optimum[v + vOffset + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU];
+                    else if (value < minV[v]) {
+                        minV[v] = value;
                     }
                 }
             }
         }
     }
-    std::vector<double> rangeV;
-    rangeV.reserve(vLength);
+    std::vector<double> rangeV(vLength, 0.0);
     for (int v = 0; v < vLength; v++) {
-        rangeV.push_back(maxV[v] - minV[v]);
+        rangeV[v] = maxV[v] - minV[v];
     }
 
-    std::vector<double> boundsDiff;
-    std::vector<double> boundsDiff2;
+    std::vector<double> boundsDiff(vLength, 0.0);
+    std::vector<double> boundsDiff2(vLength, 0.0);
+    const double intervalScale = scale / static_cast<double>(initialIntervals);
     for (int v = 0; v < vLength; v++) {
-        boundsDiff.push_back(cDiff * rangeV[v] / initialIntervals * pow(10, -LEVEL));
-        boundsDiff2.push_back(cDiff2 * rangeV[v] / initialIntervals * pow(10, -LEVEL));
+        const double scaledRange = rangeV[v] * intervalScale;
+        boundsDiff[v] = cDiff * scaledRange;
+        boundsDiff2[v] = cDiff2 * scaledRange;
     }
+
+    std::vector<double> firstIntervalValues(steps, 0.0);
+    std::vector<double> vCoeffs(steps + 1, 0.0);
+    std::vector<double> p_vDiff(steps + 1, 0.0);
+    std::vector<double> p_vDiff2(steps + 1, 0.0);
+    std::vector<double> sq_p_vDiff(steps, 0.0);
+    std::vector<double> sq_p_vDiff2(steps, 0.0);
 
     for (int i = 0; i < _priv->gdop->mesh.intervals; i++) {
         bool cornerTrigger = false;
         for (int v = 0; v < vLength; v++) {
-            std::vector<double> vCoeffs;
             if (i == 0) {
-                for (int j = 0; j < _priv->gdop->rk.steps; j++) {
-                    vCoeffs.push_back(_priv->gdop->optimum[v + vOffset + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
+                for (int j = 0; j < steps; j++) {
+                    firstIntervalValues[j] = _priv->gdop->optimum[v + vOffset + i * offXUBlock + j * offXU];
+                    vCoeffs[j + 1] = firstIntervalValues[j];
                 }
-                // for xvars can also use x0, but interpolation results in same value
-                vCoeffs.insert(vCoeffs.begin(), Integrator::evalLagrange(_priv->gdop->rk.c, vCoeffs, 0.0));
+                vCoeffs[0] = Integrator::evalLagrange(_priv->gdop->rk.c, firstIntervalValues, 0.0);
             }
             else {
-                for (int j = -1; j < _priv->gdop->rk.steps; j++) {
-                    vCoeffs.push_back(_priv->gdop->optimum[v + vOffset + i * _priv->gdop->offXUBlock + j * _priv->gdop->offXU]);
+                for (int j = -1; j < steps; j++) {
+                    vCoeffs[j + 1] = _priv->gdop->optimum[v + vOffset + i * offXUBlock + j * offXU];
                 }
             }
 
             // values of the (1st, 2nd) diff of the interpolating polynomial at 0, c1, c2, ...
-            std::vector<double> p_vDiff = _priv->gdop->rk.evalLagrangeDiff(vCoeffs);
-            // TODO: maybe remove 2nd diff matrix evalLagrangeDiff2(vCoeffs) <=> evalLagrangeDiff(p_UDiff), since D^{1}^2 = D^2
-            std::vector<double> p_vDiff2 = _priv->gdop->rk.evalLagrangeDiff(p_vDiff);
-            // squared values of the (1st, 2nd) diff of the interpolating polynomial at c1, c2, ...
-            std::vector<double> sq_p_vDiff;
-            std::vector<double> sq_p_vDiff2;
+            _priv->gdop->rk.evalLagrangeDiff(vCoeffs, p_vDiff);
+            _priv->gdop->rk.evalLagrangeDiff(p_vDiff, p_vDiff2);
             for (int k = 1; k < sz(p_vDiff); k++) {
-                sq_p_vDiff.push_back(p_vDiff[k] * p_vDiff[k]);
-                sq_p_vDiff2.push_back(p_vDiff2[k] * p_vDiff2[k]);
+                const int idx = k - 1;
+                const double diffVal = p_vDiff[k];
+                const double diff2Val = p_vDiff2[k];
+                sq_p_vDiff[idx] = diffVal * diffVal;
+                sq_p_vDiff2[idx] = diff2Val * diff2Val;
             }
 
             // (int_0^1 (d^{1,2}/dt^{1,2} p_u(t))^2 dt)^0.5 - L2 norm of the (1st, 2nd) diff
@@ -231,7 +242,8 @@ std::vector<int> Solver::L2BoundaryNorm() const {
                     cornerTrigger = true;
                 }
             }
-            lastDiffs[v] = {p_vDiff[_priv->gdop->rk.steps], p_vDiff2[_priv->gdop->rk.steps]};
+            lastDiffs[v][0] = p_vDiff[steps];
+            lastDiffs[v][1] = p_vDiff2[steps];
 
             // detection which intervals should be bisected
             if (L2Diff1 > boundsDiff[v] || L2Diff2 > boundsDiff2[v] || cornerTrigger) {
@@ -332,7 +344,7 @@ void Solver::refineLinear(std::vector<int>& markedIntervals) {
     // interpolate all values on marked intervals
     int index = 0;
     for (int i = 0; i < oldIntervalLen; i++) {
-        if (markedIntervals[index] == i && index < sz(markedIntervals)) {
+        if (index < sz(markedIntervals) && markedIntervals[index] == i) {
             for (int v = 0; v < _priv->gdop->offXU; v++) {  // iterate over every var in {x, u} -> interpolate
                 std::vector<double> localVars{};
                 // i > 0 interval cases
@@ -399,7 +411,7 @@ void Solver::refinePolynomial(std::vector<int>& markedIntervals) {
     // interpolate all values on marked intervals
     int index = 0;
     for (int i = 0; i < oldIntervalLen; i++) {
-        if (markedIntervals[index] == i && index < sz(markedIntervals)) {
+        if (index < sz(markedIntervals) && markedIntervals[index] == i) {
             for (int v = 0; v < _priv->gdop->offXU; v++) {  // iterate over every var in {x, u} -> interpolate
                 std::vector<double> localVars = {};
                 // i > 0 interval cases
@@ -480,12 +492,17 @@ void Solver::postOptimization(IpoptApplication& app) {
     SmartPtr<const SolveStatistics> stats = app.Statistics();
     SmartPtr<IpoptData> data = app.IpoptDataObject();
 
+    const double objective = IsNull(stats) ? 0.0 : stats->FinalObjective();
+    const int iterationCount = IsNull(stats) ? 0 : stats->IterationCount();
+    const double totalTime = IsNull(stats) ? 0.0 : stats->TotalWallclockTime();
+    const double funcEvalTime = IsNull(data) ? 0.0 : data->TimingStats().TotalFunctionEvaluationWallclockTime();
+
     numberOfIntervalsHistory.push_back(_priv->gdop->mesh.intervals);
-    ipoptObjectiveHistory.push_back(stats->FinalObjective());
-    ipoptIterationHistory.push_back(stats->IterationCount());
-    ipoptIterationTotalTime.push_back(stats->TotalWallclockTime());
-    ipoptIterationFuncEvalTime.push_back(data->TimingStats().TotalFunctionEvaluationWallclockTime());
-    ipoptIterationNonfuncEvalTime.push_back(stats->TotalWallclockTime() - data->TimingStats().TotalFunctionEvaluationWallclockTime());
+    ipoptObjectiveHistory.push_back(objective);
+    ipoptIterationHistory.push_back(iterationCount);
+    ipoptIterationTotalTime.push_back(totalTime);
+    ipoptIterationFuncEvalTime.push_back(funcEvalTime);
+    ipoptIterationNonfuncEvalTime.push_back(totalTime - funcEvalTime);
 
     if (EXPORT_OPTIMUM_PATH != "") {
         _priv->gdop->exportOptimum(EXPORT_OPTIMUM_PATH + "/" + _priv->gdop->problem->name + std::to_string(meshIteration) + ".csv");
